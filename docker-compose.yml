@@ -1,0 +1,298 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # API GATEWAY - Single entry point for all services
+  # ============================================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: enms-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./portal/public:/usr/share/nginx/html/portal:ro
+    depends_on:
+      - grafana
+      - nodered
+      - analytics
+      - query-service
+      - simulator
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # DATABASE - PostgreSQL with TimescaleDB extension
+  # ============================================================================
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: enms-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TIMESCALEDB_TELEMETRY: off
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # MQTT BROKER - Message bus for IoT data
+  # ============================================================================
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: enms-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt-data:/mosquitto/data
+      - mqtt-logs:/mosquitto/log
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # REDIS - Caching and Pub/Sub
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: enms-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # FACTORY SIMULATOR - Generate realistic factory data
+  # ============================================================================
+  simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: enms-simulator
+    environment:
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SIMULATOR_PORT: 8003
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # NODE-RED - Data ingestion and ETL pipeline
+  # ============================================================================
+  nodered:
+    build:
+      context: ./nodered
+      dockerfile: Dockerfile
+    container_name: enms-nodered
+    environment:
+      TZ: UTC
+      NODE_RED_ENABLE_PROJECTS: "true"
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "1880:1880"
+    volumes:
+      - nodered-data:/data
+      - ./nodered/settings.js:/data/settings.js:ro
+      - ./nodered/flows:/data/flows
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1880/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # GRAFANA - Visualization and dashboards
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: enms-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+      GF_SERVER_ROOT_URL: http://localhost/grafana
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # ANALYTICS SERVICE - ML models and statistical analysis
+  # ============================================================================
+  analytics:
+    build:
+      context: ./analytics
+      dockerfile: Dockerfile
+    container_name: enms-analytics
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 8001
+      LOG_LEVEL: INFO
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # QUERY SERVICE - API for complex queries and OVOS integration
+  # ============================================================================
+  query-service:
+    build:
+      context: ./query-service
+      dockerfile: Dockerfile
+    container_name: enms-query-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      API_PORT: 8002
+      LOG_LEVEL: INFO
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      analytics:
+        condition: service_healthy
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  enms-network:
+    driver: bridge
+    name: enms-network
+
+# ============================================================================
+# VOLUMES - Persistent data storage
+# ============================================================================
+volumes:
+  postgres-data:
+    name: enms-postgres-data
+  mqtt-data:
+    name: enms-mqtt-data
+  mqtt-logs:
+    name: enms-mqtt-logs
+  redis-data:
+    name: enms-redis-data
+  nodered-data:
+    name: enms-nodered-data
+  grafana-data:
+    name: enms-grafana-data
