@@ -1016,7 +1016,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  TO_CHAR(er.bucket, 'YYYY-MM-DD HH24:00') as \"Hour\",\n  ROUND(er.total_energy_kwh::numeric, 2) as \"Energy (kWh)\",\n  COALESCE(SUM(pd.production_count), 0) as \"Units\",\n  ROUND((er.total_energy_kwh / NULLIF(SUM(pd.production_count), 0))::numeric, 3) as \"Energy/Unit\",\n  ROUND(er.avg_power_kw::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(er.peak_demand_kw::numeric, 2) as \"Peak (kW)\"\nFROM energy_readings_1min er\nLEFT JOIN production_data pd ON \n  pd.machine_id = er.machine_id AND\n  time_bucket('1 hour', pd.time) = er.bucket\nWHERE er.machine_id = $machine_id\n  AND er.bucket >= NOW() - INTERVAL '24 hours'\nGROUP BY er.bucket, er.total_energy_kwh, er.avg_power_kw, er.peak_demand_kw\nORDER BY er.bucket DESC;",
+          "rawSql": "SELECT \n  TO_CHAR(er.bucket, 'YYYY-MM-DD HH24:00') as \"Hour\",\n  ROUND(er.total_energy_kwh::numeric, 2) as \"Energy (kWh)\",\n  COALESCE(SUM(pd.production_count), 0) as \"Units\",\n  ROUND((er.total_energy_kwh / NULLIF(SUM(pd.production_count), 0))::numeric, 3) as \"Energy/Unit\",\n  ROUND(er.avg_power_kw::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(er.max_power_kw::numeric, 2) as \"Peak (kW)\"\nFROM energy_readings_1min er\nLEFT JOIN production_data pd ON \n  pd.machine_id = er.machine_id AND\n  time_bucket('1 hour', pd.time) = er.bucket\nWHERE er.machine_id = $machine_id\n  AND er.bucket >= NOW() - INTERVAL '24 hours'\nGROUP BY er.bucket, er.total_energy_kwh, er.avg_power_kw, er.max_power_kw\nORDER BY er.bucket DESC;",
           "refId": "A",
           "sql": {
             "columns": [

@@ -113,7 +113,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(time)\n  AND m.id IN ($machines)\nGROUP BY time, m.name\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(time)\n  AND m.name IN ($machines)\nGROUP BY time, m.name\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -225,7 +225,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  bucket AS time,\n  m.name as metric,\n  total_energy_kwh as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.id IN ($machines)\nORDER BY bucket;",
+          "rawSql": "SELECT \n  bucket AS time,\n  m.name as metric,\n  total_energy_kwh as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.name IN ($machines)\nORDER BY bucket;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -345,7 +345,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  bucket AS time,\n  m.name as metric,\n  peak_demand_kw as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.id IN ($machines)\nORDER BY bucket;",
+          "rawSql": "SELECT \n  bucket AS time,\n  m.name as metric,\n  max_power_kw as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.name IN ($machines)\nORDER BY bucket;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -497,7 +497,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  ROUND(SUM(er.total_energy_kwh)::numeric, 2) as \"Energy (kWh)\",\n  ROUND(AVG(er.avg_power_kw)::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(MAX(er.peak_demand_kw)::numeric, 2) as \"Peak (kW)\",\n  COUNT(*) as \"Readings\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.id IN ($machines)\nGROUP BY m.name, m.type\nORDER BY SUM(er.total_energy_kwh) DESC;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  ROUND(SUM(er.total_energy_kwh)::numeric, 2) as \"Energy (kWh)\",\n  ROUND(AVG(er.avg_power_kw)::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(MAX(er.max_power_kw)::numeric, 2) as \"Peak (kW)\",\n  COUNT(*) as \"Readings\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.name IN ($machines)\nGROUP BY m.name, m.type\nORDER BY SUM(er.total_energy_kwh) DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -607,7 +607,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  bucket AS time,\n  m.name as metric,\n  (avg_power_kw / NULLIF(peak_demand_kw, 0) * 100) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.id IN ($machines)\n  AND peak_demand_kw > 0\nORDER BY bucket;",
+          "rawSql": "SELECT \n  bucket AS time,\n  m.name as metric,\n  (avg_power_kw / NULLIF(max_power_kw, 0) * 100) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE $__timeFilter(bucket)\n  AND m.name IN ($machines)\n  AND max_power_kw > 0\nORDER BY bucket;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -716,7 +716,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  bucket::date AS time,\n  'Total Energy' as metric,\n  SUM(total_energy_kwh) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '30 days'\n  AND m.id IN ($machines)\nGROUP BY bucket::date\nORDER BY bucket::date;",
+          "rawSql": "SELECT \n  time::date AS time,\n  'Total Energy' as metric,\n  SUM(total_energy_kwh) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '30 days'\n  AND m.name IN ($machines)\nGROUP BY time::date\nORDER BY time::date;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -835,7 +835,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('1 hour', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '7 days'\n  AND m.id IN ($machines)\nGROUP BY time, m.name\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('1 hour', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '7 days'\n  AND m.name IN ($machines)\nGROUP BY time, m.name\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
