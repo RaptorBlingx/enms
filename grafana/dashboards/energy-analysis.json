@@ -716,7 +716,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time::date AS time,\n  'Total Energy' as metric,\n  SUM(total_energy_kwh) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '30 days'\n  AND m.name IN ($machines)\nGROUP BY time::date\nORDER BY time::date;",
+          "rawSql": "SELECT \n  time::date AS time,\n  'Total Energy' as metric,\n  SUM(energy_kwh) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '30 days'\n  AND m.name IN ($machines)\nGROUP BY time::date\nORDER BY time::date;",
           "refId": "A",
           "sql": {
             "columns": [

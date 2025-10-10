@@ -244,7 +244,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(total_energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT \n  COALESCE(SUM(energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [

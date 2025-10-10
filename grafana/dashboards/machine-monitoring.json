@@ -103,7 +103,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT current_mode\nFROM machine_status\nWHERE machine_id = $machine_id\n\nLIMIT 1;",
+          "rawSql": "SELECT current_mode\nFROM machine_status\nWHERE machine_id = $machine_id::uuid\n\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -190,7 +190,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT current_power_kw\nFROM machine_status\nWHERE machine_id = $machine_id\n\nLIMIT 1;",
+          "rawSql": "SELECT current_power_kw\nFROM machine_status\nWHERE machine_id = $machine_id::uuid\n\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -269,7 +269,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(total_energy_kwh), 0) as energy\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW()) AND machine_id = $machine_id\n  AND time >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT COALESCE(SUM(energy_kwh), 0) as energy\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW()) AND machine_id = $machine_id::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -348,7 +348,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(production_count), 0) as units\nFROM production_data\nWHERE machine_id = $machine_id\n  AND time >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT COALESCE(SUM(production_count), 0) as units\nFROM production_data\nWHERE machine_id = $machine_id::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -460,7 +460,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time AS time,\n  'Power' as metric,\n  power_kw as value\nFROM energy_readings\nWHERE machine_id = $machine_id\n  AND $__timeFilter(time)\nORDER BY time;",
+          "rawSql": "SELECT \n  time AS time,\n  'Power' as metric,\n  power_kw as value\nFROM energy_readings\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -611,7 +611,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time AS time,\n  'Temperature' as metric,\n  machine_temp_c as value\nFROM environmental_data\nWHERE machine_id = $machine_id\n  AND $__timeFilter(time)\nORDER BY time;",
+          "rawSql": "SELECT \n  time AS time,\n  'Temperature' as metric,\n  machine_temp_c as value\nFROM environmental_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -639,7 +639,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time AS time,\n  'Humidity' as metric,\n  indoor_humidity_percent as value\nFROM environmental_data\nWHERE machine_id = $machine_id\n  AND $__timeFilter(time)\nORDER BY time;",
+          "rawSql": "SELECT \n  time AS time,\n  'Humidity' as metric,\n  indoor_humidity_percent as value\nFROM environmental_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -749,7 +749,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Units Produced' as metric,\n  SUM(production_count) as value\nFROM production_data\nWHERE machine_id = $machine_id\n  AND $__timeFilter(time)\nGROUP BY time\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Units Produced' as metric,\n  SUM(production_count) as value\nFROM production_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -864,7 +864,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Defect Rate' as metric,\n  (SUM(production_count_bad)::float / NULLIF(SUM(production_count), 0) * 100) as value\nFROM production_data\nWHERE machine_id = $machine_id\n  AND $__timeFilter(time)\nGROUP BY time\nHAVING SUM(production_count) > 0\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Defect Rate' as metric,\n  (SUM(production_count_bad)::float / NULLIF(SUM(production_count), 0) * 100) as value\nFROM production_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nHAVING SUM(production_count) > 0\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
