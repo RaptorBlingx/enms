@@ -257,3 +257,4 @@ query-service/cache/
 # Keep Important Empty Directories
 # ----------------------------------------------------------------------------
 !.gitkeep
+mqtt/config/passwd
