@@ -65,6 +65,16 @@ class BaseMachineSimulator(ABC):
         """Generate environmental data"""
         pass
     
+    def generate_machine_status(self, timestamp: datetime) -> Dict[str, Any]:
+        """Generate machine status data for MQTT publication"""
+        return {
+            "timestamp": timestamp.isoformat(),
+            "machine_id": self.machine_id,
+            "is_running": self.is_running,
+            "operating_mode": self.operating_mode.value,
+            "current_power_kw": round(self.current_power_kw, 3)
+        }
+    
     def start(self):
         """Start the machine"""
         self.is_running = True

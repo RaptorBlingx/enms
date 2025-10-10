@@ -164,7 +164,8 @@
         "y": 100,
         "wires": [
             [
-                "parse_topic"
+                "parse_topic",
+                "a48bc1f5174833a2"
             ]
         ]
     },
@@ -634,6 +635,22 @@
         "statusVal": "payload",
         "statusType": "auto",
         "x": 1500,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "a48bc1f5174833a2",
+        "type": "debug",
+        "z": "enms_pipeline_tab",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 270,
         "y": 200,
         "wires": []
     }

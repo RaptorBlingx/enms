@@ -263,6 +263,7 @@ class SimulatorManager:
                 energy_data = machine.generate_energy_reading(timestamp)
                 production_data = machine.generate_production_data(timestamp)
                 environmental_data = machine.generate_environmental_data(timestamp)
+                status_data = machine.generate_machine_status(timestamp)
                 
                 # Publish to MQTT
                 mqtt_publisher.publish_energy_reading(
@@ -281,6 +282,12 @@ class SimulatorManager:
                     machine.machine_id,
                     machine.mqtt_topic,
                     environmental_data
+                )
+                
+                mqtt_publisher.publish_machine_status(
+                    machine.machine_id,
+                    machine.mqtt_topic,
+                    status_data
                 )
                 
                 # Wait for next interval
