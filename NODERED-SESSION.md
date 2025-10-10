@@ -227,19 +227,7 @@ docker compose exec postgres psql -U raptorblingx -d enms -c "SELECT COUNT(*) FR
 ```
 **Expected:** Count should be increasing over time
 
-### Test 3: Check Node-RED UI
-```bash
-# Access Node-RED at: http://localhost:1881
-# Check MQTT node status - should be green "connected"
-# Deploy changes and verify no EBUSY errors
-```
 
-### Test 4: Verify Flow Persistence
-```bash
-# Make a change in Node-RED UI and deploy
-git status
-# Should show: modified: nodered/data/flows.json
-```
 
 ---
 
@@ -265,45 +253,6 @@ git status
 Data Types: energy | production | environmental | status
 Storage: TimescaleDB Hypertables (time-series optimized)
 Persistence: Directory mount ensures all changes saved
-```
-
----
-
-## Next Steps (If Needed)
-
-1. **Fix MQTT Subscribe Topic:** Change from `factory/demo/compressor-1/energy` to `factory/#` to capture all data types
-2. **Add Grafana Dashboards:** Visualize energy consumption and production metrics
-3. **Implement Anomaly Detection:** Use historical data for predictive maintenance
-4. **Add Alerting:** Email notifications for threshold violations
-5. **Expand Simulator:** Add more machines and factories
-
----
-
-## Quick Reference Commands
-
-```bash
-# Start all services
-docker compose up -d
-
-# Check Node-RED logs
-docker compose logs -f nodered
-
-# Access Node-RED UI
-http://localhost:1881
-
-# Check database data
-docker compose exec postgres psql -U raptorblingx -d enms -c "SELECT COUNT(*) FROM energy_readings;"
-
-# Test MQTT connectivity
-docker compose exec nodered mosquitto_sub -h 89.252.166.188 -p 2010 -u raptorblingx -P raptorblingx -t 'factory/#' -C 10
-
-# Restart Node-RED (after flow changes)
-docker compose restart nodered
-
-# Commit flow changes to Git
-git add nodered/data/flows.json
-git commit -m "Updated Node-RED flows"
-git push
 ```
 
 ---
