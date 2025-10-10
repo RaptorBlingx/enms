@@ -165,7 +165,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nWHERE ms.timestamp >= NOW() - INTERVAL '5 minutes';",
+          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nWHERE 1=1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -244,7 +244,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(total_energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings_1day\nWHERE bucket >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT \n  COALESCE(SUM(total_energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -453,7 +453,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('1 minute', timestamp) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE timestamp >= NOW() - INTERVAL '1 hour'\nGROUP BY time, m.name\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('1 minute', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE timestamp >= NOW() - INTERVAL '1 hour'\nGROUP BY time, m.name\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -616,7 +616,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.timestamp, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, timestamp\n  FROM machine_status\n  WHERE machine_id = m.id\n  ORDER BY timestamp DESC\n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\nORDER BY m.name;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, timestamp\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\nORDER BY m.name;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -705,7 +705,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY m.name\nORDER BY value DESC;",
+          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY m.name\nORDER BY value DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -794,7 +794,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY f.name\nORDER BY value DESC;",
+          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY f.name\nORDER BY value DESC;",
           "refId": "A",
           "sql": {
             "columns": [
