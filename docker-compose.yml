@@ -178,7 +178,7 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
-      GF_SERVER_ROOT_URL: http://localhost:8080/grafana
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://10.33.10.109:8080/grafana}
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     ports:
       - "${GRAFANA_PORT:-3001}:3000"
