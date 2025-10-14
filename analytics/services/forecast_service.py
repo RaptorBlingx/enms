@@ -97,6 +97,12 @@ class ForecastService:
         df = pd.DataFrame(rows, columns=['timestamp', 'power_kw', 
                                          'outdoor_temp_c', 'production_count'])
         df['timestamp'] = pd.to_datetime(df['timestamp'])
+        
+        # Convert numeric columns from Decimal to float
+        df['power_kw'] = pd.to_numeric(df['power_kw'], errors='coerce')
+        df['outdoor_temp_c'] = pd.to_numeric(df['outdoor_temp_c'], errors='coerce')
+        df['production_count'] = pd.to_numeric(df['production_count'], errors='coerce')
+        
         df.set_index('timestamp', inplace=True)
         
         logger.info(f"[FORECAST-SVC] Fetched {len(df)} data points")
