@@ -81,6 +81,21 @@ async def kpi_ui(request: Request):
     return templates.TemplateResponse("kpi.html", {"request": request})
 
 
+@router.get("/forecast", response_class=HTMLResponse, name="ui_forecast")
+async def forecast_ui(request: Request):
+    """
+    Forecast UI
+    
+    Features:
+    - ARIMA & Prophet model training
+    - Short/medium/long-term forecasting
+    - Confidence interval visualization
+    - Optimal load scheduling
+    - Model status tracking
+    """
+    return templates.TemplateResponse("forecast.html", {"request": request})
+
+
 # Health check for UI service
 @router.get("/health", response_class=HTMLResponse)
 async def ui_health(request: Request):

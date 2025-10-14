@@ -147,6 +147,10 @@
                            href="/api/analytics/ui/kpi">KPIs</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if '/ui/forecast' in request.url.path %}active{% endif %}" 
+                           href="/api/analytics/ui/forecast">Forecasting</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/api/analytics/docs" target="_blank">API Docs</a>
                     </li>
                 </ul>

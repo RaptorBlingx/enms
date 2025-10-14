@@ -198,12 +198,14 @@ from api.routes.baseline import router as baseline_router
 from api.routes.anomaly import router as anomaly_router
 from api.routes.kpi import router as kpi_router
 from api.routes.machines import router as machines_router
+from api.routes.forecast import router as forecast_router
 
 # Register API routes with prefix
 app.include_router(baseline_router, prefix=settings.API_PREFIX)
 app.include_router(anomaly_router, prefix=settings.API_PREFIX)
 app.include_router(kpi_router, prefix=settings.API_PREFIX)
 app.include_router(machines_router, prefix=settings.API_PREFIX)
+app.include_router(forecast_router, prefix=settings.API_PREFIX)
 
 
 # ============================================================================
