@@ -209,8 +209,8 @@
                 const select = document.getElementById(selectId);
                 machines.forEach(machine => {
                     const option = document.createElement('option');
-                    option.value = machine.machine_id;
-                    option.textContent = machine.machine_name;
+                    option.value = machine.id;
+                    option.textContent = machine.name;
                     select.appendChild(option);
                 });
             });
@@ -231,12 +231,12 @@
         
         for (const machine of machines) {
             try {
-                const response = await axios.get(`${API_BASE}/forecast/models/${machine.machine_id}`);
+                const response = await axios.get(`${API_BASE}/forecast/models/${machine.id}`);
                 const status = response.data;
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${machine.machine_name}</td>
+                    <td>${machine.name}</td>
                     <td>
                         <span class="badge bg-${status.arima.trained ? 'success' : 'secondary'}">
                             ${status.arima.trained ? 'Trained' : 'Not Trained'}
@@ -252,7 +252,7 @@
                 `;
                 tbody.appendChild(row);
             } catch (error) {
-                console.error(`Error loading status for ${machine.machine_name}:`, error);
+                console.error(`Error loading status for ${machine.name}:`, error);
             }
         }
     }
