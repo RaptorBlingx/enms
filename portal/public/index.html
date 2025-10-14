@@ -465,7 +465,7 @@
             // Update scheduler status
             const schedulerEl = document.getElementById('scheduler-jobs');
             if (data.scheduler && data.scheduler.running) {
-                schedulerEl.textContent = data.scheduler.jobs || '-';
+                schedulerEl.textContent = data.scheduler.job_count || '0';
                 schedulerEl.classList.remove('loading');
             } else {
                 schedulerEl.textContent = 'Offline';
