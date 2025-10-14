@@ -1,7 +1,7 @@
 # ============================================================================
 # EnMS Analytics Service - Dockerfile
 # ============================================================================
-# Phase 3 - Analytics & ML Service
+# Phase 4 Session 2 - Updated with Prophet & ARIMA support
 # Base: Python 3.12-slim
 # ============================================================================
 
@@ -14,12 +14,15 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app
 
 # Install system dependencies
+# Prophet requires gcc, g++, make and other build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
+    make \
     postgresql-client \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -28,21 +31,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Create directories for model storage
-RUN mkdir -p /app/models/saved && \
+# Create directories for model storage and logs
+RUN mkdir -p /app/models/saved/baseline && \
+    mkdir -p /app/models/saved/anomaly && \
+    mkdir -p /app/models/saved/forecast && \
+    mkdir -p /app/logs && \
     chmod -R 755 /app/models
 
 # Expose port
 EXPOSE 8001
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8001/health || exit 1
 
 # Run application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--log-level", "info"]
