@@ -231,7 +231,7 @@ async def health_check():
     """
     Health check endpoint.
     
-    Returns service status, database connectivity, and scheduler status.
+    Returns service status, database connectivity, scheduler status, and key statistics.
     """
     # Check database
     db_healthy = await db.health_check()
@@ -246,6 +246,36 @@ async def health_check():
         except Exception as e:
             logger.error(f"Error getting scheduler status: {e}")
     
+    # Get statistics for portal dashboard
+    active_machines = 0
+    baseline_models = 0
+    recent_anomalies = 0
+    
+    try:
+        async with db.pool.acquire() as conn:
+            # Count active machines (machines with data in last 24 hours)
+            query = """
+                SELECT COUNT(DISTINCT machine_id) 
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+            """
+            active_machines = await conn.fetchval(query)
+            
+            # Count baseline models
+            query = "SELECT COUNT(*) FROM baseline_models"
+            baseline_models = await conn.fetchval(query)
+            
+            # Count recent anomalies (last 24 hours)
+            query = """
+                SELECT COUNT(*) 
+                FROM anomalies 
+                WHERE detected_at > NOW() - INTERVAL '24 hours'
+            """
+            recent_anomalies = await conn.fetchval(query)
+        
+    except Exception as e:
+        logger.error(f"Error fetching health statistics: {e}")
+    
     health_data = {
         "service": settings.SERVICE_NAME,
         "version": settings.SERVICE_VERSION,
@@ -257,6 +287,9 @@ async def health_check():
             "pool_size": db.pool.get_size() if db.pool else 0
         },
         "scheduler": scheduler_info,
+        "active_machines": active_machines,
+        "baseline_models": baseline_models,
+        "recent_anomalies": recent_anomalies,
         "timestamp": datetime.utcnow().isoformat()
     }
     
