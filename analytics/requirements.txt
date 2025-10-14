@@ -1,0 +1,46 @@
+# ============================================================================
+# EnMS Analytics Service - Python Dependencies
+# ============================================================================
+# Phase 3 - Analytics & ML Service
+# Python 3.12
+# ============================================================================
+
+# FastAPI & Server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# ML & Data Science
+scikit-learn==1.3.2
+prophet==1.1.5
+statsmodels==0.14.0
+pandas==2.1.3
+numpy==1.26.2
+scipy==1.11.4
+
+# Scheduler
+apscheduler==3.10.4
+
+# UI Templates & Static Files
+jinja2==3.1.2
+
+# Utilities
+python-jose[cryptography]==3.3.0  # For JWT (Phase 7)
+python-multipart==0.0.6
+httpx==0.25.2
+python-dateutil==2.8.2
+
+# Model Serialization
+joblib==1.3.2
+#pickle5==0.0.11
+
+# Logging & Monitoring
+python-json-logger==2.0.7
+
+# Logging & Monitoring
+loguru==0.7.2  # Optional: Enhanced logging

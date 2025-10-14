@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "id": 6,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -60,11 +60,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
@@ -147,11 +147,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
@@ -226,11 +226,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
@@ -324,11 +324,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
@@ -386,9 +386,9 @@
             "fillOpacity": 20,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -497,25 +497,25 @@
           "mappings": [
             {
               "options": {
-                "running": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "Running"
-                },
                 "idle": {
                   "color": "yellow",
                   "index": 1,
                   "text": "Idle"
+                },
+                "maintenance": {
+                  "color": "blue",
+                  "index": 3,
+                  "text": "Maintenance"
                 },
                 "offline": {
                   "color": "red",
                   "index": 2,
                   "text": "Offline"
                 },
-                "maintenance": {
-                  "color": "blue",
-                  "index": 3,
-                  "text": "Maintenance"
+                "running": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Running"
                 }
               },
               "type": "value"
@@ -652,9 +652,9 @@
           },
           "custom": {
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             }
           },
           "mappings": [],
@@ -684,11 +684,11 @@
         },
         "pieType": "donut",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "tooltip": {
           "mode": "multi",
@@ -741,9 +741,9 @@
           },
           "custom": {
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             }
           },
           "mappings": [],
@@ -773,11 +773,11 @@
         },
         "pieType": "pie",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "tooltip": {
           "mode": "multi",
@@ -848,15 +848,15 @@
                   "index": 1,
                   "text": "High"
                 },
-                "medium": {
-                  "color": "yellow",
-                  "index": 2,
-                  "text": "Medium"
-                },
                 "low": {
                   "color": "blue",
                   "index": 3,
                   "text": "Low"
+                },
+                "medium": {
+                  "color": "yellow",
+                  "index": 2,
+                  "text": "Medium"
                 }
               },
               "type": "value"
@@ -1010,6 +1010,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 1,
+  "version": 504,
   "weekStart": ""
 }

@@ -57,7 +57,7 @@ services:
       retries: 5
 
   # ============================================================================
-  # MQTT BROKER - Using External MQTT Broker (see .env file)
+  # MQTT BROKER - Using Host Mosquitto Broker (172.18.0.1:1883)
   # ============================================================================
   # mqtt:
   #   image: eclipse-mosquitto:2.0
@@ -67,6 +67,7 @@ services:
   #     - "9001:9001"
   #   volumes:
   #     - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+  #     - ./mqtt/config/passwd:/mosquitto/config/passwd:ro
   #     - mqtt-data:/mosquitto/data
   #     - mqtt-logs:/mosquitto/log
   #   networks:
@@ -148,8 +149,8 @@ services:
         - NODE_RED_CREDENTIAL_SECRET=${NODE_RED_CREDENTIAL_SECRET:-enms-node-red-secret}
         - NODE_RED_USERNAME=${NODE_RED_USERNAME:-admin}
         - NODE_RED_PASSWORD_HASH=${NODE_RED_PASSWORD_HASH:-$$2b$$08$$wKXiKXKZ4v0g.iBZ6Y5B1.VJCHZqJV8XvPLXsNxMHjWKGqT0uLM4S}
-        - MQTT_HOST=${MQTT_HOST:-89.252.166.188}
-        - MQTT_PORT=${MQTT_PORT:-2010}
+        - MQTT_HOST=${MQTT_HOST:-172.18.0.1}
+        - MQTT_PORT=${MQTT_PORT:-1883}
         - MQTT_USERNAME=${MQTT_USERNAME:-raptorblingx}
         - MQTT_PASSWORD=${MQTT_PASSWORD:-raptorblingx}
         - POSTGRES_HOST=postgres
@@ -221,6 +222,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "${ANALYTICS_PORT:-8001}:8001"
+    volumes:
+      - ./analytics/models/saved:/app/models/saved  # Persistent ML model storage
     depends_on:
       postgres:
         condition: service_healthy

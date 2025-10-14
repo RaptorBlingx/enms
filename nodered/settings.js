@@ -129,10 +129,10 @@ module.exports = {
         path: "ui"
     },
     
-    // MQTT settings (for reference, actual config in nodes)
+    // MQTT settings (for reference, actual config in nodes) - Host Mosquitto Broker
     mqtt: {
-        broker: process.env.MQTT_HOST || "89.252.166.188",
-        port: parseInt(process.env.MQTT_PORT || "2010"),
+        broker: process.env.MQTT_HOST || "172.18.0.1",
+        port: parseInt(process.env.MQTT_PORT || "1883"),
         username: process.env.MQTT_USERNAME || "raptorblingx",
         password: process.env.MQTT_PASSWORD || "raptorblingx"
     },

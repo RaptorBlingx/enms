@@ -1,0 +1,15 @@
+[Unit]
+Description=EnMS Grafana Dashboard Backup Timer
+Documentation=https://github.com/raptorblingx/enms
+Requires=grafana-backup.service
+
+[Timer]
+# Run every 10 minutes
+OnBootSec=2min
+OnUnitActiveSec=10min
+
+# If system was off, run immediately on next boot
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -19,14 +19,14 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "id": 7,
   "links": [],
   "liveNow": true,
   "panels": [
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -36,25 +36,25 @@
           "mappings": [
             {
               "options": {
-                "running": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "Running"
-                },
                 "idle": {
                   "color": "yellow",
                   "index": 1,
                   "text": "Idle"
+                },
+                "maintenance": {
+                  "color": "blue",
+                  "index": 3,
+                  "text": "Maintenance"
                 },
                 "offline": {
                   "color": "red",
                   "index": 2,
                   "text": "Offline"
                 },
-                "maintenance": {
-                  "color": "blue",
-                  "index": 3,
-                  "text": "Maintenance"
+                "running": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Running"
                 }
               },
               "type": "value"
@@ -72,12 +72,6 @@
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 3,
-        "w": 6,
-        "x": 0,
-        "y": 0
-      },
       "id": 1,
       "options": {
         "colorMode": "background",
@@ -85,15 +79,15 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "value"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -103,7 +97,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT current_mode\nFROM machine_status\nWHERE machine_id = $machine_id::uuid\n\nLIMIT 1;",
+          "rawSql": "SELECT current_mode\nFROM machine_status\nWHERE machine_id = '$machine_id'::uuid\n\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -130,7 +124,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -172,15 +166,15 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -190,7 +184,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT current_power_kw\nFROM machine_status\nWHERE machine_id = $machine_id::uuid\n\nLIMIT 1;",
+          "rawSql": "SELECT current_power_kw\nFROM machine_status\nWHERE machine_id = '$machine_id'::uuid\n\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -217,7 +211,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -251,15 +245,15 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -269,7 +263,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(energy_kwh), 0) as energy\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW()) AND machine_id = $machine_id::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT COALESCE(SUM(energy_kwh), 0) as energy\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW()) AND machine_id = '$machine_id'::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -296,7 +290,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -330,15 +324,15 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": ""
+          "fields": "",
+          "values": false
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -348,7 +342,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(production_count), 0) as units\nFROM production_data\nWHERE machine_id = $machine_id::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT COALESCE(SUM(production_count), 0) as units\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -375,7 +369,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -383,6 +377,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -392,10 +387,11 @@
             "fillOpacity": 20,
             "gradientMode": "opacity",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
@@ -460,7 +456,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time AS time,\n  'Power' as metric,\n  power_kw as value\nFROM energy_readings\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
+          "rawSql": "SELECT \n  time AS time,\n  'Power' as metric,\n  power_kw as value\nFROM energy_readings\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -487,7 +483,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -495,6 +491,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -504,10 +501,11 @@
             "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
@@ -611,7 +609,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time AS time,\n  'Temperature' as metric,\n  machine_temp_c as value\nFROM environmental_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
+          "rawSql": "SELECT \n  time AS time,\n  'Temperature' as metric,\n  machine_temp_c as value\nFROM environmental_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -639,7 +637,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time AS time,\n  'Humidity' as metric,\n  indoor_humidity_percent as value\nFROM environmental_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
+          "rawSql": "SELECT \n  time AS time,\n  'Humidity' as metric,\n  indoor_humidity_percent as value\nFROM environmental_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
           "refId": "B",
           "sql": {
             "columns": [
@@ -666,7 +664,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -674,6 +672,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -683,10 +682,11 @@
             "fillOpacity": 100,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -749,7 +749,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Units Produced' as metric,\n  SUM(production_count) as value\nFROM production_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Units Produced' as metric,\n  SUM(production_count) as value\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -776,7 +776,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -784,6 +784,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -793,10 +794,11 @@
             "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
@@ -864,7 +866,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Defect Rate' as metric,\n  (SUM(production_count_bad)::float / NULLIF(SUM(production_count), 0) * 100) as value\nFROM production_data\nWHERE machine_id = $machine_id::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nHAVING SUM(production_count) > 0\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Defect Rate' as metric,\n  (SUM(production_count_bad)::float / NULLIF(SUM(production_count), 0) * 100) as value\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nHAVING SUM(production_count) > 0\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -891,7 +893,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
       "fieldConfig": {
         "defaults": {
@@ -1006,7 +1008,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -1016,7 +1018,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  TO_CHAR(er.bucket, 'YYYY-MM-DD HH24:00') as \"Hour\",\n  ROUND(er.total_energy_kwh::numeric, 2) as \"Energy (kWh)\",\n  COALESCE(SUM(pd.production_count), 0) as \"Units\",\n  ROUND((er.total_energy_kwh / NULLIF(SUM(pd.production_count), 0))::numeric, 3) as \"Energy/Unit\",\n  ROUND(er.avg_power_kw::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(er.max_power_kw::numeric, 2) as \"Peak (kW)\"\nFROM energy_readings_1min er\nLEFT JOIN production_data pd ON \n  pd.machine_id = er.machine_id AND\n  time_bucket('1 hour', pd.time) = er.bucket\nWHERE er.machine_id = $machine_id\n  AND er.bucket >= NOW() - INTERVAL '24 hours'\nGROUP BY er.bucket, er.total_energy_kwh, er.avg_power_kw, er.max_power_kw\nORDER BY er.bucket DESC;",
+          "rawSql": "SELECT \n  TO_CHAR(er.bucket, 'YYYY-MM-DD HH24:00') as \"Hour\",\n  ROUND(er.total_energy_kwh::numeric, 2) as \"Energy (kWh)\",\n  COALESCE(SUM(pd.production_count), 0) as \"Units\",\n  ROUND((er.total_energy_kwh / NULLIF(SUM(pd.production_count), 0))::numeric, 3) as \"Energy/Unit\",\n  ROUND(er.avg_power_kw::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(er.max_power_kw::numeric, 2) as \"Peak (kW)\"\nFROM energy_readings_1min er\nLEFT JOIN production_data pd ON \n  pd.machine_id = er.machine_id AND\n  time_bucket('1 hour', pd.time) = er.bucket\nWHERE er.machine_id = '$machine_id'\n  AND er.bucket >= NOW() - INTERVAL '24 hours'\nGROUP BY er.bucket, er.total_energy_kwh, er.avg_power_kw, er.max_power_kw\nORDER BY er.bucket DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1041,9 +1043,8 @@
       "type": "table"
     }
   ],
-  "refresh": "10s",
+  "refresh": "1s",
   "schemaVersion": 38,
-  "style": "dark",
   "tags": [
     "enms",
     "machine",
@@ -1053,9 +1054,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "",
-          "value": ""
+          "selected": true,
+          "text": "Compressor-1",
+          "value": "c0000000-0000-0000-0000-000000000001"
         },
         "datasource": {
           "type": "postgres",
@@ -1078,7 +1079,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -1094,6 +1095,6 @@
   "timezone": "browser",
   "title": "Machine Monitoring",
   "uid": "enms-machine-monitoring",
-  "version": 1,
+  "version": 504,
   "weekStart": ""
 }

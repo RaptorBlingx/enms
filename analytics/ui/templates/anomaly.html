@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Anomaly Detection - EnMS Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .anomaly-card {
+        border-left: 4px solid;
+        margin-bottom: 1rem;
+    }
+    
+    .anomaly-card.severity-critical {
+        border-left-color: #dc3545;
+    }
+    
+    .anomaly-card.severity-warning {
+        border-left-color: #ffc107;
+    }
+    
+    .anomaly-card.severity-info {
+        border-left-color: #0dcaf0;
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-6">Anomaly Detection</h1>
+        <p class="text-muted">Real-time energy consumption anomaly monitoring</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-danger border-4">
+            <div class="stat-value text-danger" id="critical-count">0</div>
+            <div class="stat-label">Critical</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-warning border-4">
+            <div class="stat-value text-warning" id="warning-count">0</div>
+            <div class="stat-label">Warnings</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-info border-4">
+            <div class="stat-value text-info" id="info-count">0</div>
+            <div class="stat-label">Info</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-success border-4">
+            <div class="stat-value text-success" id="resolved-count">0</div>
+            <div class="stat-label">Resolved</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="filter-section">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Machine</label>
+                    <select class="form-select" id="machine-filter">
+                        <option value="">All Machines</option>
+                        <option value="c0000000-0000-0000-0000-000000000001">Compressor-1</option>
+                        <option value="h0000000-0000-0000-0000-000000000001">HVAC-1</option>
+                        <option value="m0000000-0000-0000-0000-000000000001">Conveyor-1</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Time Range</label>
+                    <select class="form-select" id="time-filter">
+                        <option value="24">Last 24 Hours</option>
+                        <option value="48">Last 48 Hours</option>
+                        <option value="168">Last 7 Days</option>
+                        <option value="720">Last 30 Days</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Severity</label>
+                    <select class="form-select" id="severity-filter">
+                        <option value="">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="warning">Warning</option>
+                        <option value="info">Info</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="status-filter">
+                        <option value="all">All Status</option>
+                        <option value="active">Active Only</option>
+                        <option value="resolved">Resolved Only</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button class="btn btn-primary" id="apply-filters">Apply Filters</button>
+                    <button class="btn btn-warning ms-2" id="detect-new-btn">
+                        <svg width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                        Detect New Anomalies
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detection Progress -->
+<div id="detection-progress" style="display: none;">
+    <div class="card mb-3">
+        <div class="card-body text-center py-4">
+            <div class="spinner-border text-warning mb-2" role="status">
+                <span class="visually-hidden">Detecting...</span>
+            </div>
+            <p class="mb-0">Analyzing energy consumption patterns...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Anomalies List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Detected Anomalies</h5>
+                <span class="badge bg-primary" id="total-count">0</span>
+            </div>
+            <div class="card-body">
+                <div id="anomalies-container">
+                    <div class="loading-spinner active">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentAnomalies = [];
+    
+    // Load anomalies on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAnomalies();
+    });
+    
+    // Apply filters
+    document.getElementById('apply-filters').addEventListener('click', loadAnomalies);
+    
+    // Detect new anomalies
+    document.getElementById('detect-new-btn').addEventListener('click', async () => {
+        const machineId = document.getElementById('machine-filter').value;
+        
+        if (!machineId) {
+            alert('Please select a specific machine to detect anomalies');
+            return;
+        }
+        
+        document.getElementById('detection-progress').style.display = 'block';
+        
+        try {
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            
+            const response = await axios.post(`${API_BASE}/anomaly/detect`, {
+                machine_id: machineId,
+                start_date: yesterday.toISOString(),
+                end_date: now.toISOString()
+            });
+            
+            alert(`Detection complete! Found ${response.data.anomalies_detected} anomalies.`);
+            loadAnomalies(); // Reload the list
+            
+        } catch (error) {
+            alert('Detection failed: ' + (error.response?.data?.message || error.message));
+        } finally {
+            document.getElementById('detection-progress').style.display = 'none';
+        }
+    });
+    
+    async function loadAnomalies() {
+        const container = document.getElementById('anomalies-container');
+        showLoading('anomalies-container');
+        
+        try {
+            const hours = parseInt(document.getElementById('time-filter').value);
+            const machineId = document.getElementById('machine-filter').value;
+            const severity = document.getElementById('severity-filter').value;
+            const status = document.getElementById('status-filter').value;
+            
+            const params = { hours };
+            if (machineId) params.machine_id = machineId;
+            
+            let response;
+            if (status === 'active') {
+                response = await axios.get(`${API_BASE}/anomaly/active`, { params });
+            } else {
+                response = await axios.get(`${API_BASE}/anomaly/recent`, { params });
+            }
+            
+            // Extract anomalies array from response
+            let anomalies = response.data.anomalies || response.data;
+            if (!Array.isArray(anomalies)) {
+                anomalies = [];
+            }
+            
+            // Apply filters
+            if (severity) {
+                anomalies = anomalies.filter(a => a.severity === severity);
+            }
+            if (status === 'resolved') {
+                anomalies = anomalies.filter(a => a.is_resolved);
+            }
+            
+            currentAnomalies = anomalies;
+            displayAnomalies(anomalies);
+            updateStats(anomalies);
+            
+        } catch (error) {
+            handleError(error, 'anomalies-container');
+        }
+    }
+    
+    function displayAnomalies(data) {
+        const container = document.getElementById('anomalies-container');
+        
+        // Ensure we have an array
+        const anomalies = Array.isArray(data) ? data : (data?.anomalies || []);
+        
+        if (!anomalies || anomalies.length === 0) {
+            container.innerHTML = '<div class="text-center py-5"><p class="text-muted mb-0">No anomalies found with the selected filters.</p></div>';
+            return;
+        }
+        
+        let html = '';
+        
+        anomalies.forEach(anomaly => {
+            const severityClass = {
+                'critical': 'danger',
+                'warning': 'warning',
+                'info': 'info'
+            }[anomaly.severity] || 'secondary';
+            
+            const statusBadge = anomaly.is_resolved ? 
+                '<span class="badge bg-success">Resolved</span>' : 
+                '<span class="badge bg-danger">Active</span>';
+            
+            html += `
+                <div class="card anomaly-card severity-${anomaly.severity}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-${severityClass} me-2">${anomaly.severity.toUpperCase()}</span>
+                                    ${statusBadge}
+                                    <small class="text-muted ms-auto">${formatDate(anomaly.detected_at)}</small>
+                                </div>
+                                <h6 class="mb-2">${anomaly.anomaly_type || 'Energy Consumption Anomaly'}</h6>
+                                <p class="mb-1 text-muted"><strong>Machine:</strong> ${anomaly.machine_id}</p>
+                                ${anomaly.metric_name ? `<p class="mb-1 text-muted"><strong>Metric:</strong> ${anomaly.metric_name}</p>` : ''}
+                                ${anomaly.deviation_percent ? `<p class="mb-1"><strong>Deviation:</strong> ${formatNumber(anomaly.deviation_percent)}% from expected</p>` : ''}
+                                ${anomaly.confidence_score ? `<p class="mb-1"><strong>Confidence:</strong> ${formatNumber(anomaly.confidence_score * 100)}%</p>` : ''}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                ${!anomaly.is_resolved ? `
+                                    <button class="btn btn-sm btn-outline-success" onclick="resolveAnomaly('${anomaly.id}')">
+                                        Mark as Resolved
+                                    </button>
+                                ` : ''}
+                                ${anomaly.resolution_notes ? `
+                                    <div class="mt-2">
+                                        <small class="text-muted">Resolution:</small>
+                                        <p class="small mb-0">${anomaly.resolution_notes}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    function updateStats(anomalies) {
+        const critical = anomalies.filter(a => a.severity === 'critical').length;
+        const warning = anomalies.filter(a => a.severity === 'warning').length;
+        const info = anomalies.filter(a => a.severity === 'info').length;
+        const resolved = anomalies.filter(a => a.is_resolved).length;
+        
+        document.getElementById('critical-count').textContent = critical;
+        document.getElementById('warning-count').textContent = warning;
+        document.getElementById('info-count').textContent = info;
+        document.getElementById('resolved-count').textContent = resolved;
+        document.getElementById('total-count').textContent = anomalies.length;
+    }
+    
+    async function resolveAnomaly(anomalyId) {
+        const notes = prompt('Enter resolution notes (optional):');
+        
+        try {
+            await axios.put(`${API_BASE}/anomaly/${anomalyId}/resolve`, {
+                resolution_notes: notes || 'Resolved by user'
+            });
+            
+            alert('Anomaly marked as resolved');
+            loadAnomalies(); // Reload the list
+            
+        } catch (error) {
+            alert('Failed to resolve anomaly: ' + (error.response?.data?.message || error.message));
+        }
+    }
+</script>
+{% endblock %}

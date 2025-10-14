@@ -107,6 +107,32 @@ After installation completes:
 - **API Documentation**: http://localhost/api/docs
 - **Simulator Control**: http://localhost:8003/docs
 
+### ✨ **Automatic Dashboard Backup**
+
+**Your Grafana changes are automatically saved every 10 minutes!**
+
+Grafana dashboards are automatically exported to git-tracked JSON files. Just edit dashboards in the UI and commit when ready:
+
+```bash
+# 1. Edit dashboards in Grafana UI (changes auto-exported every 10 min)
+# 2. Wait for next backup cycle or run manually:
+./scripts/backup-grafana-dashboards.sh
+
+# 3. Commit your changes
+git add grafana/dashboards/*.json
+git commit -m "Update Grafana dashboards"
+git push
+```
+
+**Setup auto-backup on new systems:**
+```bash
+sudo ./scripts/setup-grafana-auto-backup.sh
+```
+
+For detailed information, see: [docs/GRAFANA-PERSISTENCE.md](docs/GRAFANA-PERSISTENCE.md)
+
+> **Note**: Node-RED changes are also automatically saved to the filesystem.
+
 ---
 
 ## 📊 Data Model

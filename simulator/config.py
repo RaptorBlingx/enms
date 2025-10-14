@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     API_PORT: int = 8003
     LOG_LEVEL: str = "INFO"
     
-    # MQTT Configuration
-    MQTT_HOST: str = "89.252.166.188"
-    MQTT_PORT: int = 2010
+    # MQTT Configuration - Host Mosquitto Broker
+    MQTT_HOST: str = "172.18.0.1"
+    MQTT_PORT: int = 1883
     MQTT_USERNAME: str = "raptorblingx"
     MQTT_PASSWORD: str = "raptorblingx"
     MQTT_KEEPALIVE: int = 60

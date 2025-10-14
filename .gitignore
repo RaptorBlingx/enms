@@ -171,6 +171,7 @@ mqtt/logs/
 # Grafana
 # ----------------------------------------------------------------------------
 grafana/data/
+grafana/dashboards-backup/  # Rotating backups (max 3 kept, not tracked in git)
 
 # ----------------------------------------------------------------------------
 # Redis

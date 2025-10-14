@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - EnMS{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-6">Analytics Dashboard</h1>
+        <p class="text-muted">ML-powered insights for industrial energy management</p>
+    </div>
+</div>
+
+<!-- Service Status Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-primary border-4">
+            <div class="stat-value" id="active-machines-count">-</div>
+            <div class="stat-label">Active Machines</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-success border-4">
+            <div class="stat-value" id="baseline-models-count">-</div>
+            <div class="stat-label">Baseline Models</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-warning border-4">
+            <div class="stat-value" id="anomalies-24h-count">-</div>
+            <div class="stat-label">Anomalies (24h)</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-start border-info border-4">
+            <div class="stat-value" id="scheduler-status">-</div>
+            <div class="stat-label">Scheduler Status</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Anomalies -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Anomalies</h5>
+            </div>
+            <div class="card-body">
+                <div id="recent-anomalies-container">
+                    <div class="loading-spinner active">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="/api/analytics/ui/baseline" class="btn btn-primary w-100 py-3">
+                            <svg width="24" height="24" fill="currentColor" class="mb-2" viewBox="0 0 16 16">
+                                <path d="M0 0h1v15h15v1H0V0Zm10 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V4.9l-3.613 4.417a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61L13.445 4H10.5a.5.5 0 0 1-.5-.5Z"/>
+                            </svg>
+                            <div>Train Baseline Model</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/api/analytics/ui/anomaly" class="btn btn-warning w-100 py-3">
+                            <svg width="24" height="24" fill="currentColor" class="mb-2" viewBox="0 0 16 16">
+                                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                            </svg>
+                            <div>Detect Anomalies</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/api/analytics/ui/kpi" class="btn btn-success w-100 py-3">
+                            <svg width="24" height="24" fill="currentColor" class="mb-2" viewBox="0 0 16 16">
+                                <path d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5v12h-2V2h2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z"/>
+                            </svg>
+                            <div>View KPIs</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/api/analytics/docs" target="_blank" class="btn btn-secondary w-100 py-3">
+                            <svg width="24" height="24" fill="currentColor" class="mb-2" viewBox="0 0 16 16">
+                                <path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zM5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H5zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1H5z"/>
+                                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+                            </svg>
+                            <div>API Documentation</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Service Information</h5>
+            </div>
+            <div class="card-body">
+                <div id="service-info">
+                    <div class="loading-spinner active">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Database Health</h5>
+            </div>
+            <div class="card-body">
+                <div id="db-health">
+                    <div class="loading-spinner active">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load dashboard data
+    async function loadDashboard() {
+        try {
+            // Load service health
+            const healthResponse = await axios.get(`${API_BASE}/health`);
+            displayServiceInfo(healthResponse.data);
+            
+            // Load recent anomalies
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const anomaliesResponse = await axios.get(`${API_BASE}/anomaly/recent`, {
+                params: {
+                    hours: 24
+                }
+            });
+            
+            // Fix: API returns {anomalies: [...], total_count: N}
+            const anomaliesData = anomaliesResponse.data.anomalies || [];
+            displayRecentAnomalies(anomaliesData);
+            
+            // Update stats with total count from API
+            document.getElementById('anomalies-24h-count').textContent = anomaliesResponse.data.total_count || anomaliesData.length;
+            
+            // Load active machines count
+            try {
+                const machinesResponse = await axios.get(`${API_BASE}/machines`, {
+                    params: { is_active: true }
+                });
+                const machines = machinesResponse.data || [];
+                console.log('[Dashboard] Active machines loaded:', machines.length, machines);
+                document.getElementById('active-machines-count').textContent = machines.length;
+                
+                // Count baseline models across all machines
+                let totalModels = 0;
+                for (const machine of machines) {
+                    try {
+                        const modelResponse = await axios.get(`${API_BASE}/baseline/models`, {
+                            params: { machine_id: machine.id }
+                        });
+                        const machineModels = modelResponse.data.total_models || 0;
+                        console.log(`[Dashboard] ${machine.name}: ${machineModels} models`);
+                        totalModels += machineModels;
+                    } catch (e) {
+                        // Machine has no models, skip
+                        console.log(`[Dashboard] ${machine.name}: no models (error: ${e.message})`);
+                    }
+                }
+                console.log('[Dashboard] Total baseline models:', totalModels);
+                document.getElementById('baseline-models-count').textContent = totalModels;
+                
+            } catch (e) {
+                console.error('Error loading counts:', e);
+                document.getElementById('active-machines-count').textContent = '?';
+                document.getElementById('baseline-models-count').textContent = '?';
+            }
+            
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+            // Show error state
+            document.getElementById('recent-anomalies-container').innerHTML = 
+                '<div class="alert alert-danger">Failed to load dashboard data. Please refresh the page.</div>';
+        }
+    }
+    
+    function displayServiceInfo(data) {
+        const container = document.getElementById('service-info');
+        const dbContainer = document.getElementById('db-health');
+        
+        container.innerHTML = `
+            <table class="table table-sm">
+                <tr>
+                    <td><strong>Service:</strong></td>
+                    <td>${data.service || 'EnMS Analytics'}</td>
+                </tr>
+                <tr>
+                    <td><strong>Version:</strong></td>
+                    <td>${data.version || 'N/A'}</td>
+                </tr>
+                <tr>
+                    <td><strong>Status:</strong></td>
+                    <td><span class="badge bg-success">${data.status}</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Uptime:</strong></td>
+                    <td>${data.uptime || 'N/A'}</td>
+                </tr>
+            </table>
+        `;
+        
+        dbContainer.innerHTML = `
+            <table class="table table-sm">
+                <tr>
+                    <td><strong>Database:</strong></td>
+                    <td>${data.database?.name || 'enms'}</td>
+                </tr>
+                <tr>
+                    <td><strong>Status:</strong></td>
+                    <td><span class="badge bg-${data.database?.status === 'connected' ? 'success' : 'danger'}">${data.database?.status || 'unknown'}</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Pool Size:</strong></td>
+                    <td>${data.database?.pool_size || 'N/A'}</td>
+                </tr>
+            </table>
+        `;
+        
+        // Update stats - check both enabled AND running
+        const schedulerEnabled = data.scheduler?.enabled && data.scheduler?.running;
+        document.getElementById('scheduler-status').innerHTML = schedulerEnabled ? 
+            '<span class="badge bg-success">Active</span>' : 
+            '<span class="badge bg-secondary">Disabled</span>';
+    }
+    
+    function displayRecentAnomalies(anomalies) {
+        const container = document.getElementById('recent-anomalies-container');
+        
+        if (!anomalies || anomalies.length === 0) {
+            container.innerHTML = '<p class="text-muted mb-0">No anomalies detected in the last 24 hours.</p>';
+            return;
+        }
+        
+        let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Time</th><th>Machine</th><th>Type</th><th>Severity</th><th>Confidence</th><th>Status</th></tr></thead><tbody>';
+        
+        anomalies.slice(0, 10).forEach(anomaly => {
+            const severityClass = {
+                'critical': 'danger',
+                'warning': 'warning',
+                'info': 'info'
+            }[anomaly.severity] || 'secondary';
+            
+            html += `
+                <tr>
+                    <td>${formatDate(anomaly.detected_at)}</td>
+                    <td>${anomaly.machine_name || anomaly.machine_id}</td>
+                    <td>${anomaly.anomaly_type === 'unknown' ? 'Energy Deviation' : anomaly.anomaly_type}</td>
+                    <td><span class="badge bg-${severityClass}">${anomaly.severity}</span></td>
+                    <td>${formatNumber(anomaly.confidence_score * 100, 0)}%</td>
+                    <td>${anomaly.is_resolved ? '<span class="badge bg-success">Resolved</span>' : '<span class="badge bg-warning">Active</span>'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        if (anomalies.length > 10) {
+            html += `<p class="text-muted text-end"><a href="/api/analytics/ui/anomaly">View all ${anomalies.length} anomalies →</a></p>`;
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    // Load on page ready
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock %}

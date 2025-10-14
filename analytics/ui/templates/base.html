@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EnMS Analytics{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --dark-bg: #212529;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--light-bg);
+        }
+        
+        .navbar {
+            background-color: var(--dark-bg) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+        
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 56px);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 2px solid var(--light-bg);
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .alert-banner {
+            border-left: 4px solid;
+            border-radius: 4px;
+        }
+        
+        .alert-banner.alert-success {
+            border-left-color: var(--success-color);
+        }
+        
+        .alert-banner.alert-danger {
+            border-left-color: var(--danger-color);
+        }
+        
+        .alert-banner.alert-warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .btn-group-toggle .btn {
+            border-radius: 4px;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .loading-spinner.active {
+            display: block;
+        }
+        
+        footer {
+            background-color: var(--dark-bg);
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/api/analytics/ui/">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                EnMS Analytics
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/ui/' in request.url.path or request.url.path.endswith('/ui') %}active{% endif %}" 
+                           href="/api/analytics/ui/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/ui/baseline' in request.url.path %}active{% endif %}" 
+                           href="/api/analytics/ui/baseline">Baseline</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/ui/anomaly' in request.url.path %}active{% endif %}" 
+                           href="/api/analytics/ui/anomaly">Anomalies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/ui/kpi' in request.url.path %}active{% endif %}" 
+                           href="/api/analytics/ui/kpi">KPIs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/analytics/docs" target="_blank">API Docs</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 EnMS - Energy Management System</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-0">Powered by FastAPI & TimescaleDB</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Axios for API calls -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.5.0/dist/axios.min.js"></script>
+    
+    <!-- Common JavaScript -->
+    <script>
+        // API base URL
+        const API_BASE = '/api/analytics/api/v1';
+        
+        // Common error handler
+        function handleError(error, elementId) {
+            console.error('Error:', error);
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Error:</strong> ${error.response?.data?.message || error.message || 'An error occurred'}
+                    </div>
+                `;
+            }
+        }
+        
+        // Show loading spinner
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '<div class="loading-spinner active"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            }
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+        
+        // Format number
+        function formatNumber(num, decimals = 2) {
+            return parseFloat(num).toFixed(decimals);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

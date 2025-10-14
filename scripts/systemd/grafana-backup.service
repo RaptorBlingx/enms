@@ -1,0 +1,24 @@
+[Unit]
+Description=EnMS Grafana Dashboard Backup
+Documentation=https://github.com/raptorblingx/enms
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/enms
+ExecStart=/home/ubuntu/enms/scripts/backup-grafana-dashboards.sh
+StandardOutput=append:/home/ubuntu/enms/logs/grafana-backup.log
+StandardError=append:/home/ubuntu/enms/logs/grafana-backup-error.log
+
+# Restart policy
+Restart=no
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
