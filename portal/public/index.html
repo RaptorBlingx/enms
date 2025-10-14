@@ -449,23 +449,23 @@
         function updateAnalyticsStatus(data) {
             // Update active machines
             const machinesEl = document.getElementById('active-machines');
-            machinesEl.textContent = data.active_machines || '-';
+            machinesEl.textContent = (data.active_machines !== undefined && data.active_machines !== null) ? data.active_machines : '-';
             machinesEl.classList.remove('loading');
 
             // Update baseline models
             const baselineEl = document.getElementById('baseline-models');
-            baselineEl.textContent = data.baseline_models || '-';
+            baselineEl.textContent = (data.baseline_models !== undefined && data.baseline_models !== null) ? data.baseline_models : '-';
             baselineEl.classList.remove('loading');
 
             // Update anomalies
             const anomaliesEl = document.getElementById('anomalies-24h');
-            anomaliesEl.textContent = data.recent_anomalies || '-';
+            anomaliesEl.textContent = (data.recent_anomalies !== undefined && data.recent_anomalies !== null) ? data.recent_anomalies : '-';
             anomaliesEl.classList.remove('loading');
 
             // Update scheduler status
             const schedulerEl = document.getElementById('scheduler-jobs');
             if (data.scheduler && data.scheduler.running) {
-                schedulerEl.textContent = data.scheduler.job_count || '0';
+                schedulerEl.textContent = (data.scheduler.job_count !== undefined && data.scheduler.job_count !== null) ? data.scheduler.job_count : '0';
                 schedulerEl.classList.remove('loading');
             } else {
                 schedulerEl.textContent = 'Offline';
