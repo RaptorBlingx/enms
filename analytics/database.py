@@ -75,14 +75,14 @@ db = Database()
 
 async def get_machines(
     factory_id: Optional[UUID] = None,
-    is_active: bool = True
+    is_active: Optional[bool] = None
 ) -> List[Dict[str, Any]]:
     """
     Get list of machines.
     
     Args:
         factory_id: Optional factory filter
-        is_active: Filter by active status
+        is_active: Filter by active status (None = all machines)
         
     Returns:
         List of machine records
@@ -99,14 +99,21 @@ async def get_machines(
             f.location as factory_location
         FROM machines m
         JOIN factories f ON m.factory_id = f.id
-        WHERE m.is_active = $1
+        WHERE 1=1
     """
     
-    params = [is_active]
+    params = []
+    param_count = 1
+    
+    if is_active is not None:
+        query += f" AND m.is_active = ${param_count}"
+        params.append(is_active)
+        param_count += 1
     
     if factory_id:
-        query += " AND m.factory_id = $2"
+        query += f" AND m.factory_id = ${param_count}"
         params.append(factory_id)
+        param_count += 1
     
     query += " ORDER BY m.name"
     
