@@ -69,23 +69,20 @@ class ForecastService:
         
         query = """
             SELECT 
-                time_bucket($1::interval, timestamp) AS timestamp,
-                AVG(power_kw) AS power_kw,
-                AVG(outdoor_temp_c) AS outdoor_temp_c,
-                SUM(production_count) AS production_count
+                bucket AS timestamp,
+                avg_power_kw AS power_kw,
+                NULL AS outdoor_temp_c,
+                NULL AS production_count
             FROM energy_readings_1min
             WHERE 
-                machine_id = $2
-                AND timestamp BETWEEN $3 AND $4
-                AND machine_status = 'running'
-            GROUP BY 1
+                machine_id = $1
+                AND bucket BETWEEN $2 AND $3
             ORDER BY 1
         """
         
         async with pool.acquire() as conn:
             rows = await conn.fetch(
                 query,
-                interval,
                 machine_id,
                 start_time,
                 end_time
