@@ -52,7 +52,8 @@ class AnalyticsScheduler:
             from scheduler.jobs import (
                 retrain_baseline_models,
                 detect_anomalies_hourly,
-                calculate_kpis_daily
+                calculate_kpis_daily,
+                cleanup_stuck_training_jobs
             )
             
             # Job 1: Weekly baseline retraining (Sundays 02:00)
@@ -84,6 +85,16 @@ class AnalyticsScheduler:
                 replace_existing=True
             )
             logger.info(f"Registered job: kpi_calculate (schedule: {settings.JOB_KPI_CALCULATE_SCHEDULE})")
+            
+            # Job 4: Hourly cleanup of stuck training jobs (every hour at :15)
+            self.jobs['training_cleanup'] = self.scheduler.add_job(
+                cleanup_stuck_training_jobs,
+                trigger=CronTrigger.from_crontab('15 * * * *'),  # Every hour at :15
+                id='training_cleanup',
+                name='Training Job Cleanup',
+                replace_existing=True
+            )
+            logger.info(f"Registered job: training_cleanup (schedule: 15 * * * *)")
             
             # Start scheduler
             self.scheduler.start()

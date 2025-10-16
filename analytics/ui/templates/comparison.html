@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Comparison | EnMS</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin: 2rem auto;
+            padding: 2rem;
+            max-width: 1600px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .controls-panel {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .winner-banner {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .winner-banner h3 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .insights-panel {
+            background: #fff5e6;
+            border-left: 4px solid #ff9800;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .insights-panel h5 {
+            color: #e65100;
+            margin-bottom: 1rem;
+        }
+        
+        .insight-item {
+            background: white;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            height: 400px;
+        }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table table {
+            margin: 0;
+        }
+        
+        .comparison-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            padding: 1rem;
+        }
+        
+        .comparison-table td {
+            padding: 0.75rem 1rem;
+        }
+        
+        .rank-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .rank-1 {
+            background: #43e97b;
+            color: white;
+        }
+        
+        .rank-2 {
+            background: #4facfe;
+            color: white;
+        }
+        
+        .rank-3 {
+            background: #f093fb;
+            color: white;
+        }
+        
+        .rank-other {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            padding: 4rem;
+        }
+        
+        .spinner-border {
+            width: 4rem;
+            height: 4rem;
+            color: #667eea;
+        }
+        
+        .machine-checkbox-container {
+            max-height: 250px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .machine-checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .machine-checkbox-item:hover {
+            background: #f7fafc;
+        }
+        
+        .machine-checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+            cursor: pointer;
+        }
+        
+        .machine-checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .machine-type-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        #selection-count {
+            display: block;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+        
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .loading-content {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem 4rem;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: fadeInScale 0.3s ease-out;
+        }
+        
+        .loading-content .spinner-border {
+            width: 4rem;
+            height: 4rem;
+            border-width: 0.4rem;
+        }
+        
+        .loading-content h4 {
+            color: #2d3748;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .loading-content p {
+            color: #718096;
+            margin: 0;
+        }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        #btn-spinner {
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="bi bi-bar-chart"></i>
+                Machine Comparison Dashboard
+            </h1>
+            <p>Side-by-side benchmarking and performance analysis</p>
+        </div>
+        
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label"><strong>Select Machines (2-5)</strong></label>
+                    <div id="machine-checkboxes" class="machine-checkbox-container">
+                        <!-- Populated dynamically with checkboxes -->
+                    </div>
+                    <small class="text-muted" id="selection-count">Selected: 0 machines</small>
+                </div>
+                <div class="col-md-6">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label"><strong>Start Date</strong></label>
+                            <input type="date" id="start-date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label"><strong>End Date</strong></label>
+                            <input type="date" id="end-date" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary w-100 btn-lg" onclick="loadComparison()" id="compare-btn" disabled>
+                                <span id="btn-icon"><i class="bi bi-graph-up"></i></span>
+                                <span id="btn-text">Compare Selected Machines</span>
+                                <span id="btn-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4 class="mt-3">Analyzing Machines...</h4>
+                <p class="text-muted">Processing comparison data</p>
+            </div>
+        </div>
+        
+        <!-- Results Container (hidden initially) -->
+        <div id="results-container" style="display: none;">
+            <!-- Winner Banner -->
+            <div class="winner-banner">
+                <h3>
+                    <i class="bi bi-trophy-fill"></i>
+                    Best Performer
+                </h3>
+                <h2 id="best-performer">-</h2>
+                <p id="comparison-period">-</p>
+            </div>
+            
+            <!-- Insights Panel -->
+            <div class="insights-panel">
+                <h5>
+                    <i class="bi bi-lightbulb"></i>
+                    Key Insights
+                </h5>
+                <div id="insights-list"></div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="energy-chart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="efficiency-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="cost-chart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="production-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comparison Table -->
+            <div class="comparison-table mb-4">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Machine</th>
+                            <th>Type</th>
+                            <th>Energy (kWh)</th>
+                            <th>SEC</th>
+                            <th>Load Factor (%)</th>
+                            <th>Production</th>
+                            <th>Cost ($)</th>
+                            <th>Cost/Unit ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparison-tbody">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Back Button -->
+        <div class="text-center mt-4">
+            <a href="/ui/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ====================================================================
+        // CONFIGURATION
+        // ====================================================================
+        
+            // API Base URL - detect if accessed through nginx proxy or directly
+            const API_BASE = window.location.port === '8001' ? '/api/v1' : '/api/analytics/api/v1';
+            const API_BASE_URL = `${API_BASE}/comparison`;
+        let charts = {};
+        
+        // ====================================================================
+        // INITIALIZATION
+        // ====================================================================
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Set default date range (last 30 days)
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('end-date').valueAsDate = endDate;
+            document.getElementById('start-date').valueAsDate = startDate;
+            
+            // Load available machines
+            await loadMachines();
+        });
+        
+        // ====================================================================
+        // MACHINE LOADING
+        // ====================================================================
+        
+        async function loadMachines() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/available`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const machines = await response.json();
+                const container = document.getElementById('machine-checkboxes');
+                
+                container.innerHTML = machines.map(m => `
+                    <div class="machine-checkbox-item">
+                        <input type="checkbox" 
+                               id="machine-${m.id}" 
+                               value="${m.id}" 
+                               onchange="updateSelectionCount()">
+                        <label for="machine-${m.id}">
+                            <span>${m.name}</span>
+                            <span class="machine-type-badge">${m.type}</span>
+                        </label>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading machines:', error);
+                alert('Error loading machines: ' + error.message);
+            }
+        }
+        
+        // ====================================================================
+        // SELECTION MANAGEMENT
+        // ====================================================================
+        
+        function updateSelectionCount() {
+            const checkboxes = document.querySelectorAll('#machine-checkboxes input[type="checkbox"]:checked');
+            const count = checkboxes.length;
+            const countDisplay = document.getElementById('selection-count');
+            const compareBtn = document.getElementById('compare-btn');
+            
+            countDisplay.textContent = `Selected: ${count} machine${count !== 1 ? 's' : ''}`;
+            
+            // Enable button only if 2-5 machines selected
+            if (count >= 2 && count <= 5) {
+                compareBtn.disabled = false;
+                countDisplay.style.color = '#43e97b';
+            } else {
+                compareBtn.disabled = true;
+                if (count === 0) {
+                    countDisplay.style.color = '#718096';
+                } else if (count === 1) {
+                    countDisplay.style.color = '#ff9800';
+                } else {
+                    countDisplay.style.color = '#ef4444';
+                }
+            }
+        }
+        
+        // ====================================================================
+        // COMPARISON LOADING
+        // ====================================================================
+        
+        async function loadComparison() {
+            try {
+                // Get selected machines from checkboxes
+                const checkboxes = document.querySelectorAll('#machine-checkboxes input[type="checkbox"]:checked');
+                const selectedMachines = Array.from(checkboxes);
+                
+                if (selectedMachines.length < 2) {
+                    alert('Please select at least 2 machines to compare');
+                    return;
+                }
+                
+                if (selectedMachines.length > 5) {
+                    alert('Please select maximum 5 machines');
+                    return;
+                }
+                
+                // Show loading state
+                showLoading(true);
+                
+                const machineIds = selectedMachines.map(cb => cb.value).join(',');
+                
+                // Get dates
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                
+                // Build query
+                const params = new URLSearchParams({
+                    machine_ids: machineIds,
+                    start_date: startDate + 'T00:00:00Z',
+                    end_date: endDate + 'T23:59:59Z'
+                });
+                
+                // Fetch comparison data
+                const response = await fetch(`${API_BASE_URL}/machines?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display results
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Error loading comparison:', error);
+                alert('Error loading comparison: ' + error.message);
+            } finally {
+                // Always hide loading state
+                showLoading(false);
+            }
+        }
+        
+        // ====================================================================
+        // LOADING STATE MANAGEMENT
+        // ====================================================================
+        
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            const btn = document.getElementById('compare-btn');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnText = document.getElementById('btn-text');
+            const btnSpinner = document.getElementById('btn-spinner');
+            
+            if (show) {
+                // Show loading overlay
+                overlay.style.display = 'flex';
+                
+                // Update button state
+                btn.disabled = true;
+                btnIcon.style.display = 'none';
+                btnText.textContent = 'Processing...';
+                btnSpinner.style.display = 'inline-block';
+                
+                // Scroll to top to see overlay
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Hide loading overlay
+                overlay.style.display = 'none';
+                
+                // Restore button state
+                btn.disabled = false;
+                btnIcon.style.display = 'inline';
+                btnText.textContent = 'Compare Selected Machines';
+                btnSpinner.style.display = 'none';
+            }
+        }
+        
+        // ====================================================================
+        // RESULTS DISPLAY
+        // ====================================================================
+        
+        function displayResults(data) {
+            // Show results container
+            document.getElementById('results-container').style.display = 'block';
+            
+            // Update winner banner
+            document.getElementById('best-performer').textContent = data.best_performer;
+            const start = new Date(data.start_date).toLocaleDateString();
+            const end = new Date(data.end_date).toLocaleDateString();
+            document.getElementById('comparison-period').textContent = `Period: ${start} - ${end}`;
+            
+            // Update insights
+            updateInsights(data.insights);
+            
+            // Update charts
+            updateCharts(data.machines);
+            
+            // Update table
+            updateTable(data.machines);
+        }
+        
+        function updateInsights(insights) {
+            const list = document.getElementById('insights-list');
+            list.innerHTML = insights.map(insight => `
+                <div class="insight-item">
+                    <i class="bi bi-info-circle" style="color: #ff9800;"></i>
+                    ${insight}
+                </div>
+            `).join('');
+        }
+        
+        function updateCharts(machines) {
+            const labels = machines.map(m => m.machine_name);
+            
+            // Destroy existing charts
+            Object.values(charts).forEach(chart => chart && chart.destroy());
+            
+            // Energy Chart
+            charts.energy = new Chart(document.getElementById('energy-chart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Energy (kWh)',
+                        data: machines.map(m => m.total_energy_kwh),
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Energy Consumption'
+                        }
+                    }
+                }
+            });
+            
+            // Efficiency Chart (SEC)
+            charts.efficiency = new Chart(document.getElementById('efficiency-chart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'SEC (kWh/unit)',
+                        data: machines.map(m => m.sec),
+                        backgroundColor: 'rgba(67, 233, 123, 0.7)',
+                        borderColor: 'rgba(67, 233, 123, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Energy Efficiency (Lower is Better)'
+                        }
+                    }
+                }
+            });
+            
+            // Cost Chart
+            charts.cost = new Chart(document.getElementById('cost-chart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energy Cost ($)',
+                        data: machines.map(m => m.energy_cost),
+                        backgroundColor: 'rgba(240, 147, 251, 0.7)',
+                        borderColor: 'rgba(240, 147, 251, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Energy Cost'
+                        }
+                    }
+                }
+            });
+            
+            // Production Chart
+            charts.production = new Chart(document.getElementById('production-chart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Production (units)',
+                        data: machines.map(m => m.total_production),
+                        backgroundColor: 'rgba(79, 172, 254, 0.7)',
+                        borderColor: 'rgba(79, 172, 254, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Production Output'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateTable(machines) {
+            const tbody = document.getElementById('comparison-tbody');
+            
+            tbody.innerHTML = machines.map(m => {
+                const rankClass = m.rank_overall === 1 ? 'rank-1' : 
+                                 m.rank_overall === 2 ? 'rank-2' : 
+                                 m.rank_overall === 3 ? 'rank-3' : 'rank-other';
+                
+                return `
+                    <tr>
+                        <td><span class="rank-badge ${rankClass}">#${m.rank_overall}</span></td>
+                        <td><strong>${m.machine_name}</strong></td>
+                        <td>${m.machine_type}</td>
+                        <td>${m.total_energy_kwh.toLocaleString()}</td>
+                        <td>${m.sec.toFixed(4)}</td>
+                        <td>${m.load_factor.toFixed(1)}%</td>
+                        <td>${m.total_production.toLocaleString()}</td>
+                        <td>$${m.energy_cost.toFixed(2)}</td>
+                        <td>$${m.cost_per_unit.toFixed(4)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>

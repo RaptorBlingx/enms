@@ -22,6 +22,7 @@ from database import (
     save_anomaly
 )
 from config import settings
+from services.event_publisher import event_publisher  # Phase 4 Session 5
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,20 @@ class AnomalyService:
             anomaly_id = await save_anomaly(anomaly_data)
             anomaly_data['id'] = anomaly_id
             saved_anomalies.append(anomaly_data)
+            
+            # Phase 4 Session 5: Publish real-time anomaly event
+            try:
+                await event_publisher.publish_anomaly_detected(
+                    machine_id=str(machine_id),
+                    metric=anomaly_data.get('metric_name', anomaly_data['anomaly_type']),
+                    value=anomaly_data.get('metric_value', 0.0),
+                    anomaly_score=anomaly_data.get('deviation_std_dev', 1.0),
+                    severity=anomaly_data['severity'],
+                    timestamp=anomaly_data['detected_at']
+                )
+                logger.debug(f"Published anomaly event for anomaly {anomaly_id}")
+            except Exception as e:
+                logger.error(f"Failed to publish anomaly event: {e}")
         
         logger.info(f"✓ Saved {len(saved_anomalies)} anomalies to database")
         
@@ -162,13 +177,109 @@ class AnomalyService:
         }
     
     @staticmethod
+    async def create_anomaly_manual(
+        machine_id: UUID,
+        detected_at: datetime,
+        anomaly_type: str,
+        severity: str,
+        metric_name: Optional[str] = None,
+        metric_value: Optional[float] = None,
+        expected_value: Optional[float] = None,
+        deviation_percent: Optional[float] = None,
+        confidence_score: float = 0.85,
+        is_resolved: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Manually create an anomaly record (for development/testing).
+        
+        Args:
+            machine_id: Machine UUID
+            detected_at: Detection timestamp
+            anomaly_type: Type (spike, drop, drift, unknown)
+            severity: Severity (critical, high, medium, low, normal)
+            metric_name: Optional metric name
+            metric_value: Optional actual value
+            expected_value: Optional expected value
+            deviation_percent: Optional deviation percentage
+            confidence_score: Confidence score (0-1)
+            is_resolved: Whether already resolved
+            
+        Returns:
+            Created anomaly record
+        """
+        logger.info(f"Manually creating anomaly for machine {machine_id}")
+        
+        # Validate machine exists
+        machine = await get_machine_by_id(machine_id)
+        if not machine:
+            raise ValueError(f"Machine not found: {machine_id}")
+        
+        # Validate severity (alert_level enum in database)
+        valid_severities = ['critical', 'warning', 'normal']
+        if severity not in valid_severities:
+            raise ValueError(f"Invalid severity: {severity}. Must be one of {valid_severities}")
+        
+        # Validate anomaly type
+        valid_types = ['spike', 'drop', 'drift', 'unknown']
+        if anomaly_type not in valid_types:
+            raise ValueError(f"Invalid anomaly type: {anomaly_type}. Must be one of {valid_types}")
+        
+        # Build anomaly record
+        anomaly_data = {
+            'machine_id': machine_id,
+            'detected_at': detected_at,
+            'anomaly_type': anomaly_type,
+            'severity': severity,
+            'metric_name': metric_name,
+            'metric_value': metric_value,
+            'expected_value': expected_value,
+            'deviation_percent': deviation_percent,
+            'confidence_score': confidence_score,
+            'is_resolved': is_resolved
+        }
+        
+        # Save to database
+        anomaly_id = await save_anomaly(anomaly_data)
+        
+        # Publish WebSocket event (if not resolved)
+        if not is_resolved:
+            try:
+                await event_publisher.publish_anomaly({
+                    'id': str(anomaly_id),
+                    'machine_id': str(machine_id),
+                    'machine_name': machine['name'],
+                    'machine_type': machine['type'],
+                    'detected_at': detected_at.isoformat(),
+                    'anomaly_type': anomaly_type,
+                    'severity': severity,
+                    'metric_name': metric_name,
+                    'confidence_score': confidence_score
+                })
+                logger.info(f"Published WebSocket event for manually created anomaly {anomaly_id}")
+            except Exception as e:
+                logger.warning(f"Failed to publish WebSocket event: {e}")
+        
+        logger.info(f"Successfully created anomaly {anomaly_id} for machine {machine['name']}")
+        
+        return {
+            'success': True,
+            'anomaly_id': str(anomaly_id),
+            'machine_name': machine['name'],
+            'machine_type': machine['type'],
+            'detected_at': detected_at.isoformat(),
+            'severity': severity,
+            'anomaly_type': anomaly_type,
+            'websocket_published': not is_resolved
+        }
+    
+    @staticmethod
     async def get_recent_anomalies(
         machine_id: Optional[UUID] = None,
         severity: Optional[str] = None,
         limit: int = 50
     ) -> List[Dict[str, Any]]:
         """
-        Get recent anomalies (last 24 hours by default).
+        Get recent anomalies (last 7 days by default).
         
         Args:
             machine_id: Optional machine filter
@@ -186,7 +297,7 @@ class AnomalyService:
                 m.name as machine_name, m.type as machine_type
             FROM anomalies a
             JOIN machines m ON a.machine_id = m.id
-            WHERE a.detected_at >= NOW() - INTERVAL '24 hours'
+            WHERE a.detected_at >= NOW() - INTERVAL '7 days'
         """
         
         params = []

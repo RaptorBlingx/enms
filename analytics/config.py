@@ -77,6 +77,31 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: list = ["*"]
     CORS_ALLOW_HEADERS: list = ["*"]
     
+    # ============================================================================
+    # WebSocket Configuration (Phase 4 Session 5)
+    # ============================================================================
+    WEBSOCKET_ENABLED: bool = True
+    WEBSOCKET_HEARTBEAT_INTERVAL: int = 30  # seconds
+    WEBSOCKET_MAX_CONNECTIONS: int = 100
+    WEBSOCKET_MESSAGE_QUEUE_SIZE: int = 1000
+    
+    # ============================================================================
+    # Redis Pub/Sub Configuration (Phase 4 Session 5)
+    # ============================================================================
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str = "raptorblingx"
+    REDIS_DB: int = 0
+    REDIS_PUBSUB_ENABLED: bool = True
+    
+    # Pub/Sub Channel Names
+    CHANNEL_ANOMALY_DETECTED: str = "anomaly.detected"
+    CHANNEL_METRIC_UPDATED: str = "metric.updated"
+    CHANNEL_TRAINING_STARTED: str = "training.started"
+    CHANNEL_TRAINING_PROGRESS: str = "training.progress"
+    CHANNEL_TRAINING_COMPLETED: str = "training.completed"
+    CHANNEL_SYSTEM_ALERT: str = "system.alert"
+    
     class Config:
         """Pydantic configuration."""
         env_file = ".env"

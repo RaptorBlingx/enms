@@ -25,6 +25,20 @@ router = APIRouter()
 # Request/Response Models
 # ============================================================================
 
+class CreateAnomalyRequest(BaseModel):
+    """Request model for manually creating an anomaly (dev/testing)."""
+    machine_id: UUID = Field(..., description="Machine UUID")
+    detected_at: datetime = Field(..., description="Detection timestamp (ISO 8601)")
+    anomaly_type: str = Field(..., description="Type: spike, drop, drift, unknown")
+    severity: str = Field(..., description="Severity: critical, warning, normal")
+    metric_name: Optional[str] = Field(None, description="Metric name (e.g., temperature)")
+    metric_value: Optional[float] = Field(None, description="Actual measured value")
+    expected_value: Optional[float] = Field(None, description="Expected value")
+    deviation_percent: Optional[float] = Field(None, description="Deviation percentage")
+    confidence_score: float = Field(0.85, description="Confidence (0-1)", ge=0.0, le=1.0)
+    is_resolved: bool = Field(False, description="Whether resolved")
+
+
 class DetectAnomaliesRequest(BaseModel):
     """Request model for anomaly detection."""
     machine_id: UUID = Field(..., description="Machine UUID")
@@ -53,6 +67,48 @@ class ResolveAnomalyRequest(BaseModel):
 # ============================================================================
 # API Endpoints
 # ============================================================================
+
+@router.post("/anomaly/create", tags=["Anomaly"])
+async def create_anomaly(request: CreateAnomalyRequest):
+    """
+    Manually create an anomaly record (for development/testing).
+    
+    ⚠️ **DEVELOPMENT TOOL** - Use for testing anomaly UI and features.
+    
+    **Purpose:**
+    - Create test anomalies
+    - Populate UI for development
+    - Test notification systems
+    
+    **Fields:**
+    - All fields from anomaly detection
+    - Customizable timestamps (for historical data)
+    - Manual severity and confidence scores
+    
+    **Returns:**
+    - Created anomaly record with ID
+    """
+    try:
+        result = await anomaly_service.create_anomaly_manual(
+            machine_id=request.machine_id,
+            detected_at=request.detected_at,
+            anomaly_type=request.anomaly_type,
+            severity=request.severity,
+            metric_name=request.metric_name,
+            metric_value=request.metric_value,
+            expected_value=request.expected_value,
+            deviation_percent=request.deviation_percent,
+            confidence_score=request.confidence_score,
+            is_resolved=request.is_resolved
+        )
+        return result
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error creating anomaly: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @router.post("/anomaly/detect", tags=["Anomaly"])
 async def detect_anomalies(request: DetectAnomaliesRequest):
@@ -105,7 +161,7 @@ async def get_recent_anomalies(
     limit: int = Query(50, description="Maximum results", ge=1, le=200)
 ):
     """
-    Get recent anomalies (last 24 hours).
+    Get recent anomalies (last 7 days).
     
     **Use Cases:**
     - Dashboard display

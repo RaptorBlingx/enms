@@ -313,6 +313,71 @@ async def calculate_kpis_daily():
         raise
 
 
+async def cleanup_stuck_training_jobs():
+    """
+    Hourly job: Clean up stuck training jobs.
+    
+    Schedule: Every hour at :15 (e.g., 00:15, 01:15, etc.)
+    
+    Marks training jobs as 'failed' if they've been in 'pending' or 'running'
+    state for more than 30 minutes. This prevents jobs from getting stuck
+    indefinitely and blocking new training requests.
+    """
+    job_start = datetime.utcnow()
+    logger.info("=" * 70)
+    logger.info("Starting stuck training job cleanup")
+    logger.info(f"Job started at: {job_start}")
+    logger.info("=" * 70)
+    
+    try:
+        pool = db.pool
+        
+        async with pool.acquire() as conn:
+            # Find stuck jobs
+            stuck_jobs = await conn.fetch("""
+                SELECT id, model_type, machine_id, training_status, training_start
+                FROM model_training_history
+                WHERE training_status IN ('pending', 'running')
+                AND training_start < NOW() - INTERVAL '30 minutes'
+                ORDER BY training_start ASC
+            """)
+            
+            if not stuck_jobs:
+                logger.info("No stuck training jobs found")
+                return {"cleaned_up": 0}
+            
+            logger.info(f"Found {len(stuck_jobs)} stuck training job(s)")
+            
+            # Mark them as failed
+            for job in stuck_jobs:
+                logger.info(f"  - Job {job['id']}: {job['model_type']} (stuck since {job['training_start']})")
+                
+                await conn.execute("""
+                    UPDATE model_training_history
+                    SET training_status = 'failed',
+                        training_end = NOW(),
+                        error_message = 'Job timed out - exceeded 30 minute limit'
+                    WHERE id = $1
+                """, job['id'])
+            
+            logger.info(f"✓ Cleaned up {len(stuck_jobs)} stuck job(s)")
+        
+        job_end = datetime.utcnow()
+        duration = (job_end - job_start).total_seconds()
+        
+        logger.info("=" * 70)
+        logger.info("Stuck training job cleanup completed")
+        logger.info(f"Duration: {duration:.2f} seconds")
+        logger.info(f"Jobs cleaned up: {len(stuck_jobs)}")
+        logger.info("=" * 70)
+        
+        return {"cleaned_up": len(stuck_jobs)}
+        
+    except Exception as e:
+        logger.error(f"Cleanup job failed: {e}", exc_info=True)
+        raise
+
+
 # Manual job triggers for testing
 async def trigger_all_jobs():
     """
@@ -325,6 +390,7 @@ async def trigger_all_jobs():
         await retrain_baseline_models()
         await detect_anomalies_hourly()
         await calculate_kpis_daily()
+        await cleanup_stuck_training_jobs()
         logger.info("All jobs completed successfully")
     except Exception as e:
         logger.error(f"Job execution failed: {e}", exc_info=True)

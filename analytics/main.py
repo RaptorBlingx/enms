@@ -34,6 +34,42 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
+# Utility Functions
+# ============================================================================
+
+async def cleanup_stuck_training_jobs() -> int:
+    """
+    Clean up training jobs that are stuck in pending/running state.
+    
+    Jobs are considered stuck if they've been in pending/running state
+    for more than 30 minutes (configurable).
+    
+    Returns:
+        Number of jobs cleaned up
+    """
+    try:
+        pool = db.pool
+        async with pool.acquire() as conn:
+            # Mark stuck jobs as failed
+            result = await conn.execute("""
+                UPDATE model_training_history
+                SET training_status = 'failed',
+                    training_end = NOW(),
+                    error_message = 'Job timed out - exceeded 30 minute limit'
+                WHERE training_status IN ('pending', 'running')
+                AND training_start < NOW() - INTERVAL '30 minutes'
+            """)
+            
+            # Extract count from result string like "UPDATE 5"
+            count = int(result.split()[-1]) if result and result.split() else 0
+            return count
+            
+    except Exception as e:
+        logger.error(f"Error cleaning up stuck jobs: {e}", exc_info=True)
+        return 0
+
+
+# ============================================================================
 # Lifespan Management
 # ============================================================================
 
@@ -57,6 +93,31 @@ async def lifespan(app: FastAPI):
         if not is_healthy:
             raise Exception("Database health check failed")
         logger.info("✓ Database connected and healthy")
+        
+        # Connect to Redis and start event subscriber (Phase 4 Session 5)
+        if settings.REDIS_PUBSUB_ENABLED:
+            logger.info("Connecting to Redis...")
+            from services.redis_manager import redis_manager
+            await redis_manager.connect()
+            logger.info("✓ Redis connected")
+            
+            logger.info("Starting event subscriber...")
+            from services.event_subscriber import event_subscriber
+            await event_subscriber.start()
+            logger.info("✓ Event subscriber started")
+        else:
+            logger.info("⚠ Redis Pub/Sub is disabled in configuration")
+        
+        # Clean up stuck training jobs
+        logger.info("Cleaning up stuck training jobs...")
+        try:
+            stuck_count = await cleanup_stuck_training_jobs()
+            if stuck_count > 0:
+                logger.info(f"✓ Cleaned up {stuck_count} stuck training job(s)")
+            else:
+                logger.info("✓ No stuck training jobs found")
+        except Exception as e:
+            logger.warning(f"Failed to cleanup stuck jobs: {e}")
         
         # Initialize scheduler
         if settings.SCHEDULER_ENABLED:
@@ -89,6 +150,12 @@ async def lifespan(app: FastAPI):
             from scheduler.scheduler import scheduler
             scheduler.stop()
             logger.info("✓ Scheduler stopped")
+        
+        # Disconnect Redis (Phase 4 Session 5)
+        if settings.REDIS_PUBSUB_ENABLED:
+            from services.redis_manager import redis_manager
+            await redis_manager.disconnect()
+            logger.info("✓ Redis disconnected")
         
         # Disconnect from database
         await db.disconnect()
@@ -199,6 +266,12 @@ from api.routes.anomaly import router as anomaly_router
 from api.routes.kpi import router as kpi_router
 from api.routes.machines import router as machines_router
 from api.routes.forecast import router as forecast_router
+from api.routes.timeseries import router as timeseries_router
+from api.routes.sankey import router as sankey_router
+from api.routes.heatmap import router as heatmap_router
+from api.routes.comparison import router as comparison_router
+from api.routes.model_performance import router as model_performance_router
+from api.websocket_routes import router as websocket_router  # Phase 4 Session 5
 
 # Register API routes with prefix
 app.include_router(baseline_router, prefix=settings.API_PREFIX)
@@ -206,6 +279,12 @@ app.include_router(anomaly_router, prefix=settings.API_PREFIX)
 app.include_router(kpi_router, prefix=settings.API_PREFIX)
 app.include_router(machines_router, prefix=settings.API_PREFIX)
 app.include_router(forecast_router, prefix=settings.API_PREFIX)
+app.include_router(timeseries_router, prefix=settings.API_PREFIX)
+app.include_router(sankey_router, prefix=settings.API_PREFIX)
+app.include_router(heatmap_router, prefix=settings.API_PREFIX)
+app.include_router(comparison_router, prefix=settings.API_PREFIX)
+app.include_router(model_performance_router, prefix=settings.API_PREFIX, tags=["Model Performance"])
+app.include_router(websocket_router, prefix=settings.API_PREFIX)  # Phase 4 Session 5: WebSocket Routes
 
 
 # ============================================================================
@@ -289,6 +368,17 @@ async def health_check():
             "pool_size": db.pool.get_size() if db.pool else 0
         },
         "scheduler": scheduler_info,
+        "features": [
+            "baseline_regression",
+            "anomaly_detection",
+            "kpi_calculation",
+            "energy_forecasting",
+            "time_series_analytics",
+            "sankey_energy_flow",
+            "anomaly_heatmap",
+            "machine_comparison",
+            "model_performance_tracking"  # ✅ Phase 4 Session 4
+        ],
         "active_machines": active_machines,
         "baseline_models": baseline_models,
         "recent_anomalies": recent_anomalies,

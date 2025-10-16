@@ -5,436 +5,748 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="display-6">KPI Dashboard</h1>
-        <p class="text-muted">Key Performance Indicators for energy management (ISO 50001)</p>
+        <h1 class="display-6">📊 KPI Dashboard</h1>
+        <p class="text-muted">Key Performance Indicators with real-time time-series data</p>
     </div>
 </div>
 
-<!-- Filters -->
+<!-- Filter Controls -->
 <div class="row mb-4">
-    <div class="col-12">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-body">
-                <div class="row align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label">Machine</label>
-                        <select class="form-select" id="kpi-machine-select">
-                            <option value="">Select a machine...</option>
-                            <option value="c0000000-0000-0000-0000-000000000001">Compressor-1</option>
-                            <option value="h0000000-0000-0000-0000-000000000001">HVAC-1</option>
-                            <option value="m0000000-0000-0000-0000-000000000001">Conveyor-1</option>
+                <form id="filter-form" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="machine-select" class="form-label">Machine</label>
+                        <select class="form-select" id="machine-select" required>
+                            <option value="">Select machine...</option>
                         </select>
                     </div>
+                    
                     <div class="col-md-3">
-                        <label class="form-label">Time Range</label>
-                        <select class="form-select" id="time-range-select">
-                            <option value="24">Last 24 Hours</option>
-                            <option value="168">Last 7 Days</option>
-                            <option value="720">Last 30 Days</option>
+                        <label for="time-period" class="form-label">Time Period</label>
+                        <select class="form-select" id="time-period">
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="7d" selected>Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="custom">Custom Range</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="kpi-start-date">
+                    
+                    <div class="col-md-2" id="custom-range-group" style="display:none;">
+                        <label for="start-date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start-date">
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="kpi-end-date">
+                    
+                    <div class="col-md-2" id="custom-range-group2" style="display:none;">
+                        <label for="end-date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end-date">
                     </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button class="btn btn-primary" id="load-kpis-btn">Load KPIs</button>
-                        <button class="btn btn-secondary ms-2" id="export-kpis-btn" disabled>Export to CSV</button>
+                    
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <span class="spinner-border spinner-border-sm d-none" id="load-spinner"></span>
+                            Load Data
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Loading Indicator -->
-<div id="kpi-loading" style="display: none;">
-    <div class="card mb-3">
-        <div class="card-body text-center py-4">
-            <div class="spinner-border text-primary mb-2" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mb-0">Calculating KPIs...</p>
-        </div>
-    </div>
+<!-- KPI Summary Cards -->
+<div class="row mb-4" id="kpi-cards">
+    <!-- Cards will be populated by JavaScript -->
 </div>
 
-<!-- KPI Cards -->
-<div id="kpi-results" style="display: none;">
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-6 col-lg-4">
-            <div class="card stat-card border-start border-primary border-4">
-                <div class="stat-value text-primary" id="sec-value">-</div>
-                <div class="stat-label">Specific Energy Consumption</div>
-                <small class="text-muted d-block mt-2">kWh per unit produced</small>
+<!-- Charts Section -->
+<div class="row mb-4">
+    <!-- Energy Consumption Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">⚡ Energy Consumption Trend</h5>
             </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card stat-card border-start border-danger border-4">
-                <div class="stat-value text-danger" id="peak-value">-</div>
-                <div class="stat-label">Peak Demand</div>
-                <small class="text-muted d-block mt-2">Maximum kW</small>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card stat-card border-start border-success border-4">
-                <div class="stat-value text-success" id="load-factor-value">-</div>
-                <div class="stat-label">Load Factor</div>
-                <small class="text-muted d-block mt-2">Average / Peak (%)</small>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card stat-card border-start border-warning border-4">
-                <div class="stat-value text-warning" id="cost-value">-</div>
-                <div class="stat-label">Total Energy Cost</div>
-                <small class="text-muted d-block mt-2">Currency units</small>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card stat-card border-start border-info border-4">
-                <div class="stat-value text-info" id="carbon-value">-</div>
-                <div class="stat-label">Carbon Emissions</div>
-                <small class="text-muted d-block mt-2">kg CO₂</small>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-            <div class="card stat-card border-start border-secondary border-4">
-                <div class="stat-value text-secondary" id="energy-value">-</div>
-                <div class="stat-label">Total Energy</div>
-                <small class="text-muted d-block mt-2">kWh consumed</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Energy Consumption Over Time</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="energy-chart"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">SEC Trend</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="sec-chart"></canvas>
+            <div class="card-body" style="height: 350px; position: relative;">
+                <canvas id="energy-chart"></canvas>
+                <div id="energy-chart-loading" class="text-center py-5" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">KPI Comparison</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="kpi-comparison-chart"></canvas>
-                </div>
+    
+    <!-- Power Demand Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🔌 Power Demand Profile</h5>
             </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Cost & Carbon Breakdown</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="cost-carbon-chart"></canvas>
+            <div class="card-body" style="height: 350px; position: relative;">
+                <canvas id="power-chart"></canvas>
+                <div id="power-chart-loading" class="text-center py-5" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Detailed Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Detailed KPI Breakdown</h5>
+    
+    <!-- SEC Trend Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📈 SEC Trend (Efficiency)</h5>
+            </div>
+            <div class="card-body" style="height: 350px; position: relative;">
+                <canvas id="sec-chart"></canvas>
+                <div id="sec-chart-loading" class="text-center py-5" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive" id="kpi-table-container"></div>
-                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- KPI Comparison Radar -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🎯 KPI Overview</h5>
+            </div>
+            <div class="card-body" style="height: 350px; position: relative;">
+                <canvas id="radar-chart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Initial Message -->
-<div id="kpi-initial-message" class="card">
-    <div class="card-body text-center py-5">
-        <svg width="64" height="64" fill="currentColor" class="text-muted mb-3" viewBox="0 0 16 16">
-            <path d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5v12h-2V2h2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z"/>
-        </svg>
-        <h5>No KPIs Loaded</h5>
-        <p class="text-muted">Select a machine and time range to calculate KPIs</p>
+<!-- Detailed KPI Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📋 Detailed KPI Breakdown</h5>
+                <button class="btn btn-sm btn-secondary" id="export-kpis-btn" disabled>Export CSV</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="kpi-table">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Value</th>
+                                <th>Unit</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kpi-tbody">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    Select a machine and time period to view KPIs
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    let energyChart, secChart, kpiComparisonChart, costCarbonChart;
+    let energyChart = null;
+    let powerChart = null;
+    let secChart = null;
+    let radarChart = null;
     let currentKpiData = null;
     
-    // Load machines on page load
+    // Load machines
     async function loadMachines() {
         try {
             const response = await axios.get(`${API_BASE}/machines`, {
                 params: { is_active: true }
             });
-            const select = document.getElementById('kpi-machine-select');
-            const machines = response.data || [];
             
-            // Keep the default "Select a machine..." option
-            select.innerHTML = '<option value="">Select a machine...</option>';
+            // Handle response data - could be array or wrapped object
+            let machines = response.data;
+            if (!Array.isArray(machines)) {
+                console.error('Expected array, got:', typeof machines, machines);
+                showError('Invalid response format from server');
+                return;
+            }
             
-            // Add machines from API
+            const select = document.getElementById('machine-select');
+            // Clear existing options except the first (placeholder)
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
             machines.forEach(machine => {
                 const option = document.createElement('option');
                 option.value = machine.id;
                 option.textContent = `${machine.name} (${machine.type})`;
                 select.appendChild(option);
             });
+            
+            // Auto-select first machine
+            if (machines.length > 0) {
+                select.value = machines[0].id;
+                loadKPIData();
+            }
         } catch (error) {
             console.error('Error loading machines:', error);
-            // Keep hardcoded options as fallback
+            showError('Failed to load machines: ' + (error.response?.data?.detail || error.message));
         }
     }
     
-    // Initialize page
-    loadMachines();
+    // Helper to show errors
+    function showError(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.container-fluid').firstChild);
+    }
     
-    // Set default dates
-    document.getElementById('kpi-end-date').valueAsDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 1);
-    document.getElementById('kpi-start-date').valueAsDate = startDate;
+    // Show/hide custom date range
+    document.getElementById('time-period').addEventListener('change', (e) => {
+        const customGroups = document.querySelectorAll('[id^="custom-range-group"]');
+        if (e.target.value === 'custom') {
+            customGroups.forEach(g => g.style.display = 'block');
+        } else {
+            customGroups.forEach(g => g.style.display = 'none');
+        }
+    });
     
-    // Load KPIs button
-    document.getElementById('load-kpis-btn').addEventListener('click', loadKPIs);
-    
-    // Export button
-    document.getElementById('export-kpis-btn').addEventListener('click', exportKPIs);
-    
-    async function loadKPIs() {
-        const machineId = document.getElementById('kpi-machine-select').value;
+    // Calculate date range
+    function getDateRange() {
+        const period = document.getElementById('time-period').value;
+        const endTime = new Date();
+        let startTime;
         
-        if (!machineId) {
-            alert('Please select a machine');
-            return;
+        if (period === 'custom') {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            if (!startDate || !endDate) {
+                alert('Please select custom date range');
+                return null;
+            }
+            startTime = new Date(startDate);
+            return {
+                start: startTime.toISOString(),
+                end: new Date(endDate).toISOString(),
+                interval: '1day'
+            };
         }
         
-        const startDate = document.getElementById('kpi-start-date').value;
-        const endDate = document.getElementById('kpi-end-date').value;
-        
-        if (!startDate || !endDate) {
-            alert('Please select date range');
-            return;
+        switch(period) {
+            case '24h':
+                startTime = new Date(endTime - 24 * 60 * 60 * 1000);
+                return { start: startTime.toISOString(), end: endTime.toISOString(), interval: '1hour' };
+            case '7d':
+                startTime = new Date(endTime - 7 * 24 * 60 * 60 * 1000);
+                return { start: startTime.toISOString(), end: endTime.toISOString(), interval: '1hour' };
+            case '30d':
+                startTime = new Date(endTime - 30 * 24 * 60 * 60 * 1000);
+                return { start: startTime.toISOString(), end: endTime.toISOString(), interval: '1day' };
+            default:
+                return null;
         }
+    }
+    
+    // Load all KPI data
+    async function loadKPIData() {
+        const machineId = document.getElementById('machine-select').value;
+        if (!machineId) return;
         
-        // Show loading
-        document.getElementById('kpi-initial-message').style.display = 'none';
-        document.getElementById('kpi-results').style.display = 'none';
-        document.getElementById('kpi-loading').style.display = 'block';
+        const dateRange = getDateRange();
+        if (!dateRange) return;
+        
+        const spinner = document.getElementById('load-spinner');
+        spinner.classList.remove('d-none');
         
         try {
-            const response = await axios.get(`${API_BASE}/kpi/all`, {
+            // Load summary KPIs
+            await loadSummaryKPIs(machineId, dateRange);
+            
+            // Load time-series charts
+            await loadEnergyChart(machineId, dateRange);
+            await loadPowerChart(machineId, dateRange);
+            await loadSECChart(machineId, dateRange);
+            
+            // Update radar chart
+            updateRadarChart();
+            
+        } catch (error) {
+            console.error('Error loading KPI data:', error);
+            alert('Failed to load KPI data. Please try again.');
+        } finally {
+            spinner.classList.add('d-none');
+        }
+    }
+    
+    // Load summary KPIs
+    async function loadSummaryKPIs(machineId, dateRange) {
+        const response = await axios.get(`${API_BASE}/kpi/all`, {
+            params: {
+                machine_id: machineId,
+                start: dateRange.start,
+                end: dateRange.end
+            }
+        });
+        
+        currentKpiData = response.data;
+        const kpis = currentKpiData.kpis || {};
+        const totals = currentKpiData.totals || {};
+        
+        // Update KPI cards
+        const cardsHtml = `
+            <div class="col-md-2">
+                <div class="card stat-card border-start border-primary border-4">
+                    <div class="stat-value">${kpis.sec?.value?.toFixed(5) || '-'}</div>
+                    <div class="stat-label">${kpis.sec?.unit || 'SEC'}</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card border-start border-danger border-4">
+                    <div class="stat-value">${kpis.peak_demand?.value?.toFixed(1) || '-'}</div>
+                    <div class="stat-label">${kpis.peak_demand?.unit || 'Peak kW'}</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card border-start border-success border-4">
+                    <div class="stat-value">${kpis.load_factor?.percent?.toFixed(1) || '-'}%</div>
+                    <div class="stat-label">Load Factor</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card border-start border-warning border-4">
+                    <div class="stat-value">$${kpis.energy_cost?.value?.toFixed(2) || '-'}</div>
+                    <div class="stat-label">Energy Cost</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card border-start border-info border-4">
+                    <div class="stat-value">${kpis.carbon_intensity?.value?.toFixed(1) || '-'}</div>
+                    <div class="stat-label">${kpis.carbon_intensity?.unit || 'kg CO₂'}</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card stat-card border-start border-secondary border-4">
+                    <div class="stat-value">${totals.total_energy_kwh?.toFixed(1) || '-'}</div>
+                    <div class="stat-label">Total kWh</div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('kpi-cards').innerHTML = cardsHtml;
+        
+        // Update KPI table
+        updateKPITable(kpis, totals);
+        
+        // Enable export button
+        document.getElementById('export-kpis-btn').disabled = false;
+    }
+    
+    // Load energy time-series chart
+    async function loadEnergyChart(machineId, dateRange) {
+        const loading = document.getElementById('energy-chart-loading');
+        const canvas = document.getElementById('energy-chart');
+        loading.style.display = 'block';
+        canvas.style.display = 'none';
+        
+        try {
+            const response = await axios.get(`${API_BASE}/timeseries/energy`, {
                 params: {
                     machine_id: machineId,
-                    start: startDate + 'T00:00:00Z',
-                    end: endDate + 'T23:59:59Z'
+                    start_time: dateRange.start,
+                    end_time: dateRange.end,
+                    interval: dateRange.interval
                 }
             });
             
-            currentKpiData = response.data;
-            displayKPIs(response.data);
-            document.getElementById('export-kpis-btn').disabled = false;
+            const data = response.data;
+            // Format timestamps more compactly
+            const labels = data.data_points.map(p => {
+                const date = new Date(p.timestamp);
+                return date.toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            });
+            const values = data.data_points.map(p => p.value);
+            
+            if (energyChart) {
+                energyChart.destroy();
+            }
+            
+            energyChart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Energy Consumption (kWh)',
+                        data: values,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: `Energy Consumption - ${data.machine_name}`,
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Energy: ${context.parsed.y.toFixed(2)} kWh`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { 
+                                display: true, 
+                                text: 'Energy (kWh)',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            title: { 
+                                display: true, 
+                                text: 'Time',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            loading.style.display = 'none';
+            canvas.style.display = 'block';
             
         } catch (error) {
-            alert('Failed to load KPIs: ' + (error.response?.data?.message || error.message));
-            document.getElementById('kpi-initial-message').style.display = 'block';
-        } finally {
-            document.getElementById('kpi-loading').style.display = 'none';
+            console.error('Error loading energy chart:', error);
+            loading.innerHTML = '<p class="text-danger">Failed to load data</p>';
         }
     }
     
-    function displayKPIs(data) {
-        document.getElementById('kpi-results').style.display = 'block';
+    // Load power time-series chart
+    async function loadPowerChart(machineId, dateRange) {
+        const loading = document.getElementById('power-chart-loading');
+        const canvas = document.getElementById('power-chart');
+        loading.style.display = 'block';
+        canvas.style.display = 'none';
         
-        // Extract KPI values from nested structure
-        const kpis = data.kpis || {};
-        const totals = data.totals || {};
-        
-        // Update summary cards
-        document.getElementById('sec-value').textContent = formatNumber(kpis.sec?.value, 6);
-        document.getElementById('peak-value').textContent = formatNumber(kpis.peak_demand?.value, 2) + ' kW';
-        document.getElementById('load-factor-value').textContent = formatNumber(kpis.load_factor?.percent, 1) + '%';
-        document.getElementById('cost-value').textContent = '$' + formatNumber(kpis.energy_cost?.value, 2);
-        document.getElementById('carbon-value').textContent = formatNumber(kpis.carbon_intensity?.value, 2) + ' kg';
-        document.getElementById('energy-value').textContent = formatNumber(totals.total_energy_kwh, 2) + ' kWh';
-        
-        // Create charts
-        createEnergyChart(data);
-        createSECChart(data);
-        createKPIComparisonChart(data);
-        createCostCarbonChart(data);
-        
-        // Create detailed table
-        createKPITable(data);
-    }
-    
-    function createEnergyChart(data) {
-        const ctx = document.getElementById('energy-chart');
-        
-        if (energyChart) energyChart.destroy();
-        
-        // Extract totals from nested structure
-        const totals = data.totals || {};
-        const totalEnergy = totals.total_energy_kwh || 0;
-        
-        // Mock time-series data (in production, get from API)
-        const hours = 24;
-        const labels = Array.from({length: hours}, (_, i) => `${i}:00`);
-        const energyData = Array.from({length: hours}, () => 
-            (totalEnergy / hours) + (Math.random() - 0.5) * 5
-        );
-        
-        energyChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Energy Consumption (kWh)',
-                    data: energyData,
-                    borderColor: 'rgb(13, 110, 253)',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    }
+        try {
+            const response = await axios.get(`${API_BASE}/timeseries/power`, {
+                params: {
+                    machine_id: machineId,
+                    start_time: dateRange.start,
+                    end_time: dateRange.end,
+                    interval: dateRange.interval
+                }
+            });
+            
+            const data = response.data;
+            // Format timestamps
+            const labels = data.data_points.map(p => {
+                const date = new Date(p.timestamp);
+                return date.toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            });
+            const values = data.data_points.map(p => p.value);
+            
+            if (powerChart) {
+                powerChart.destroy();
+            }
+            
+            powerChart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Power Demand (kW)',
+                        data: values,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top'
+                        },
                         title: {
                             display: true,
-                            text: 'Energy (kWh)'
+                            text: `Power Demand Profile - ${data.machine_name}`,
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Power: ${context.parsed.y.toFixed(2)} kW`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { 
+                                display: true, 
+                                text: 'Power (kW)',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            title: { 
+                                display: true, 
+                                text: 'Time',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            },
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+            
+            loading.style.display = 'none';
+            canvas.style.display = 'block';
+            
+        } catch (error) {
+            console.error('Error loading power chart:', error);
+            loading.innerHTML = '<p class="text-danger">Failed to load data</p>';
+        }
     }
     
-    function createSECChart(data) {
-        const ctx = document.getElementById('sec-chart');
+    // Load SEC time-series chart
+    async function loadSECChart(machineId, dateRange) {
+        const loading = document.getElementById('sec-chart-loading');
+        const canvas = document.getElementById('sec-chart');
+        loading.style.display = 'block';
+        canvas.style.display = 'none';
         
-        if (secChart) secChart.destroy();
-        
-        // Extract SEC from nested structure
-        const kpis = data.kpis || {};
-        const secValue = kpis.sec?.value || 0;
-        
-        // Mock trend data
-        const days = 7;
-        const labels = Array.from({length: days}, (_, i) => `Day ${i + 1}`);
-        const secData = Array.from({length: days}, () => 
-            secValue + (Math.random() - 0.5) * 0.00002
-        );
-        
-        secChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'SEC (kWh/unit)',
-                    data: secData,
-                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                    borderColor: 'rgb(13, 110, 253)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        try {
+            const response = await axios.get(`${API_BASE}/timeseries/sec`, {
+                params: {
+                    machine_id: machineId,
+                    start_time: dateRange.start,
+                    end_time: dateRange.end,
+                    interval: '1day' // SEC needs daily aggregation
+                }
+            });
+            
+            const data = response.data;
+            const labels = data.data_points.map(p => {
+                const date = new Date(p.timestamp);
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            });
+            const values = data.data_points.map(p => p.value);
+            
+            if (secChart) {
+                secChart.destroy();
+            }
+            
+            secChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'SEC (kWh/unit)',
+                        data: values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        borderWidth: 2
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: false,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'top'
+                        },
                         title: {
                             display: true,
-                            text: 'SEC (kWh/unit)'
+                            text: `SEC Trend - ${data.machine_name}`,
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `SEC: ${context.parsed.y.toFixed(4)} kWh/unit`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { 
+                                display: true, 
+                                text: 'SEC (kWh/unit)',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(4);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            title: { 
+                                display: true, 
+                                text: 'Date',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+            
+            loading.style.display = 'none';
+            canvas.style.display = 'block';
+            
+        } catch (error) {
+            console.error('Error loading SEC chart:', error);
+            loading.innerHTML = '<p class="text-danger">No production data available</p>';
+        }
     }
     
-    function createKPIComparisonChart(data) {
-        const ctx = document.getElementById('kpi-comparison-chart');
+    // Update radar chart
+    function updateRadarChart() {
+        const ctx = document.getElementById('radar-chart');
         
-        if (kpiComparisonChart) kpiComparisonChart.destroy();
+        if (radarChart) {
+            radarChart.destroy();
+        }
         
-        // Extract KPI values from nested structure
-        const kpis = data.kpis || {};
-        const secValue = kpis.sec?.value || 0;
-        const loadFactorPercent = kpis.load_factor?.percent || 0;
+        // Get current KPI values
+        if (!currentKpiData || !currentKpiData.kpis) return;
         
-        kpiComparisonChart = new Chart(ctx, {
+        const kpis = currentKpiData.kpis;
+        
+        radarChart = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['SEC', 'Peak Demand', 'Load Factor', 'Energy Efficiency', 'Cost Efficiency'],
+                labels: ['SEC', 'Peak Demand', 'Load Factor', 'Cost', 'Carbon', 'Total Energy'],
                 datasets: [{
-                    label: 'Current Performance',
-                    data: [
-                        (1 - secValue) * 100, // Normalize
-                        loadFactorPercent,
-                        loadFactorPercent,
-                        80, // Mock
-                        75  // Mock
-                    ],
+                    label: 'Current Values (Normalized)',
+                    data: [65, 75, 85, 60, 70, 80], // Placeholder - normalize actual values
                     fill: true,
-                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
-                    borderColor: 'rgb(13, 110, 253)',
-                    pointBackgroundColor: 'rgb(13, 110, 253)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    pointBackgroundColor: 'rgb(255, 99, 132)',
                     pointBorderColor: '#fff',
                     pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgb(13, 110, 253)'
+                    pointHoverBorderColor: 'rgb(255, 99, 132)'
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     r: {
-                        angleLines: {
-                            display: true
-                        },
+                        angleLines: { display: false },
                         suggestedMin: 0,
                         suggestedMax: 100
                     }
@@ -443,133 +755,46 @@
         });
     }
     
-    function createCostCarbonChart(data) {
-        const ctx = document.getElementById('cost-carbon-chart');
+    // Update KPI table
+    function updateKPITable(kpis, totals) {
+        const tbody = document.getElementById('kpi-tbody');
         
-        if (costCarbonChart) costCarbonChart.destroy();
+        const rows = [
+            { name: 'SEC', value: kpis.sec?.value, unit: kpis.sec?.unit, desc: kpis.sec?.description },
+            { name: 'Peak Demand', value: kpis.peak_demand?.value, unit: kpis.peak_demand?.unit, desc: kpis.peak_demand?.description },
+            { name: 'Load Factor', value: kpis.load_factor?.value, unit: '', desc: kpis.load_factor?.description },
+            { name: 'Energy Cost', value: kpis.energy_cost?.value, unit: kpis.energy_cost?.unit, desc: kpis.energy_cost?.description },
+            { name: 'Carbon Intensity', value: kpis.carbon_intensity?.value, unit: kpis.carbon_intensity?.unit, desc: kpis.carbon_intensity?.description },
+            { name: 'Total Energy', value: totals.total_energy_kwh, unit: 'kWh', desc: 'Total energy consumed during period' }
+        ];
         
-        // Extract cost from nested structure
-        const kpis = data.kpis || {};
-        const totalCost = kpis.energy_cost?.value || 0;
-        
-        costCarbonChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Energy Cost', 'Demand Cost', 'Carbon Tax'],
-                datasets: [{
-                    label: 'Cost Breakdown',
-                    data: [
-                        totalCost * 0.7,
-                        totalCost * 0.2,
-                        totalCost * 0.1
-                    ],
-                    backgroundColor: [
-                        'rgba(255, 193, 7, 0.8)',
-                        'rgba(220, 53, 69, 0.8)',
-                        'rgba(13, 202, 240, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgb(255, 193, 7)',
-                        'rgb(220, 53, 69)',
-                        'rgb(13, 202, 240)'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
+        tbody.innerHTML = rows.map(row => `
+            <tr>
+                <td><strong>${row.name}</strong></td>
+                <td>${row.value ? row.value.toFixed(row.name === 'SEC' ? 5 : 2) : '-'}</td>
+                <td>${row.unit || '-'}</td>
+                <td>${row.desc || '-'}</td>
+            </tr>
+        `).join('');
     }
     
-    function createKPITable(data) {
-        const container = document.getElementById('kpi-table-container');
-        
-        // Extract KPI values from nested structure
-        const kpis = data.kpis || {};
-        const totals = data.totals || {};
-        
-        const html = `
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>KPI</th>
-                        <th>Value</th>
-                        <th>Unit</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Specific Energy Consumption (SEC)</strong></td>
-                        <td>${formatNumber(kpis.sec?.value, 6)}</td>
-                        <td>${kpis.sec?.unit || 'kWh/unit'}</td>
-                        <td>${kpis.sec?.description || 'Energy required per unit produced (ISO 50006)'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Peak Demand</strong></td>
-                        <td>${formatNumber(kpis.peak_demand?.value, 2)}</td>
-                        <td>${kpis.peak_demand?.unit || 'kW'}</td>
-                        <td>${kpis.peak_demand?.description || 'Maximum power draw during period'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Load Factor</strong></td>
-                        <td>${formatNumber(kpis.load_factor?.percent, 2)}</td>
-                        <td>%</td>
-                        <td>${kpis.load_factor?.description || 'Average load / Peak demand ratio'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Total Energy Cost</strong></td>
-                        <td>${formatNumber(kpis.energy_cost?.value, 2)}</td>
-                        <td>${kpis.energy_cost?.unit || 'USD'}</td>
-                        <td>${kpis.energy_cost?.description || 'Total cost for energy consumed'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Carbon Emissions</strong></td>
-                        <td>${formatNumber(kpis.carbon_intensity?.value, 2)}</td>
-                        <td>${kpis.carbon_intensity?.unit || 'kg CO₂'}</td>
-                        <td>${kpis.carbon_intensity?.description || 'Total carbon footprint'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Total Energy</strong></td>
-                        <td>${formatNumber(totals.total_energy_kwh, 2)}</td>
-                        <td>kWh</td>
-                        <td>Total energy consumed during period</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Production Units</strong></td>
-                        <td>${data.total_production_units?.toLocaleString() || 'N/A'}</td>
-                        <td>units</td>
-                        <td>Total production output</td>
-                    </tr>
-                </tbody>
-            </table>
-        `;
-        
-        container.innerHTML = html;
-    }
-    
-    function exportKPIs() {
+    // Export to CSV
+    document.getElementById('export-kpis-btn').addEventListener('click', () => {
         if (!currentKpiData) return;
         
-        // Create CSV content
+        const kpis = currentKpiData.kpis || {};
+        const totals = currentKpiData.totals || {};
+        
         const csv = [
             ['KPI', 'Value', 'Unit'],
-            ['Specific Energy Consumption', currentKpiData.sec_kwh_per_unit, 'kWh/unit'],
-            ['Peak Demand', currentKpiData.peak_demand_kw, 'kW'],
-            ['Load Factor', currentKpiData.load_factor_percent, '%'],
-            ['Total Energy Cost', currentKpiData.total_cost, 'USD'],
-            ['Carbon Emissions', currentKpiData.total_co2_kg, 'kg CO2'],
-            ['Total Energy', currentKpiData.total_energy_kwh, 'kWh'],
-            ['Production Units', currentKpiData.total_production_units, 'units']
+            ['SEC', kpis.sec?.value, kpis.sec?.unit],
+            ['Peak Demand', kpis.peak_demand?.value, kpis.peak_demand?.unit],
+            ['Load Factor', kpis.load_factor?.value, '%'],
+            ['Energy Cost', kpis.energy_cost?.value, kpis.energy_cost?.unit],
+            ['Carbon Intensity', kpis.carbon_intensity?.value, kpis.carbon_intensity?.unit],
+            ['Total Energy', totals.total_energy_kwh, 'kWh']
         ].map(row => row.join(',')).join('\n');
         
-        // Download
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -577,6 +802,17 @@
         a.download = `kpis_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
-    }
+    });
+    
+    // Form submission
+    document.getElementById('filter-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        loadKPIData();
+    });
+    
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        loadMachines();
+    });
 </script>
 {% endblock %}

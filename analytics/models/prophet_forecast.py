@@ -85,14 +85,32 @@ class ProphetForecastModel:
         else:
             raise ValueError("No datetime column found")
         
+        # Remove timezone - Prophet doesn't support timezone-aware timestamps
+        if df['ds'].dt.tz is not None:
+            df['ds'] = df['ds'].dt.tz_localize(None)
+        
         df['y'] = df[target_column]
         
-        # Keep regressor columns
-        columns_to_keep = ['ds', 'y'] + self.regressors
+        # Filter regressors that actually exist and have data
+        valid_regressors = []
+        for reg in self.regressors:
+            if reg in df.columns and df[reg].notna().any():
+                valid_regressors.append(reg)
+            else:
+                logger.warning(
+                    f"[PROPHET-PREP] Regressor '{reg}' has no data, excluding"
+                )
+        
+        # Update regressors list with only valid ones
+        self.regressors = valid_regressors
+        
+        # Keep valid columns only
+        columns_to_keep = ['ds', 'y'] + valid_regressors
         df = df[columns_to_keep]
         
-        # Remove NaN values
-        df = df.dropna()
+        # Remove NaN values in target column only
+        # (regressors can have NaNs, we'll handle those separately)
+        df = df.dropna(subset=['ds', 'y'])
         
         return df
     
@@ -249,6 +267,10 @@ class ProphetForecastModel:
         
         # Create future dataframe
         future = self.model.make_future_dataframe(periods=periods, freq=freq)
+        
+        # Remove timezone if present
+        if future['ds'].dt.tz is not None:
+            future['ds'] = future['ds'].dt.tz_localize(None)
         
         # Add regressors to future
         if future_regressors is not None:

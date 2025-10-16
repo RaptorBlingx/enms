@@ -316,6 +316,15 @@ class ForecastService:
             f"Mean={sum(result['predictions'])/len(result['predictions']):.2f} kW"
         )
         
+        # Save predictions to database
+        await self._save_forecast_to_db(
+            machine_id=machine_id,
+            model_type=result['model_type'],
+            horizon=horizon,
+            predictions=result,
+            model=model
+        )
+        
         return result
     
     async def get_optimal_schedule(
@@ -398,3 +407,99 @@ class ForecastService:
         )
         
         return result
+    
+    async def _save_forecast_to_db(
+        self,
+        machine_id: UUID,
+        model_type: str,
+        horizon: str,
+        predictions: Dict,
+        model: any
+    ):
+        """
+        Save forecast predictions to database for Grafana visualization.
+        
+        Args:
+            machine_id: Machine UUID
+            model_type: 'ARIMA' or 'Prophet'
+            horizon: 'short', 'medium', or 'long'
+            predictions: Dictionary with predictions, timestamps, confidence intervals
+            model: The trained model instance for extracting metrics
+        """
+        try:
+            pool = db.pool
+            forecasted_at = datetime.now()
+            
+            # Prepare data for bulk insert
+            values = []
+            timestamps = predictions.get('timestamps', [])
+            preds = predictions['predictions']
+            lower_bounds = predictions.get('lower_bound', [None] * len(preds))
+            upper_bounds = predictions.get('upper_bound', [None] * len(preds))
+            
+            # Extract model metrics
+            rmse = None
+            mape = None
+            r2 = None
+            training_samples = None
+            
+            if hasattr(model, 'training_history') and model.training_history:
+                last_training = model.training_history[-1]
+                rmse = last_training.get('rmse')
+                mape = last_training.get('mape')
+                r2 = last_training.get('r2')
+                training_samples = last_training.get('samples')
+            
+            # Build rows for insertion
+            for i, pred in enumerate(preds):
+                forecast_time = datetime.fromisoformat(timestamps[i]) if timestamps else forecasted_at + timedelta(hours=i)
+                lower = lower_bounds[i] if i < len(lower_bounds) else None
+                upper = upper_bounds[i] if i < len(upper_bounds) else None
+                
+                values.append((
+                    machine_id,
+                    model_type,
+                    1,  # model_version
+                    horizon,
+                    forecasted_at,
+                    forecast_time,
+                    pred,
+                    lower,
+                    upper,
+                    0.95,  # confidence_level
+                    training_samples,
+                    rmse,
+                    mape,
+                    r2
+                ))
+            
+            # Bulk insert
+            query = """
+                INSERT INTO energy_forecasts (
+                    machine_id, model_type, model_version, horizon,
+                    forecasted_at, forecast_time,
+                    predicted_power_kw, lower_bound_kw, upper_bound_kw,
+                    confidence_level, training_samples, rmse, mape, r2
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                ON CONFLICT (forecast_time, machine_id, model_type) 
+                DO UPDATE SET
+                    predicted_power_kw = EXCLUDED.predicted_power_kw,
+                    lower_bound_kw = EXCLUDED.lower_bound_kw,
+                    upper_bound_kw = EXCLUDED.upper_bound_kw,
+                    forecasted_at = EXCLUDED.forecasted_at,
+                    rmse = EXCLUDED.rmse,
+                    mape = EXCLUDED.mape,
+                    r2 = EXCLUDED.r2
+            """
+            
+            async with pool.acquire() as conn:
+                await conn.executemany(query, values)
+            
+            logger.info(
+                f"[FORECAST-SVC] Saved {len(values)} forecast predictions to database "
+                f"for machine {machine_id}"
+            )
+            
+        except Exception as e:
+            # Don't fail the forecast if DB save fails
+            logger.error(f"[FORECAST-SVC] Failed to save forecast to database: {e}", exc_info=True)

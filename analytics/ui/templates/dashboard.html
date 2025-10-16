@@ -141,10 +141,236 @@
         </div>
     </div>
 </div>
+
+<!-- WebSocket Connection Status Indicator -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+    <div id="ws-status-indicator" class="badge bg-secondary" style="font-size: 0.85rem; padding: 0.5rem 0.75rem; cursor: pointer;" title="WebSocket Status">
+        <svg width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="3"/>
+        </svg>
+        <span id="ws-status-text">Connecting...</span>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1060;">
+    <div id="toast-template" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+        <div class="d-flex">
+            <div class="toast-body">
+                <!-- Toast content will be inserted here -->
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- WebSocket Client -->
+<script src="/api/analytics/ui/static/js/websocket-client.js?v=20251016"></script>
+
 <script>
+    // WebSocket Manager Instance
+    let wsManager = null;
+    let dashboardWS = null;
+    let anomaliesWS = null;
+    
+    // Toast Notification System
+    function showToast(message, type = 'info', duration = 5000) {
+        const container = document.querySelector('.toast-container');
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        container.appendChild(toastEl);
+        const toast = new bootstrap.Toast(toastEl, { delay: duration });
+        toast.show();
+        
+        // Remove from DOM after hiding
+        toastEl.addEventListener('hidden.bs.toast', () => {
+            toastEl.remove();
+        });
+    }
+    
+    // Update WebSocket Connection Status Indicator
+    function updateWSStatus(state) {
+        const indicator = document.getElementById('ws-status-indicator');
+        const textEl = document.getElementById('ws-status-text');
+        
+        const statusConfig = {
+            'connected': { class: 'bg-success', text: 'Live', title: 'WebSocket Connected - Real-time updates active' },
+            'connecting': { class: 'bg-warning', text: 'Connecting...', title: 'Connecting to WebSocket...' },
+            'reconnecting': { class: 'bg-warning', text: 'Reconnecting...', title: 'Attempting to reconnect...' },
+            'disconnected': { class: 'bg-danger', text: 'Offline', title: 'WebSocket Disconnected - No real-time updates' }
+        };
+        
+        const config = statusConfig[state] || statusConfig['disconnected'];
+        
+        indicator.className = `badge ${config.class}`;
+        indicator.title = config.title;
+        textEl.textContent = config.text;
+    }
+    
+    // Initialize WebSocket Connections
+    function initWebSockets() {
+        console.log('[Dashboard] Initializing WebSocket connections...');
+        
+        wsManager = new WebSocketManager();
+        
+        // Connect to Dashboard WebSocket
+        dashboardWS = wsManager.connectDashboard(
+            // onMessage
+            (data) => handleDashboardMessage(data),
+            // onConnect
+            () => {
+                console.log('[Dashboard] Dashboard WebSocket connected');
+                updateWSStatus('connected');
+                showToast('✓ Real-time updates active', 'success', 3000);
+            },
+            // onDisconnect
+            () => {
+                console.log('[Dashboard] Dashboard WebSocket disconnected');
+                updateWSStatus('disconnected');
+            }
+        );
+        
+        // Connect to Anomalies WebSocket
+        anomaliesWS = wsManager.connectAnomalies(
+            // onMessage
+            (data) => handleAnomalyMessage(data),
+            // onConnect
+            () => {
+                console.log('[Dashboard] Anomalies WebSocket connected');
+            },
+            // onDisconnect
+            () => {
+                console.log('[Dashboard] Anomalies WebSocket disconnected');
+            }
+        );
+        
+        // Check connection status periodically
+        setInterval(() => {
+            const state = dashboardWS.getConnectionState();
+            updateWSStatus(state);
+        }, 5000);
+    }
+    
+    // Handle Dashboard WebSocket Messages
+    function handleDashboardMessage(data) {
+        console.log('[Dashboard] Received message:', data);
+        
+        switch(data.event_type) {
+            case 'metric_updated':
+                handleMetricUpdate(data.payload);
+                break;
+            case 'model_updated':
+                handleModelUpdate(data.payload);
+                showToast(`Model updated: ${data.payload.model_type} v${data.payload.version}`, 'info');
+                break;
+            case 'training_completed':
+                handleTrainingComplete(data.payload);
+                break;
+            default:
+                console.log('[Dashboard] Unknown event type:', data.event_type);
+        }
+    }
+    
+    // Handle Anomaly WebSocket Messages
+    function handleAnomalyMessage(data) {
+        console.log('[Dashboard] Received anomaly:', data);
+        
+        if (data.event_type === 'anomaly_detected') {
+            handleNewAnomaly(data.payload);
+        }
+    }
+    
+    // Handle New Anomaly Event
+    function handleNewAnomaly(anomaly) {
+        console.log('[Dashboard] New anomaly detected:', anomaly);
+        
+        // Show toast notification with severity-based styling
+        const severity = anomaly.severity || 'warning';
+        const toastType = severity === 'critical' ? 'danger' : 'warning';
+        const icon = severity === 'critical' ? '🚨' : '⚠️';
+        
+        showToast(
+            `${icon} <strong>Anomaly Detected</strong><br/>` +
+            `Machine: ${anomaly.machine_name || anomaly.machine_id}<br/>` +
+            `Type: ${anomaly.anomaly_type || 'Energy Deviation'}<br/>` +
+            `Severity: ${severity.toUpperCase()}`,
+            toastType,
+            8000
+        );
+        
+        // Increment anomaly counter
+        const counterEl = document.getElementById('anomalies-24h-count');
+        if (counterEl && counterEl.textContent !== '-') {
+            const currentCount = parseInt(counterEl.textContent) || 0;
+            counterEl.textContent = currentCount + 1;
+            
+            // Animate the counter
+            counterEl.style.transform = 'scale(1.2)';
+            counterEl.style.color = 'var(--danger-color)';
+            setTimeout(() => {
+                counterEl.style.transform = 'scale(1)';
+                counterEl.style.color = '';
+            }, 500);
+        }
+        
+        // Reload recent anomalies to show the new one
+        loadRecentAnomalies();
+    }
+    
+    // Handle Metric Update Event
+    function handleMetricUpdate(data) {
+        console.log('[Dashboard] Metric updated:', data);
+        // Future: Update specific metric displays in real-time
+    }
+    
+    // Handle Model Update Event
+    function handleModelUpdate(data) {
+        console.log('[Dashboard] Model updated:', data);
+        // Reload baseline models count
+        loadDashboard();
+    }
+    
+    // Handle Training Complete Event
+    function handleTrainingComplete(data) {
+        console.log('[Dashboard] Training completed:', data);
+        
+        if (data.status === 'completed') {
+            showToast(
+                `✓ <strong>Training Complete</strong><br/>` +
+                `Job ID: ${data.job_id}<br/>` +
+                `Performance: ${data.metrics?.r_squared ? (data.metrics.r_squared * 100).toFixed(1) + '%' : 'N/A'}`,
+                'success',
+                6000
+            );
+        } else if (data.status === 'failed') {
+            showToast(
+                `✗ <strong>Training Failed</strong><br/>` +
+                `Job ID: ${data.job_id}<br/>` +
+                `Error: ${data.error_message || 'Unknown error'}`,
+                'danger',
+                8000
+            );
+        }
+        
+        // Reload dashboard stats
+        loadDashboard();
+    }
+    
     // Load dashboard data
     async function loadDashboard() {
         try {
@@ -296,7 +522,48 @@
         container.innerHTML = html;
     }
     
+    // Load Recent Anomalies (can be called independently for real-time updates)
+    async function loadRecentAnomalies() {
+        try {
+            const anomaliesResponse = await axios.get(`${API_BASE}/anomaly/recent`, {
+                params: {
+                    hours: 24
+                }
+            });
+            
+            // Fix: API returns {anomalies: [...], total_count: N}
+            const anomaliesData = anomaliesResponse.data.anomalies || [];
+            displayRecentAnomalies(anomaliesData);
+            
+            // Update stats with total count from API
+            document.getElementById('anomalies-24h-count').textContent = anomaliesResponse.data.total_count || anomaliesData.length;
+            
+        } catch (error) {
+            console.error('Error loading recent anomalies:', error);
+        }
+    }
+    
+    // Initialize Dashboard
+    async function initDashboard() {
+        console.log('[Dashboard] Initializing dashboard...');
+        
+        // Load initial data
+        await loadDashboard();
+        
+        // Initialize WebSocket connections for real-time updates
+        initWebSockets();
+        
+        console.log('[Dashboard] Dashboard initialized ✓');
+    }
+    
     // Load on page ready
-    document.addEventListener('DOMContentLoaded', loadDashboard);
+    document.addEventListener('DOMContentLoaded', initDashboard);
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (wsManager) {
+            wsManager.disconnectAll(true);
+        }
+    });
 </script>
 {% endblock %}

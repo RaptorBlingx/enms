@@ -8,6 +8,9 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
@@ -35,6 +38,31 @@
         .navbar-brand {
             font-weight: 600;
             font-size: 1.3rem;
+        }
+        
+        .dropdown-menu-dark {
+            background-color: #343a40;
+        }
+        
+        .dropdown-menu-dark .dropdown-item {
+            color: rgba(255,255,255,.85);
+            padding: 0.5rem 1rem;
+        }
+        
+        .dropdown-menu-dark .dropdown-item:hover {
+            background-color: rgba(255,255,255,.1);
+            color: #fff;
+        }
+        
+        .dropdown-menu-dark .dropdown-item.active {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        
+        .dropdown-menu-dark .dropdown-item i {
+            margin-right: 0.5rem;
+            width: 1.2rem;
+            display: inline-block;
         }
         
         .main-content {
@@ -150,6 +178,43 @@
                         <a class="nav-link {% if '/ui/forecast' in request.url.path %}active{% endif %}" 
                            href="/api/analytics/ui/forecast">Forecasting</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if '/ui/sankey' in request.url.path or '/ui/heatmap' in request.url.path or '/ui/comparison' in request.url.path or '/ui/model-performance' in request.url.path %}active{% endif %}" 
+                           href="#" 
+                           id="visualizationsDropdown" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false">
+                            Visualizations
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="visualizationsDropdown">
+                            <li>
+                                <a class="dropdown-item {% if '/ui/sankey' in request.url.path %}active{% endif %}" 
+                                   href="/api/analytics/ui/sankey">
+                                    <i class="bi bi-diagram-3"></i> Sankey Diagram
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if '/ui/heatmap' in request.url.path %}active{% endif %}" 
+                                   href="/api/analytics/ui/heatmap">
+                                    <i class="bi bi-grid-3x3"></i> Anomaly Heatmap
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if '/ui/comparison' in request.url.path %}active{% endif %}" 
+                                   href="/api/analytics/ui/comparison">
+                                    <i class="bi bi-bar-chart-steps"></i> Machine Comparison
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item {% if '/ui/model-performance' in request.url.path %}active{% endif %}" 
+                                   href="/api/analytics/ui/model-performance">
+                                    <i class="bi bi-graph-up-arrow"></i> Model Performance
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/api/analytics/docs" target="_blank">API Docs</a>
                     </li>
@@ -187,10 +252,10 @@
     
     <!-- Common JavaScript -->
     <script>
-        // API base URL
-        const API_BASE = '/api/analytics/api/v1';
-        
-        // Common error handler
+        // API configuration
+        // When accessed through nginx proxy, use /api/analytics
+        // When accessed directly, use /api/v1
+        const API_BASE = window.location.port === '8001' ? '/api/v1' : '/api/analytics/api/v1';        // Common error handler
         function handleError(error, elementId) {
             console.error('Error:', error);
             const element = document.getElementById(elementId);

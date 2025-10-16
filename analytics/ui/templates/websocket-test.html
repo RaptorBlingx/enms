@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Connection Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .status-box {
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #2d2d2d;
+        }
+        .connected { color: #00ff00; }
+        .disconnected { color: #ff0000; }
+        .connecting { color: #ffaa00; }
+        .log {
+            background: #000;
+            padding: 15px;
+            border: 1px solid #00ff00;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+            padding-left: 10px;
+        }
+        .log-error {
+            border-left-color: #ff0000;
+            color: #ff6666;
+        }
+        .log-success {
+            border-left-color: #00ff00;
+            color: #00ff00;
+        }
+        .log-info {
+            border-left-color: #00aaff;
+            color: #66ccff;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        h1 { color: #00ff00; }
+        h2 { color: #00aaff; }
+    </style>
+</head>
+<body>
+    <h1>🔌 WebSocket Connection Diagnostic Tool</h1>
+    
+    <div class="status-box">
+        <h2>Connection Status</h2>
+        <p>Dashboard WebSocket: <span id="dash-status" class="disconnected">DISCONNECTED</span></p>
+        <p>Anomalies WebSocket: <span id="anom-status" class="disconnected">DISCONNECTED</span></p>
+        <p>Total Messages Received: <span id="msg-count">0</span></p>
+    </div>
+
+    <div class="status-box">
+        <h2>Controls</h2>
+        <button onclick="connectWebSockets()">Connect WebSockets</button>
+        <button onclick="disconnectWebSockets()">Disconnect</button>
+        <button onclick="triggerAnomaly()">Trigger Test Anomaly</button>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div class="status-box">
+        <h2>Event Log (Most Recent First)</h2>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="/api/analytics/ui/static/js/websocket-client.js"></script>
+    <script>
+        let wsManager = null;
+        let dashboardWS = null;
+        let anomaliesWS = null;
+        let messageCount = 0;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+
+        function updateStatus(wsType, status) {
+            const statusEl = document.getElementById(wsType === 'dashboard' ? 'dash-status' : 'anom-status');
+            statusEl.textContent = status.toUpperCase();
+            statusEl.className = status === 'connected' ? 'connected' : 
+                                status === 'connecting' ? 'connecting' : 'disconnected';
+        }
+
+        function connectWebSockets() {
+            log('Initializing WebSocket Manager...', 'info');
+            
+            try {
+                wsManager = new WebSocketManager();
+                log('✅ WebSocket Manager created', 'success');
+
+                // Connect to dashboard WebSocket
+                log('Connecting to dashboard WebSocket...', 'info');
+                dashboardWS = wsManager.connectDashboard((message) => {
+                    messageCount++;
+                    document.getElementById('msg-count').textContent = messageCount;
+                    log(`📨 Dashboard Message: ${JSON.stringify(message)}`, 'success');
+                    
+                    if (message.type === 'anomaly_detected') {
+                        log(`🚨 ANOMALY DETECTED: ${message.data.machine_id}`, 'error');
+                    }
+                });
+
+                dashboardWS.addEventListener('open', () => {
+                    updateStatus('dashboard', 'connected');
+                    log('✅ Dashboard WebSocket CONNECTED', 'success');
+                });
+
+                dashboardWS.addEventListener('close', () => {
+                    updateStatus('dashboard', 'disconnected');
+                    log('❌ Dashboard WebSocket DISCONNECTED', 'error');
+                });
+
+                dashboardWS.addEventListener('error', (error) => {
+                    log(`❌ Dashboard WebSocket ERROR: ${error.message || 'Unknown error'}`, 'error');
+                });
+
+                // Connect to anomalies WebSocket
+                log('Connecting to anomalies WebSocket...', 'info');
+                anomaliesWS = wsManager.connectAnomalies((message) => {
+                    messageCount++;
+                    document.getElementById('msg-count').textContent = messageCount;
+                    log(`📨 Anomaly Message: ${JSON.stringify(message)}`, 'success');
+                    
+                    if (message.type === 'anomaly_detected') {
+                        const data = message.data;
+                        log(`🚨 ANOMALY: Machine=${data.machine_id}, Metric=${data.metric}, Severity=${data.severity}`, 'error');
+                    }
+                });
+
+                anomaliesWS.addEventListener('open', () => {
+                    updateStatus('anomalies', 'connected');
+                    log('✅ Anomalies WebSocket CONNECTED', 'success');
+                });
+
+                anomaliesWS.addEventListener('close', () => {
+                    updateStatus('anomalies', 'disconnected');
+                    log('❌ Anomalies WebSocket DISCONNECTED', 'error');
+                });
+
+                anomaliesWS.addEventListener('error', (error) => {
+                    log(`❌ Anomalies WebSocket ERROR: ${error.message || 'Unknown error'}`, 'error');
+                });
+
+                log('🎯 WebSocket connections initiated', 'success');
+
+            } catch (error) {
+                log(`❌ FATAL ERROR: ${error.message}`, 'error');
+                console.error('WebSocket initialization error:', error);
+            }
+        }
+
+        function disconnectWebSockets() {
+            if (wsManager) {
+                wsManager.disconnectAll();
+                log('🔌 All WebSocket connections closed', 'info');
+                updateStatus('dashboard', 'disconnected');
+                updateStatus('anomalies', 'disconnected');
+            }
+        }
+
+        function triggerAnomaly() {
+            log('🧪 Triggering test anomaly detection...', 'info');
+            
+            fetch('http://10.33.10.109:8080/api/analytics/api/v1/machines')
+                .then(res => res.json())
+                .then(machines => {
+                    const machineId = machines[0].id;
+                    log(`Using machine: ${machineId}`, 'info');
+                    
+                    return fetch('http://10.33.10.109:8080/api/analytics/api/v1/anomaly/detect', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            machine_id: machineId,
+                            start: '2025-10-01T00:00:00Z',
+                            end: '2025-10-16T23:59:59Z',
+                            contamination: 0.1,
+                            use_baseline: true
+                        })
+                    });
+                })
+                .then(res => res.json())
+                .then(result => {
+                    log(`✅ Anomaly detection complete: ${result.anomalies_detected} anomalies found`, 'success');
+                    log('👀 Watch for WebSocket messages above!', 'info');
+                })
+                .catch(error => {
+                    log(`❌ Failed to trigger anomaly: ${error.message}`, 'error');
+                });
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            messageCount = 0;
+            document.getElementById('msg-count').textContent = '0';
+            log('Log cleared', 'info');
+        }
+
+        // Auto-connect on page load
+        window.addEventListener('load', () => {
+            log('🚀 Page loaded - Ready to test!', 'success');
+            log('Click "Connect WebSockets" to start', 'info');
+        });
+    </script>
+</body>
+</html>

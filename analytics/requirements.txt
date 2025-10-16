@@ -44,3 +44,12 @@ python-json-logger==2.0.7
 
 # Logging & Monitoring
 loguru==0.7.2  # Optional: Enhanced logging
+
+# ============================================================================
+# WebSocket & Real-Time Updates (Phase 4 Session 5)
+# ============================================================================
+# Redis Async Client for Pub/Sub
+redis==5.0.1
+
+# WebSocket protocol support
+websockets==12.0
