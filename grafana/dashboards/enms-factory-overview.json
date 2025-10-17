@@ -616,7 +616,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\nORDER BY m.name;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nORDER BY m.name;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1273,7 +1273,56 @@
     "factory"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT id AS __value, name AS __text FROM factories ORDER BY name;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Factory",
+        "multi": false,
+        "name": "factory_id",
+        "options": [],
+        "query": "SELECT id AS __value, name AS __text FROM factories ORDER BY name;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT DISTINCT type FROM machines WHERE is_active = true ORDER BY type;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Machine Type",
+        "multi": true,
+        "name": "machine_type",
+        "options": [],
+        "query": "SELECT DISTINCT type FROM machines WHERE is_active = true ORDER BY type;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -1291,6 +1340,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 934,
+  "version": 943,
   "weekStart": ""
 }
