@@ -517,19 +517,19 @@
         let html = '<div class="table-responsive"><table class="industrial-table table-striped"><thead><tr><th>Time</th><th>Machine</th><th>Type</th><th>Severity</th><th>Confidence</th><th>Status</th></tr></thead><tbody>';
         
         anomalies.slice(0, 10).forEach(anomaly => {
-            // Professional badge styling - subtle but clear
+            // Professional badge styling with dot indicators
             const severityConfig = {
-                'critical': { class: 'badge-danger', text: 'Critical' },
-                'warning': { class: 'badge-warning', text: 'Warning' },
-                'normal': { class: 'badge-info', text: 'Normal' },
-                'info': { class: 'badge-info', text: 'Info' }
+                'critical': { class: 'badge-danger badge-with-dot', text: 'Critical' },
+                'warning': { class: 'badge-warning badge-with-dot', text: 'Warning' },
+                'normal': { class: 'badge-info-subtle', text: 'Normal' },
+                'info': { class: 'badge-info-subtle', text: 'Info' }
             };
             const severity = severityConfig[anomaly.severity] || severityConfig['info'];
             
-            // Status badges - resolved is success, active is neutral blue
+            // Status badges - resolved gets success with dot, active gets subtle blue
             const statusConfig = anomaly.is_resolved 
-                ? { class: 'badge-success', text: 'Resolved' }
-                : { class: 'badge-info', text: 'Active' };
+                ? { class: 'badge-success badge-with-dot', text: 'Resolved' }
+                : { class: 'badge-info-subtle', text: 'Active' };
             
             html += `
                 <tr>
