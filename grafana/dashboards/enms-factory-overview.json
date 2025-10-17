@@ -78,7 +78,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Machines\"\nFROM machines m\nWHERE m.is_active = true\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type));",
+          "rawSql": "SELECT COUNT(*) as \"Active Machines\"\nFROM machines\nWHERE is_active = true;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -165,7 +165,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nJOIN machines m ON ms.machine_id = m.id\nWHERE ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type));",
+          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nWHERE 1=1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -244,7 +244,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(er.energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.time >= DATE_TRUNC('day', NOW())\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type));",
+          "rawSql": "SELECT \n  COALESCE(SUM(energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -342,7 +342,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Alerts\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nWHERE a.is_resolved = false\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type));",
+          "rawSql": "SELECT COUNT(*) as \"Active Alerts\"\nFROM anomalies\nWHERE is_resolved = false;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -453,7 +453,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('1 minute', er.time) AS time,\n  m.name as metric,\n  AVG(er.power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.time >= NOW() - INTERVAL '1 hour'\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nGROUP BY time, m.name\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('1 minute', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '1 hour'\nGROUP BY time, m.name\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -616,7 +616,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nORDER BY m.name;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\nORDER BY m.name;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -705,7 +705,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nGROUP BY m.name\nORDER BY value DESC;",
+          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY m.name\nORDER BY value DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -794,7 +794,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nGROUP BY f.name\nORDER BY value DESC;",
+          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY f.name\nORDER BY value DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -958,7 +958,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  TO_CHAR(a.detected_at, 'HH24:MI:SS') as \"Time\",\n  m.name as \"Machine\",\n  a.anomaly_type as \"Type\",\n  a.severity as \"Severity\",\n  ROUND(a.deviation_percent::numeric, 1) as \"Deviation %\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nWHERE a.is_resolved = false\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nORDER BY a.detected_at DESC\nLIMIT 10;",
+          "rawSql": "SELECT \n  TO_CHAR(a.detected_at, 'HH24:MI:SS') as \"Time\",\n  m.name as \"Machine\",\n  a.anomaly_type as \"Type\",\n  a.severity as \"Severity\",\n  ROUND(a.deviation_percent::numeric, 1) as \"Deviation %\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nWHERE a.is_resolved = false\nORDER BY a.detected_at DESC\nLIMIT 10;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -1067,7 +1067,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\n  AND ($factory_id = '$__all' OR m.factory_id = $factory_id::int)\n  AND ('$__all' = ANY($machine_type) OR m.type = ANY($machine_type))\nGROUP BY m.name\nORDER BY \"Energy (kWh)\" DESC\nLIMIT 5;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Energy (kWh)\" DESC\nLIMIT 5;",
           "refId": "A"
         }
       ],
@@ -1273,56 +1273,7 @@
     "factory"
   ],
   "templating": {
-    "list": [
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "postgres",
-          "uid": "TimescaleDB"
-        },
-        "definition": "SELECT id AS __value, name AS __text FROM factories ORDER BY name;",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Factory",
-        "multi": false,
-        "name": "factory_id",
-        "options": [],
-        "query": "SELECT id AS __value, name AS __text FROM factories ORDER BY name;",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "postgres",
-          "uid": "TimescaleDB"
-        },
-        "definition": "SELECT DISTINCT type FROM machines WHERE is_active = true ORDER BY type;",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Machine Type",
-        "multi": true,
-        "name": "machine_type",
-        "options": [],
-        "query": "SELECT DISTINCT type FROM machines WHERE is_active = true ORDER BY type;",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      }
-    ]
+    "list": []
   },
   "time": {
     "from": "now-1h",
@@ -1340,6 +1291,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 945,
+  "version": 934,
   "weekStart": ""
 }
