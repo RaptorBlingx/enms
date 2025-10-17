@@ -15,9 +15,14 @@
   - Energy Cost in USD (customizable rate)
   - Carbon Emissions in kg CO₂ (customizable factor)
   - Total Energy Consumption
+- **New Trend & Efficiency Panels (3):**
+  - SEC Trend by Machine (Daily) - Bar chart showing efficiency over time
+  - Peak Demand - Stat panel with max power demand
+  - Average Load Factor - Gauge showing efficiency %
 - **New Variables (2):**
   - `$cost_per_kwh` - default 0.15 (editable textbox)
   - `$carbon_factor` - default 0.45 (editable textbox)
+- **Total:** 7 → 14 panels (+7 new panels)
 
 ### Factory Overview Dashboard
 - **New Panels (2):**
@@ -44,6 +49,7 @@
 - `a0ba6e7` - Added comparison panels (Phase 1 complete)
 - `b2ca2b6` - Updated plan with completion summary
 - `02987a1` - Fixed production column name errors
+- `343774c` - Added SEC trend and efficiency panels (Phase 1+)
 
 ---
 
@@ -613,9 +619,9 @@ Configure meaningful thresholds:
    - ✅ Top 5 Energy Consumers bar chart (panel ID: 200, Last 24h)
 
 **Phase 1 Summary:**
-- Energy Analysis: 7 → 11 panels (added 4 KPI stats, 2 variables)
+- Energy Analysis: 7 → 14 panels (added 7 panels: 4 KPI stats + 3 efficiency charts, 2 variables)
 - Factory Overview: 9 → 11 panels (added 1 bar chart, 1 table)
-- Total enhancements: 6 new panels, 2 new variables
+- Total enhancements: 9 new panels, 2 new variables
 - All queries tested and working with real-time data
 
 ### Medium Priority (Week 3-4) - NOT STARTED
