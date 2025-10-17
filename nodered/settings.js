@@ -36,15 +36,15 @@ module.exports = {
     // HTTP request settings
     httpRequestTimeout: 120000,
     
-    // HTTP Admin API
-    httpAdminRoot: '/admin',
+    // HTTP Admin API - Set to root for nginx proxy
+    httpAdminRoot: '/',
     httpAdminCors: {
         origin: "*",
         credentials: true
     },
     
-    // HTTP Node endpoints
-    httpNodeRoot: '/',
+    // HTTP Node endpoints - Use /api for flow endpoints
+    httpNodeRoot: '/api',
     httpNodeCors: {
         origin: "*",
         credentials: true

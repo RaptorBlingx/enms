@@ -12,7 +12,7 @@ Author: EnMS Team
 Phase: 3 - Analytics & ML (Session 3)
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +20,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 import logging
 import sys
+import asyncio
+import json
 
 from config import settings
 from database import db
@@ -343,7 +345,7 @@ async def health_check():
             active_machines = await conn.fetchval(query)
             
             # Count baseline models
-            query = "SELECT COUNT(*) FROM baseline_models"
+            query = "SELECT COUNT(*) FROM energy_baselines"
             baseline_models = await conn.fetchval(query)
             
             # Count recent anomalies (last 24 hours)
@@ -386,6 +388,194 @@ async def health_check():
     }
     
     return health_data
+
+
+@app.get(f"{settings.API_PREFIX}/stats/system")
+async def system_statistics():
+    """
+    Get detailed system statistics for the portal dashboard.
+    
+    Returns comprehensive real-time operational metrics:
+    - Total energy readings and consumption
+    - Data ingestion rates
+    - Cost and carbon footprint
+    - Peak power and efficiency
+    - System uptime and health
+    """
+    try:
+        async with db.pool.acquire() as conn:
+            # Total energy readings
+            total_readings = await conn.fetchval(
+                "SELECT COUNT(*) FROM energy_readings"
+            )
+            
+            # Total energy consumption (kWh)
+            total_energy = await conn.fetchval(
+                """
+                SELECT COALESCE(SUM(energy_kwh), 0)::INTEGER 
+                FROM energy_readings
+                """
+            )
+            
+            # Data rate: count readings in last minute
+            data_rate = await conn.fetchval(
+                """
+                SELECT COUNT(*) 
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '1 minute'
+                """
+            )
+            
+            # Readings per minute (average from last hour)
+            readings_per_minute = await conn.fetchval(
+                """
+                SELECT COALESCE(COUNT(*) / 60, 0)::INTEGER
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '1 hour'
+                """
+            )
+            
+            # Energy per hour (average from last 24 hours)
+            energy_per_hour = await conn.fetchval(
+                """
+                SELECT COALESCE(SUM(energy_kwh) / 24, 0)::INTEGER
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+                """
+            )
+            
+            # Peak power in last 24 hours (kW)
+            peak_power = await conn.fetchval(
+                """
+                SELECT COALESCE(MAX(power_kw), 0)::INTEGER
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+                """
+            )
+            
+            # Average power (kW)
+            avg_power = await conn.fetchval(
+                """
+                SELECT COALESCE(AVG(power_kw), 0)::INTEGER
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+                """
+            )
+            
+            # Estimated cost (assuming $0.12 per kWh)
+            estimated_cost = round(total_energy * 0.12, 2) if total_energy else 0
+            
+            # Cost per day (last 24h)
+            cost_per_day = await conn.fetchval(
+                """
+                SELECT COALESCE(SUM(energy_kwh) * 0.12, 0)::NUMERIC(10,2)
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+                """
+            )
+            
+            # Carbon footprint (kg CO2) - assuming 0.5 kg CO2 per kWh
+            carbon_footprint = round(total_energy * 0.5, 2) if total_energy else 0
+            
+            # Carbon per day
+            carbon_per_day = await conn.fetchval(
+                """
+                SELECT COALESCE(SUM(energy_kwh) * 0.5, 0)::NUMERIC(10,2)
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+                """
+            )
+            
+            # Total anomalies detected
+            total_anomalies = await conn.fetchval(
+                "SELECT COUNT(*) FROM anomalies"
+            )
+            
+            # Active machines today
+            active_machines_today = await conn.fetchval(
+                """
+                SELECT COUNT(DISTINCT machine_id) 
+                FROM energy_readings 
+                WHERE time > NOW() - INTERVAL '24 hours'
+                """
+            )
+            
+            # Calculate uptime (days since first reading)
+            first_reading_date = await conn.fetchval(
+                "SELECT MIN(time) FROM energy_readings"
+            )
+            
+            uptime_days = 0
+            uptime_percent = 99.7
+            
+            if first_reading_date:
+                from datetime import timezone
+                now_utc = datetime.now(timezone.utc)
+                if first_reading_date.tzinfo is None:
+                    first_reading_date = first_reading_date.replace(tzinfo=timezone.utc)
+                delta = now_utc - first_reading_date
+                uptime_days = delta.days
+                
+                # Calculate uptime percentage
+                expected_readings = 7 * 60 * 60 * 24 * uptime_days
+                if expected_readings > 0:
+                    uptime_percent = min(99.9, (total_readings / expected_readings) * 100)
+            
+            # Power efficiency (current vs peak)
+            efficiency = round((avg_power / peak_power * 100), 1) if peak_power > 0 else 0
+            
+            return {
+                # Core metrics
+                "total_readings": total_readings or 0,
+                "total_energy": total_energy or 0,
+                "data_rate": data_rate or 0,
+                "uptime_days": uptime_days,
+                "uptime_percent": round(uptime_percent, 1),
+                
+                # Rates
+                "readings_per_minute": readings_per_minute or 0,
+                "energy_per_hour": energy_per_hour or 0,
+                
+                # Power metrics
+                "peak_power": peak_power or 0,
+                "avg_power": avg_power or 0,
+                "efficiency": efficiency,
+                
+                # Cost and carbon
+                "estimated_cost": float(estimated_cost),
+                "cost_per_day": float(cost_per_day) if cost_per_day else 0,
+                "carbon_footprint": float(carbon_footprint),
+                "carbon_per_day": float(carbon_per_day) if carbon_per_day else 0,
+                
+                # System health
+                "total_anomalies": total_anomalies or 0,
+                "active_machines_today": active_machines_today or 0,
+                
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Error fetching system statistics: {e}")
+        return {
+            "total_readings": 0,
+            "total_energy": 0,
+            "data_rate": 0,
+            "uptime_days": 0,
+            "uptime_percent": 0,
+            "readings_per_minute": 0,
+            "energy_per_hour": 0,
+            "peak_power": 0,
+            "avg_power": 0,
+            "efficiency": 0,
+            "estimated_cost": 0,
+            "cost_per_day": 0,
+            "carbon_footprint": 0,
+            "carbon_per_day": 0,
+            "total_anomalies": 0,
+            "active_machines_today": 0,
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 
 @app.get(f"{settings.API_PREFIX}/scheduler/status")
@@ -471,6 +661,79 @@ async def trigger_job(job_id: str):
                 "message": str(e)
             }
         )
+
+
+# ============================================================================
+# WebSocket Endpoint for Real-Time Updates
+# ============================================================================
+
+# Store active WebSocket connections
+active_connections: list[WebSocket] = []
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time system statistics updates.
+    
+    Pushes live updates every 5 seconds to all connected clients.
+    Sends anomaly alerts immediately when detected.
+    """
+    await websocket.accept()
+    active_connections.append(websocket)
+    
+    logger.info(f"🔌 WebSocket client connected. Total connections: {len(active_connections)}")
+    
+    try:
+        while True:
+            # Fetch latest statistics
+            stats = await system_statistics()
+            
+            # Send stats update
+            await websocket.send_json({
+                "type": "stats_update",
+                "stats": stats,
+                "timestamp": datetime.utcnow().isoformat()
+            })
+            
+            # Wait 5 seconds before next update
+            await asyncio.sleep(5)
+            
+    except WebSocketDisconnect:
+        active_connections.remove(websocket)
+        logger.info(f"🔌 WebSocket client disconnected. Total connections: {len(active_connections)}")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        if websocket in active_connections:
+            active_connections.remove(websocket)
+
+
+async def broadcast_anomaly(anomaly_data: dict):
+    """
+    Broadcast anomaly detection to all connected WebSocket clients.
+    
+    Called by the anomaly detection scheduler job.
+    """
+    if not active_connections:
+        return
+    
+    message = {
+        "type": "anomaly_detected",
+        "anomaly": anomaly_data,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    # Send to all connected clients
+    disconnected = []
+    for connection in active_connections:
+        try:
+            await connection.send_json(message)
+        except Exception as e:
+            logger.error(f"Error broadcasting to client: {e}")
+            disconnected.append(connection)
+    
+    # Clean up disconnected clients
+    for connection in disconnected:
+        active_connections.remove(connection)
 
 
 # ============================================================================

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnMS - Energy Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: white;
+        }
+
+        .status-bar h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-item-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        .status-indicator.warning {
+            background: #f59e0b;
+        }
+
+        .status-indicator.error {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-item span {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .status-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            opacity: 0.5;
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 35px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 240px;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .service-card p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.7;
+            flex-grow: 1;
+            margin-bottom: 15px;
+        }
+
+        .service-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #10b981;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: auto;
+            align-self: flex-start;
+        }
+
+        .service-badge.pending {
+            background: #f59e0b;
+        }
+
+        .service-badge.inactive {
+            background: #6b7280;
+        }
+
+        .service-badge.analytics {
+            background: #667eea;
+        }
+
+        .service-badge.data-pipeline {
+            background: #06b6d4;
+        }
+
+        .service-badge.ml-ai {
+            background: #8b5cf6;
+        }
+
+        .service-badge.voice-api {
+            background: #ec4899;
+        }
+
+        .service-badge.testing {
+            background: #f59e0b;
+        }
+
+        footer {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        footer p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .quick-stats {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            color: white;
+        }
+
+        .quick-stats h2 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            text-align: center;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ EnMS</h1>
+            <p>Energy Management System - Real-time Factory Intelligence</p>
+        </header>
+
+        <!-- Enhanced System Status Section -->
+        <div class="status-bar">
+            <h2>
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                </svg>
+                System Status
+            </h2>
+            <div class="status-items">
+                <div class="status-item">
+                    <div class="status-item-header">
+                        <div class="status-indicator" id="machines-status"></div>
+                        <span>Active Machines</span>
+                    </div>
+                    <div class="status-value loading" id="active-machines">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-item-header">
+                        <div class="status-indicator" id="baseline-status"></div>
+                        <span>Baseline Models</span>
+                    </div>
+                    <div class="status-value loading" id="baseline-models">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-item-header">
+                        <div class="status-indicator warning" id="anomaly-status"></div>
+                        <span>Anomalies (24h)</span>
+                    </div>
+                    <div class="status-value loading" id="anomalies-24h">-</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-item-header">
+                        <div class="status-indicator" id="scheduler-status"></div>
+                        <span>Scheduler</span>
+                    </div>
+                    <div class="status-value loading" id="scheduler-jobs">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced System Statistics -->
+        <div class="quick-stats">
+            <h2>📊 System Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 class="loading" id="total-readings">-</h3>
+                    <p>Energy Readings</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="loading" id="total-energy">-</h3>
+                    <p>Total Energy (kWh)</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="loading" id="data-rate">-</h3>
+                    <p>Data Rate (pts/min)</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="loading" id="uptime">-</h3>
+                    <p>System Uptime</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="services-grid">
+            <!-- Analytics & ML - NEW! -->
+            <a href="/api/analytics/ui/" class="service-card">
+                <div class="service-icon">📊</div>
+                <h3>Analytics & ML</h3>
+                <p>Machine learning powered analytics. Energy baseline models, anomaly detection, KPI dashboards, and predictive forecasting.</p>
+                <span class="service-badge">Active</span>
+            </a>
+
+            <!-- Node-RED Editor -->
+            <a href="/nodered/" class="service-card">
+                <div class="service-icon">🔄</div>
+                <h3>Node-RED</h3>
+                <p>Visual programming for IoT. Design data pipelines, process MQTT messages, and orchestrate workflows with drag-and-drop nodes.</p>
+                <span class="service-badge">Active</span>
+            </a>
+
+            <!-- Factory Simulator -->
+            <a href="/api/simulator/docs" class="service-card" target="_blank">
+                <div class="service-icon">🏭</div>
+                <h3>Factory Simulator</h3>
+                <p>Real-time industrial machine simulator. Generates realistic energy consumption data for 7 machines across 2 factories.</p>
+                <span class="service-badge">Active</span>
+            </a>
+
+            <!-- Grafana Dashboard -->
+            <a href="/grafana/" class="service-card">
+                <div class="service-icon">�</div>
+                <h3>Grafana Dashboards</h3>
+                <p>Real-time visualization and monitoring. Interactive dashboards for energy consumption, production metrics, and environmental data.</p>
+                <span class="service-badge pending">Phase 2</span>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Built with ❤️ for Industrial Energy Management</p>
+        <p style="margin-top: 10px;">
+            <a href="https://github.com/RaptorBlingx/enms" target="_blank" style="color: white; text-decoration: none; font-weight: 600;">GitHub</a> · 
+            <a href="/api/simulator/docs" target="_blank" style="color: white; text-decoration: none; font-weight: 600;">API Docs</a> · 
+            <a href="/api/analytics/docs" target="_blank" style="color: white; text-decoration: none; font-weight: 600;">Analytics API</a>
+        </p>
+        <p style="margin-top: 15px; opacity: 0.7; font-size: 0.85rem;">
+            EnMS v1.0.0 | Phase 3 Complete | October 2025
+        </p>
+    </footer>
+
+    <script>
+        // Fetch system status and statistics
+        async function loadSystemData() {
+            try {
+                // Fetch Analytics health data
+                const analyticsResponse = await fetch('/api/analytics/api/v1/health');
+                if (analyticsResponse.ok) {
+                    const analyticsData = await analyticsResponse.json();
+                    updateAnalyticsStatus(analyticsData);
+                }
+
+                // Update system statistics
+                updateSystemStats();
+
+            } catch (error) {
+                console.error('Error loading system data:', error);
+            }
+        }
+
+        function updateAnalyticsStatus(data) {
+            // Update active machines
+            const machinesEl = document.getElementById('active-machines');
+            machinesEl.textContent = (data.active_machines !== undefined && data.active_machines !== null) ? data.active_machines : '-';
+            machinesEl.classList.remove('loading');
+
+            // Update baseline models
+            const baselineEl = document.getElementById('baseline-models');
+            baselineEl.textContent = (data.baseline_models !== undefined && data.baseline_models !== null) ? data.baseline_models : '-';
+            baselineEl.classList.remove('loading');
+
+            // Update anomalies
+            const anomaliesEl = document.getElementById('anomalies-24h');
+            anomaliesEl.textContent = (data.recent_anomalies !== undefined && data.recent_anomalies !== null) ? data.recent_anomalies : '-';
+            anomaliesEl.classList.remove('loading');
+
+            // Update scheduler status
+            const schedulerEl = document.getElementById('scheduler-jobs');
+            if (data.scheduler && data.scheduler.running) {
+                schedulerEl.textContent = (data.scheduler.job_count !== undefined && data.scheduler.job_count !== null) ? data.scheduler.job_count : '0';
+                schedulerEl.classList.remove('loading');
+            } else {
+                schedulerEl.textContent = 'Offline';
+                schedulerEl.classList.remove('loading');
+                document.getElementById('scheduler-status').classList.add('error');
+            }
+        }
+
+        function updateSimulatorStatus(data) {
+            // Could add simulator-specific stats here
+            console.log('Simulator status:', data);
+        }
+
+        function updateSystemStats() {
+            // Placeholder statistics - replace with real API calls later
+            const stats = {
+                totalReadings: '1.2M',
+                totalEnergy: '43,567',
+                dataRate: '~420',
+                uptime: '99.7%'
+            };
+
+            document.getElementById('total-readings').textContent = stats.totalReadings;
+            document.getElementById('total-readings').classList.remove('loading');
+
+            document.getElementById('total-energy').textContent = stats.totalEnergy;
+            document.getElementById('total-energy').classList.remove('loading');
+
+            document.getElementById('data-rate').textContent = stats.dataRate;
+            document.getElementById('data-rate').classList.remove('loading');
+
+            document.getElementById('uptime').textContent = stats.uptime;
+            document.getElementById('uptime').classList.remove('loading');
+        }
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSystemData();
+            // Refresh every 30 seconds
+            setInterval(loadSystemData, 30000);
+        });
+
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
