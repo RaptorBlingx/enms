@@ -32,10 +32,18 @@
 🔗 http://10.33.10.109:8080/grafana/
 - Username: `admin` / Password: `admin`
 
+### Known Issues Fixed
+✅ **Production Column Name Error** (Fixed in commit `02987a1`)
+- Error: `pq: column pd.production_count does not exist`
+- Fixed in 3 panels: SEC, Machine Efficiency Ranking, Hourly Performance Summary
+- Changed: `pd.production_count` → `pd.total_production_count`
+
 **Git Commits:**
 - `5df85f3` - Backup before enhancement
 - `ee9acd6` - Added KPI panels and variables
 - `a0ba6e7` - Added comparison panels (Phase 1 complete)
+- `b2ca2b6` - Updated plan with completion summary
+- `02987a1` - Fixed production column name errors
 
 ---
 
