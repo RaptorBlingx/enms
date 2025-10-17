@@ -221,15 +221,25 @@ Transform EnMS from playful/inconsistent design to professional industrial-grade
    - Removed redundant connection toast (status indicator shows this)
    - Professional semi-transparent backgrounds with backdrop blur
    - Better positioning below status indicator
+10. ✅ **BADGE SYSTEM COMPLETE REDESIGN** → Professional enterprise-grade badges:
+    - **Modern gradient styling**: All badges use 135° gradients from lighter to darker shades
+    - **Consistent white text**: Perfect contrast with text-shadow for readability
+    - **Visual hierarchy with dots**: Critical/Warning/Resolved badges get glowing white dot indicators
+    - **Professional polish**: Border highlights, box-shadows, letter-spacing, uppercase text
+    - **Complete consistency**: Normal and Active badges now match the professional gradient style
+    - **Before**: Inconsistent mix of light backgrounds and solid colors
+    - **After**: Unified gradient system across ALL badge types
 
 **Files Updated**: 
-- ✅ `portal/public/css/enms-industrial.css` (2,023 → 2,161 lines)
+- ✅ `portal/public/css/enms-industrial.css` (2,131 → 2,217 lines)
   - Enhanced toast notification system with color variants
   - Added complete WebSocket status indicator styling with animations
+  - **Complete badge system redesign**: Gradient backgrounds, dot indicators, text shadows, professional spacing
 - ✅ `analytics/ui/templates/dashboard.html`
   - Replaced WebSocket status from bottom badge to top-right professional indicator
   - Removed redundant connection toast notification
   - Updated JavaScript to manage status dot and text classes properly
+  - **Updated badge configuration**: Critical/Warning/Resolved use `badge-with-dot`, Normal/Active use standard gradient style
 
 ---
 
@@ -279,7 +289,33 @@ Transform EnMS from playful/inconsistent design to professional industrial-grade
 - [x] Proper auto-dismiss timing
 - [x] Better positioning
 
-**Status**: Dashboard at ~85% completion. Minor refinements may be needed based on user feedback.
+#### Step 5.7: Professional Badge System Redesign ✅
+- [x] **Complete badge redesign** with modern gradient styling
+- [x] **ALL badges now consistent** - gradient backgrounds with white text
+- [x] Badge variants implemented:
+  - `badge-success` - Green gradient (for Resolved status)
+  - `badge-warning` - Orange gradient (for Warning severity)
+  - `badge-danger` - Red gradient (for Critical severity)
+  - `badge-info` - Blue gradient (for Normal, Active status)
+  - `badge-primary` - Deep blue gradient
+  - `badge-secondary` - Teal gradient
+  - `badge-neutral` - Gray gradient
+- [x] **Visual hierarchy with dot indicators**:
+  - Critical/Warning/Resolved badges get white dot prefix (`badge-with-dot`)
+  - Normal/Active badges use standard gradient style
+  - Creates clear priority signaling
+- [x] Professional details:
+  - Gradient backgrounds (135deg, lighter to darker)
+  - White text with subtle text-shadow for readability
+  - Border with 20% white opacity for depth
+  - Box-shadow for elevation (2px blur with 25% opacity)
+  - Uppercase text with letter-spacing for impact
+  - 11px font size, 600 weight for perfect balance
+- [x] Outline variants for secondary emphasis
+- [x] Hover effects for clickable badges
+- [x] Size variants (sm, lg) for different contexts
+
+**Status**: Dashboard at ~95% completion. Badge system is now enterprise-grade and fully consistent! 🚀
 
 ---
 

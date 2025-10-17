@@ -1072,7 +1072,6 @@
         }
       ],
       "title": "Top 5 Energy Consumers (Last 24h)",
-      "type": "barchart",
       "transformations": [
         {
           "id": "organize",
@@ -1082,7 +1081,8 @@
             "renameByName": {}
           }
         }
-      ]
+      ],
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -1256,7 +1256,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROW_NUMBER() OVER (\n    ORDER BY \n      COALESCE(SUM(er.total_energy_kwh) / NULLIF(SUM(pd.production_count), 0), 999) ASC\n  ) as \"Rank\",\n  m.name as \"Machine\",\n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.production_count), 0),\n    0\n  ) as \"SEC\",\n  COALESCE(\n    AVG(er.avg_power_kw) / NULLIF(MAX(er.max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nLEFT JOIN production_data_1hour pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Rank\" ASC;",
+          "rawSql": "SELECT \n  ROW_NUMBER() OVER (\n    ORDER BY \n      COALESCE(SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0), 999) ASC\n  ) as \"Rank\",\n  m.name as \"Machine\",\n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0),\n    0\n  ) as \"SEC\",\n  COALESCE(\n    AVG(er.avg_power_kw) / NULLIF(MAX(er.max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nLEFT JOIN production_data_1hour pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Rank\" ASC;",
           "refId": "A"
         }
       ],
@@ -1291,6 +1291,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 930,
+  "version": 932,
   "weekStart": ""
 }

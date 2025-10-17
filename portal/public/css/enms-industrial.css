@@ -741,6 +741,7 @@ a:hover {
 
 /* ============================================================================
  * BADGE SYSTEM - PROFESSIONAL INDUSTRIAL REDESIGN
+ * Modern, consistent, high-contrast badges with gradient depth
  * ============================================================================ */
 
 /* Base Badge Styling */
@@ -748,114 +749,93 @@ a:hover {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    padding: 0.25rem 0.625rem;
+    padding: 0.3rem 0.75rem;
     font-size: 0.6875rem; /* 11px */
     font-weight: 600;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     border-radius: var(--radius-sm);
-    line-height: 1.4;
+    line-height: 1.5;
     white-space: nowrap;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     border: 1px solid transparent;
 }
 
-/* Solid Badge Variants - Primary Use */
+/* Status Badge Variants - Gradient Style with White Text */
 .badge-success {
     background: linear-gradient(135deg, #27AE60 0%, #229954 100%);
     color: #FFFFFF;
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 1px 3px rgba(39, 174, 96, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(39, 174, 96, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .badge-warning {
     background: linear-gradient(135deg, #F39C12 0%, #E67E22 100%);
     color: #FFFFFF;
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 1px 3px rgba(243, 156, 18, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(243, 156, 18, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+.badge-error,
 .badge-danger {
     background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
     color: #FFFFFF;
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 1px 3px rgba(231, 76, 60, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .badge-info {
     background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
     color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Primary/Secondary/Neutral Badges */
+.badge-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--text-inverse);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(10, 36, 99, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-secondary {
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+    color: var(--text-inverse);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 168, 232, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-neutral {
+    background: linear-gradient(135deg, #7F8C8D 0%, #5D6D7E 100%);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(127, 140, 141, 0.25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.badge-dark {
+    background: linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-900) 100%);
+    color: var(--text-inverse);
     border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 1px 3px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 2px 4px rgba(44, 62, 80, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Subtle Badge Variants - Soft, Modern Look */
-.badge-success-subtle {
-    background-color: rgba(39, 174, 96, 0.1);
-    color: #1E8449;
-    border-color: rgba(39, 174, 96, 0.25);
-    font-weight: 600;
+.badge-light {
+    background: linear-gradient(135deg, #F8F9FA 0%, #ECF0F1 100%);
+    color: var(--color-gray-700);
+    border: 1px solid var(--color-gray-300);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.badge-warning-subtle {
-    background-color: rgba(243, 156, 18, 0.1);
-    color: #CA6F1E;
-    border-color: rgba(243, 156, 18, 0.25);
-    font-weight: 600;
-}
-
-.badge-danger-subtle {
-    background-color: rgba(231, 76, 60, 0.1);
-    color: #A93226;
-    border-color: rgba(231, 76, 60, 0.25);
-    font-weight: 600;
-}
-
-.badge-info-subtle {
-    background-color: rgba(52, 152, 219, 0.1);
-    color: #1F618D;
-    border-color: rgba(52, 152, 219, 0.25);
-    font-weight: 600;
-}
-
-/* Industrial Badge Variants - Strong, Bold */
-.badge-success-industrial {
-    background-color: #2ECC71;
-    color: #FFFFFF;
-    border: 2px solid #27AE60;
-    font-weight: 700;
-    padding: 0.3rem 0.75rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.badge-warning-industrial {
-    background-color: #F39C12;
-    color: #FFFFFF;
-    border: 2px solid #E67E22;
-    font-weight: 700;
-    padding: 0.3rem 0.75rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.badge-danger-industrial {
-    background-color: #E74C3C;
-    color: #FFFFFF;
-    border: 2px solid #C0392B;
-    font-weight: 700;
-    padding: 0.3rem 0.75rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.badge-info-industrial {
-    background-color: #3498DB;
-    color: #FFFFFF;
-    border: 2px solid #2980B9;
-    font-weight: 700;
-    padding: 0.3rem 0.75rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-/* Badge with Icon Dot */
+/* Badge with Status Dot Indicator */
 .badge-with-dot::before {
     content: '';
     display: inline-block;
@@ -863,58 +843,11 @@ a:hover {
     height: 6px;
     border-radius: 50%;
     margin-right: var(--space-1);
-}
-
-.badge-success.badge-with-dot::before {
     background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
 }
 
-.badge-warning.badge-with-dot::before {
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
-}
-
-.badge-danger.badge-with-dot::before {
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
-}
-
-.badge-info.badge-with-dot::before {
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
-}
-
-/* Primary/Secondary/Neutral Badges */
-.badge-primary {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    color: var(--text-inverse);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 1px 3px rgba(10, 36, 99, 0.3);
-}
-
-.badge-secondary {
-    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
-    color: var(--text-inverse);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 1px 3px rgba(0, 168, 232, 0.3);
-}
-
-.badge-neutral,
-.badge-light {
-    background-color: var(--color-gray-200);
-    color: var(--color-gray-700);
-    border-color: var(--color-gray-300);
-    font-weight: 600;
-}
-
-.badge-dark {
-    background: linear-gradient(135deg, var(--color-gray-800) 0%, var(--color-gray-900) 100%);
-    color: var(--text-inverse);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Badge Outline Variants */
+/* Badge Outline Variants - Modern Style */
 .badge-outline-primary {
     background-color: transparent;
     color: var(--color-primary);
@@ -952,7 +885,7 @@ a:hover {
 
 /* Badge Sizes */
 .badge-sm {
-    padding: 0.15rem 0.5rem;
+    padding: 0.2rem 0.5rem;
     font-size: 0.625rem; /* 10px */
 }
 
@@ -968,7 +901,7 @@ a:hover {
 
 .badge.badge-clickable:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Count Badges (for notifications) */
