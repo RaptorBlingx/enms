@@ -154,41 +154,136 @@ async def detect_anomalies(request: DetectAnomaliesRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/anomaly/recent", tags=["Anomaly"])
-async def get_recent_anomalies(
+@router.get("/anomaly/search", tags=["Anomaly"])
+async def search_anomalies(
     machine_id: Optional[UUID] = Query(None, description="Filter by machine"),
+    start_date: Optional[datetime] = Query(None, description="Start date (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="End date (ISO 8601)"),
     severity: Optional[str] = Query(None, description="Filter by severity (warning, critical)"),
-    limit: int = Query(50, description="Maximum results", ge=1, le=200)
+    is_resolved: Optional[bool] = Query(None, description="Filter by resolution status"),
+    limit: int = Query(100, description="Maximum results", ge=1, le=500)
 ):
     """
-    Get recent anomalies (last 7 days).
+    Search anomalies with flexible date range filtering.
+    
+    **NEW FEATURE** - Extends /anomaly/recent with custom date ranges.
     
     **Use Cases:**
-    - Dashboard display
-    - Alert monitoring
-    - Real-time fault tracking
+    - "Show me all critical alerts from last week"
+    - "What anomalies occurred in October?"
+    - "Find unresolved warnings for Compressor-1"
     
     **Filters:**
-    - By machine (optional)
-    - By severity (optional: 'warning', 'critical')
-    - Result limit (1-200, default: 50)
+    - `machine_id`: Filter by specific machine (optional)
+    - `start_date`: Beginning of search period (ISO 8601, optional)
+    - `end_date`: End of search period (ISO 8601, optional)
+    - `severity`: Filter by severity level (optional: 'info', 'warning', 'critical')
+    - `is_resolved`: Show only resolved (true) or unresolved (false) anomalies (optional)
+    - `limit`: Maximum results (1-500, default: 100)
+    
+    **Date Behavior:**
+    - If no dates provided: Returns last 30 days
+    - If only start_date: From start to now
+    - If only end_date: From 30 days before end to end
+    - If both: Exact range
     
     **Returns:**
-    - List of anomalies with machine info
+    - List of anomalies matching criteria
+    - Total count and applied filters
     - Ordered by detection time (newest first)
     """
     try:
-        anomalies = await anomaly_service.get_recent_anomalies(
+        anomalies = await anomaly_service.search_anomalies(
             machine_id=machine_id,
+            start_date=start_date,
+            end_date=end_date,
             severity=severity,
+            is_resolved=is_resolved,
             limit=limit
         )
         return {
             'total_count': len(anomalies),
             'filters': {
                 'machine_id': str(machine_id) if machine_id else None,
+                'start_date': start_date.isoformat() if start_date else None,
+                'end_date': end_date.isoformat() if end_date else None,
                 'severity': severity,
-                'time_window': '24 hours'
+                'is_resolved': is_resolved,
+                'limit': limit
+            },
+            'anomalies': anomalies
+        }
+    
+    except Exception as e:
+        logger.error(f"Error searching anomalies: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/anomaly/recent", tags=["Anomaly"])
+async def get_recent_anomalies(
+    machine_id: Optional[UUID] = Query(None, description="Filter by machine"),
+    severity: Optional[str] = Query(None, description="Filter by severity (warning, critical)"),
+    start_time: Optional[datetime] = Query(None, description="Start of date range (ISO 8601, defaults to 7 days ago)"),
+    end_time: Optional[datetime] = Query(None, description="End of date range (ISO 8601, defaults to now)"),
+    limit: int = Query(50, description="Maximum results", ge=1, le=200)
+):
+    """
+    Get recent anomalies with optional custom date range.
+    
+    **NEW:** Now supports flexible date ranges! Defaults to last 7 days if not specified.
+    
+    **Use Cases:**
+    - Dashboard display
+    - Alert monitoring
+    - Real-time fault tracking
+    - Historical anomaly analysis
+    
+    **Filters:**
+    - `machine_id`: Filter by specific machine (optional)
+    - `severity`: Filter by severity - 'warning', 'critical' (optional)
+    - `start_time`: Custom start date (ISO 8601, optional, defaults to 7 days ago)
+    - `end_time`: Custom end date (ISO 8601, optional, defaults to now)
+    - `limit`: Maximum results (1-200, default: 50)
+    
+    **Returns:**
+    - List of anomalies with machine info
+    - Ordered by detection time (newest first)
+    
+    **Examples:**
+    ```
+    # Last 7 days (default)
+    GET /anomaly/recent
+    
+    # Custom date range
+    GET /anomaly/recent?start_time=2025-10-15T00:00:00Z&end_time=2025-10-20T00:00:00Z
+    
+    # Last week's critical alerts for specific machine
+    GET /anomaly/recent?machine_id=...&severity=critical&start_time=2025-10-13T00:00:00Z
+    ```
+    """
+    try:
+        anomalies = await anomaly_service.get_recent_anomalies(
+            machine_id=machine_id,
+            severity=severity,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit
+        )
+        
+        # Calculate time window for response
+        if start_time and end_time:
+            time_window = f"Custom range: {start_time.isoformat()} to {end_time.isoformat()}"
+        else:
+            time_window = "Last 7 days (default)"
+        
+        return {
+            'total_count': len(anomalies),
+            'filters': {
+                'machine_id': str(machine_id) if machine_id else None,
+                'severity': severity,
+                'start_time': start_time.isoformat() if start_time else None,
+                'end_time': end_time.isoformat() if end_time else None,
+                'time_window': time_window
             },
             'anomalies': anomalies
         }

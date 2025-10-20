@@ -8,7 +8,7 @@ Phase: 3 - Analytics & ML
 """
 
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 import logging
 
@@ -273,22 +273,104 @@ class AnomalyService:
         }
     
     @staticmethod
-    async def get_recent_anomalies(
+    @staticmethod
+    async def search_anomalies(
         machine_id: Optional[UUID] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
         severity: Optional[str] = None,
-        limit: int = 50
+        is_resolved: Optional[bool] = None,
+        limit: int = 100
     ) -> List[Dict[str, Any]]:
         """
-        Get recent anomalies (last 7 days by default).
+        Search anomalies with flexible filtering.
         
         Args:
             machine_id: Optional machine filter
-            severity: Optional severity filter ('warning', 'critical')
+            start_date: Start of search period
+            end_date: End of search period
+            severity: Optional severity filter
+            is_resolved: Optional resolution status filter
             limit: Maximum number of results
             
         Returns:
             List of anomaly records
         """
+        from datetime import timedelta
+        
+        # Default date range: last 30 days
+        if not start_date and not end_date:
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=30)
+        elif not start_date:
+            start_date = end_date - timedelta(days=30)
+        elif not end_date:
+            end_date = datetime.now()
+        
+        query = """
+            SELECT 
+                a.id, a.machine_id, a.detected_at, a.anomaly_type,
+                a.severity, a.metric_name, a.metric_value, a.expected_value,
+                a.deviation_percent, a.confidence_score, a.is_resolved,
+                a.resolved_at, a.resolution_notes,
+                m.name as machine_name, m.type as machine_type
+            FROM anomalies a
+            JOIN machines m ON a.machine_id = m.id
+            WHERE a.detected_at >= $1 AND a.detected_at <= $2
+        """
+        
+        params = [start_date, end_date]
+        param_count = 3
+        
+        if machine_id:
+            query += f" AND a.machine_id = ${param_count}"
+            params.append(machine_id)
+            param_count += 1
+        
+        if severity:
+            query += f" AND a.severity = ${param_count}"
+            params.append(severity)
+            param_count += 1
+        
+        if is_resolved is not None:
+            query += f" AND a.is_resolved = ${param_count}"
+            params.append(is_resolved)
+            param_count += 1
+        
+        query += f" ORDER BY a.detected_at DESC LIMIT ${param_count}"
+        params.append(limit)
+        
+        async with db.pool.acquire() as conn:
+            rows = await conn.fetch(query, *params)
+            return [dict(row) for row in rows]
+
+    @staticmethod
+    async def get_recent_anomalies(
+        machine_id: Optional[UUID] = None,
+        severity: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """
+        Get recent anomalies with optional custom date range.
+        
+        Args:
+            machine_id: Optional machine filter
+            severity: Optional severity filter ('warning', 'critical')
+            start_time: Optional start of date range (defaults to 7 days ago)
+            end_time: Optional end of date range (defaults to now)
+            limit: Maximum number of results
+            
+        Returns:
+            List of anomaly records
+        """
+        # Set default date range if not provided (last 7 days)
+        if start_time is None:
+            start_time = datetime.now() - timedelta(days=7)
+        if end_time is None:
+            end_time = datetime.now()
+        
         query = """
             SELECT 
                 a.id, a.machine_id, a.detected_at, a.anomaly_type,
@@ -297,11 +379,11 @@ class AnomalyService:
                 m.name as machine_name, m.type as machine_type
             FROM anomalies a
             JOIN machines m ON a.machine_id = m.id
-            WHERE a.detected_at >= NOW() - INTERVAL '7 days'
+            WHERE a.detected_at >= $1 AND a.detected_at <= $2
         """
         
-        params = []
-        param_count = 1
+        params = [start_time, end_time]
+        param_count = 3
         
         if machine_id:
             query += f" AND a.machine_id = ${param_count}"

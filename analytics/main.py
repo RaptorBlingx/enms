@@ -273,6 +273,10 @@ from api.routes.sankey import router as sankey_router
 from api.routes.heatmap import router as heatmap_router
 from api.routes.comparison import router as comparison_router
 from api.routes.model_performance import router as model_performance_router
+from api.routes.stats import router as stats_router
+from api.routes.production import router as production_router
+from api.routes.compare import router as compare_router
+from api.routes.ovos import router as ovos_router  # OVOS Integration
 from api.websocket_routes import router as websocket_router  # Phase 4 Session 5
 
 # Register API routes with prefix
@@ -286,6 +290,10 @@ app.include_router(sankey_router, prefix=settings.API_PREFIX)
 app.include_router(heatmap_router, prefix=settings.API_PREFIX)
 app.include_router(comparison_router, prefix=settings.API_PREFIX)
 app.include_router(model_performance_router, prefix=settings.API_PREFIX, tags=["Model Performance"])
+app.include_router(stats_router, prefix=settings.API_PREFIX)
+app.include_router(production_router, prefix=settings.API_PREFIX)
+app.include_router(compare_router, prefix=settings.API_PREFIX)
+app.include_router(ovos_router, prefix=settings.API_PREFIX)  # OVOS Integration
 app.include_router(websocket_router, prefix=settings.API_PREFIX)  # Phase 4 Session 5: WebSocket Routes
 
 
