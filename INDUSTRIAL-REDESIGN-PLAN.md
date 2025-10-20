@@ -319,7 +319,78 @@ Transform EnMS from playful/inconsistent design to professional industrial-grade
 
 ---
 
-### Phase 6: Baseline Training Page 🚀 ⬅️ **NEXT PHASE**
+### Phase 6: Baseline Training Page ✅ **COMPLETE** (Redesigned with Expert UX)
+**Objective**: Professional baseline model training interface with optimal information hierarchy
+**Strategy**: Expert layout architecture following F-pattern with sidebar + main content
+**Time Spent**: 60 minutes
+**Completion Date**: October 17, 2025
+
+#### Expert UX Layout Architecture ✅
+- [x] **Sidebar + Main Content Pattern**: 340px sticky sidebar for Training Configuration, flexible main content area
+- [x] **Left Sidebar (Training Configuration)**:
+  - Compact form inputs (38px height, text-sm sizing)
+  - Uppercase labels with letter-spacing (industrial professional style)
+  - Simplified driver checkboxes (clean, no descriptions)
+  - 42px Train Model button
+  - Sticky positioning follows scroll
+- [x] **Main Content (Optimal Hierarchy)**:
+  - Performance stats at top (3-column horizontal grid)
+  - Actual vs Predicted chart as primary focus (large, prominent)
+  - Coefficients visualization below chart
+  - All in chart-container with proper borders/padding
+- [x] **Full-Width Bottom Section (Training History)**:
+  - Separated with 2px border-top
+  - Comprehensive table: Name, Version, R², RMSE, Samples, Date, Status
+  - Badge system for Active/Archived models
+  - Easy scanning of historical performance
+- [x] **Responsive Design**: Adapts to smaller screens (sidebar → full width, stats grid adjusts)
+
+#### UX Best Practices Applied ✅
+- [x] F-pattern layout: Form left, results right
+- [x] Visual hierarchy: Stats → Chart → Coefficients → History
+- [x] Proximity: Related elements grouped
+- [x] Consistency: Design system variables throughout
+- [x] Scannability: Clear labels, color-coding, badges
+- [x] Color-coded R² scores (green for good, amber for below threshold)
+- [x] Proper date formatting
+- [x] Clean empty state message
+
+#### Step 6.4: Results Section Redesign ✅
+- [x] Model Performance stat cards:
+  - Gradient backgrounds matching metrics (green/blue/dark blue)
+  - Large, bold values (2.5rem)
+  - Proper spacing and padding
+  - Border styling for depth
+- [x] Coefficient bars with industrial gradient:
+  - Different gradients for positive (blue→teal) vs negative (orange→red)
+  - Proper labeling and spacing
+  - Clear visual hierarchy
+- [x] Professional loading state with industrial spinner
+- [x] Clean initial empty state with large icon
+
+#### Step 6.5: Typography & Spacing ✅
+- [x] Consistent use of design system variables
+- [x] Proper heading hierarchy (4xl → 2xl → xl → base)
+- [x] Consistent spacing scale (space-2 to space-12)
+- [x] Professional font weights (400/500/600/700)
+- [x] Color consistency (text-primary/secondary, bg-elevated)
+
+**Files Updated**: 
+- ✅ `analytics/ui/templates/baseline.html` (525 → 525 lines)
+  - Complete visual overhaul with industrial design system
+  - Professional spacing and layout
+  - Enhanced driver selection UI
+  - Stat cards with gradients
+  - Industrial table for existing models
+  - Improved coefficient visualization
+
+**What Changed**:
+- **Before**: Inconsistent spacing, Bootstrap default styling, cramped layout, poor visual hierarchy
+- **After**: Professional spacing throughout, industrial design system, clean layout, clear visual hierarchy, enterprise-grade appearance
+
+---
+
+### Phase 7: Anomaly Detection Page 🚀 ⬅️ **NEXT PHASE**
 **Objective**: Redesign Baseline Training page
 **Strategy**: Apply CSS + page-specific improvements
 **Time Estimate**: 20-30 minutes

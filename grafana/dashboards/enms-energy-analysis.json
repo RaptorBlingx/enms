@@ -242,7 +242,7 @@
           "refId": "A"
         }
       ],
-      "title": "Carbon Emissions (CO\u2082)",
+      "title": "Carbon Emissions (CO₂)",
       "type": "stat"
     },
     {
@@ -1079,7 +1079,7 @@
           "color": "rgba(255,0,255,0.7)"
         },
         "filterValues": {
-          "le": 1e-09
+          "le": 1E-9
         },
         "legend": {
           "show": true
@@ -1172,6 +1172,7 @@
               "mode": "area"
             }
           },
+          "decimals": 5,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1190,8 +1191,7 @@
               }
             ]
           },
-          "unit": "none",
-          "decimals": 5
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1244,6 +1244,7 @@
           "color": {
             "mode": "thresholds"
           },
+          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1266,8 +1267,7 @@
               }
             ]
           },
-          "unit": "kwatt",
-          "decimals": 1
+          "unit": "kwatt"
         },
         "overrides": []
       },
@@ -1290,8 +1290,8 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto",
-        "showPercentChange": false
+        "showPercentChange": false,
+        "textMode": "auto"
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -1320,7 +1320,10 @@
           "color": {
             "mode": "thresholds"
           },
+          "decimals": 1,
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1338,10 +1341,7 @@
               }
             ]
           },
-          "unit": "percent",
-          "decimals": 1,
-          "min": 0,
-          "max": 100
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -1480,6 +1480,6 @@
   "timezone": "browser",
   "title": "Energy Analysis",
   "uid": "enms-energy-analysis",
-  "version": 937,
+  "version": 1327,
   "weekStart": ""
 }
