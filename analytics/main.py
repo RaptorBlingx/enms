@@ -26,6 +26,93 @@ import json
 from config import settings
 from database import db
 
+# Rate limiting imports - inline fallback
+try:
+    from middleware import RateLimitMiddleware, ConnectionThrottle, ConnectionThrottleMiddleware
+except ImportError:
+    # Inline fallback implementation
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from collections import defaultdict
+    import time
+    
+    class ConnectionThrottle:
+        def __init__(self, max_connections_per_ip: int = 10, max_total_connections: int = 100):
+            self.max_connections_per_ip = max_connections_per_ip
+            self.max_total_connections = max_total_connections
+            self.connections = defaultdict(int)
+            self.total = 0
+        
+        def acquire(self, ip: str) -> bool:
+            if self.total >= self.max_total_connections:
+                return False
+            if self.connections[ip] >= self.max_connections_per_ip:
+                return False
+            self.connections[ip] += 1
+            self.total += 1
+            return True
+        
+        def release(self, ip: str):
+            if self.connections[ip] > 0:
+                self.connections[ip] -= 1
+                self.total -= 1
+        
+        def get_stats(self):
+            return {
+                "total_connections": self.total,
+                "max_total": self.max_total_connections,
+                "connections_by_ip": dict(self.connections)
+            }
+    
+    class ConnectionThrottleMiddleware(BaseHTTPMiddleware):
+        def __init__(self, app, throttle):
+            super().__init__(app)
+            self.throttle = throttle
+        
+        async def dispatch(self, request, call_next):
+            client_ip = request.client.host
+            if not self.throttle.acquire(client_ip):
+                return JSONResponse(
+                    status_code=429,
+                    content={"error": "Too many concurrent connections"}
+                )
+            try:
+                response = await call_next(request)
+                return response
+            finally:
+                self.throttle.release(client_ip)
+    
+    class RateLimitMiddleware(BaseHTTPMiddleware):
+        def __init__(self, app, redis_client=None):
+            super().__init__(app)
+            self.limits = defaultdict(list)
+            self.window = 60  # 60 seconds
+            self.max_requests = 100  # per minute
+        
+        async def dispatch(self, request, call_next):
+            client_ip = request.client.host
+            now = time.time()
+            
+            # Clean old entries
+            self.limits[client_ip] = [t for t in self.limits[client_ip] if now - t < self.window]
+            
+            # Check limit
+            if len(self.limits[client_ip]) >= self.max_requests:
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "error": "Rate limit exceeded",
+                        "retry_after": int(self.window - (now - self.limits[client_ip][0]))
+                    }
+                )
+            
+            # Add current request
+            self.limits[client_ip].append(now)
+            
+            response = await call_next(request)
+            response.headers["X-RateLimit-Limit"] = str(self.max_requests)
+            response.headers["X-RateLimit-Remaining"] = str(self.max_requests - len(self.limits[client_ip]))
+            return response
+
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL),
@@ -187,6 +274,22 @@ app = FastAPI(
 # ============================================================================
 # Middleware
 # ============================================================================
+
+# Connection Throttle (must be added first, before rate limiter)
+connection_throttle = ConnectionThrottle(
+    max_connections_per_ip=10,
+    max_total_connections=100
+)
+app.add_middleware(ConnectionThrottleMiddleware, throttle=connection_throttle)
+
+# Rate Limiting Middleware (Redis-based)
+try:
+    from services.redis_manager import redis_manager
+    app.add_middleware(RateLimitMiddleware, redis_client=redis_manager.redis)
+    logger.info("✓ Rate limiting enabled with Redis backend")
+except Exception as e:
+    logger.warning(f"Rate limiting disabled: {e}")
+    app.add_middleware(RateLimitMiddleware, redis_client=None)
 
 # CORS Middleware
 app.add_middleware(
@@ -396,6 +499,21 @@ async def health_check():
     }
     
     return health_data
+
+
+@app.get(f"{settings.API_PREFIX}/stats/connections")
+async def connection_statistics():
+    """
+    Get current connection statistics.
+    
+    Returns information about active connections and throttling status.
+    """
+    stats = connection_throttle.get_stats()
+    return {
+        "success": True,
+        "data": stats,
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 
 @app.get(f"{settings.API_PREFIX}/stats/system")
