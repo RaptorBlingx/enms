@@ -94,31 +94,41 @@ class BaselineModel:
                 'avg_load_factor'
             ]
         
-        # Filter to columns that exist in the data
-        available_features = [col for col in feature_columns if col in df.columns]
+        # Filter to columns that exist in the data AND have non-null values
+        available_features = []
+        for col in feature_columns:
+            if col in df.columns:
+                # Check if column has at least some non-null values (>10% coverage)
+                non_null_ratio = df[col].notna().sum() / len(df)
+                if non_null_ratio > 0.1:
+                    available_features.append(col)
+                    logger.info(f"[MODEL-PREP] Feature '{col}': {non_null_ratio*100:.1f}% coverage - INCLUDED")
+                else:
+                    logger.warning(f"[MODEL-PREP] Feature '{col}': {non_null_ratio*100:.1f}% coverage - EXCLUDED (insufficient data)")
         
         logger.info(f"Available columns in data: {list(df.columns)}")
         logger.info(f"Requested features: {feature_columns}")
-        logger.info(f"Features found in data: {available_features}")
+        logger.info(f"Features selected for training: {available_features}")
         
         if len(available_features) == 0:
             raise ValueError(f"No valid features found in data. Available columns: {list(df.columns)}, Requested: {feature_columns}")
         
-        # Remove rows with missing values
-        df = df[[target_column] + available_features].dropna()
+        # Remove rows with missing values (only for selected features + target)
+        df_clean = df[[target_column] + available_features].dropna()
+        logger.info(f"[MODEL-PREP] After removing rows with missing values: {len(df_clean)} rows (removed {len(df) - len(df_clean)})")
         
-        if len(df) < settings.BASELINE_MIN_SAMPLES:
+        if len(df_clean) < settings.BASELINE_MIN_SAMPLES:
             raise ValueError(
-                f"Insufficient samples after cleaning: {len(df)} "
+                f"Insufficient samples after cleaning: {len(df_clean)} "
                 f"(minimum: {settings.BASELINE_MIN_SAMPLES})"
             )
         
         # Extract features (X) and target (y)
-        X = df[available_features].values
-        y = df[target_column].values
+        X = df_clean[available_features].values
+        y = df_clean[target_column].values
         
         logger.info(
-            f"Prepared data: {len(df)} samples, "
+            f"Prepared data: {len(df_clean)} samples, "
             f"{len(available_features)} features: {available_features}"
         )
         
