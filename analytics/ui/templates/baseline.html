@@ -29,19 +29,31 @@
         min-width: 0; /* Prevents flex overflow */
     }
     
-    /* Form Inputs - Better Visibility */
-    #machine-select {
+    /* Form Inputs - Better Visibility - Unified with Anomaly page */
+    .form-select {
         color: var(--text-primary) !important;
         font-weight: var(--font-medium) !important;
         font-size: 15px !important;
+        height: 42px !important;
+        padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+        background-color: var(--bg-elevated) !important;
+        border: 1px solid var(--border-default) !important;
+        border-radius: var(--radius-sm) !important;
+        width: 100% !important;
     }
     
-    #machine-select option {
+    .form-select:focus {
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1) !important;
+    }
+    
+    .form-select option {
         color: var(--text-primary) !important;
         font-size: 15px !important;
+        padding: 8px !important;
     }
     
-    #machine-select option:first-child {
+    .form-select option:first-child {
         color: var(--text-secondary) !important;
         font-style: italic;
     }
@@ -325,7 +337,7 @@
                             <label for="machine-select" class="form-label" style="font-weight: var(--font-semibold); color: var(--text-primary); margin-bottom: var(--space-2); display: block; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.5px;">
                                 Machine
                             </label>
-                            <select class="form-select" id="machine-select" required style="height: 42px;">
+                            <select class="form-select" id="machine-select" required>
                                 <option value="">Select a machine...</option>
                                 <option value="c0000000-0000-0000-0000-000000000001">Compressor-1</option>
                                 <option value="h0000000-0000-0000-0000-000000000001">HVAC-1</option>
