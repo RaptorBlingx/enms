@@ -153,6 +153,7 @@
         padding: var(--space-6);
         border: 1px solid var(--border-default);
         margin-bottom: var(--space-6);
+        overflow: visible; /* Allow content to flow naturally */
     }
     
     .chart-container h5 {
@@ -164,20 +165,22 @@
         border-bottom: 1px solid var(--border-default);
     }
     
-    /* Chart Wrapper - Prevent Overflow */
+    /* Chart Wrapper - Prevent Overflow with proper spacing */
     .chart-wrapper {
         position: relative;
         width: 100%;
-        height: 400px;
-        padding: var(--space-4) 0;
+        height: 450px; /* Increased from 400px to accommodate axis labels */
+        padding: var(--space-4) 0 var(--space-8) 0; /* Extra bottom padding for x-axis labels */
     }
     
-    /* Coefficient Container - Dynamic Height */
+    /* Coefficient Container - Dynamic Height that grows with content */
     #coefficients-container {
         width: 100%;
         display: flex;
         flex-direction: column;
         gap: var(--space-4);
+        min-height: auto; /* Allow natural height based on content */
+        padding-bottom: var(--space-4); /* Extra bottom padding to prevent cutoff */
     }
 
     .coefficient-item {
@@ -782,7 +785,7 @@
                         left: 10,
                         right: 10,
                         top: 10,
-                        bottom: 10
+                        bottom: 30 /* Increased from 10 to prevent x-axis label cutoff */
                     }
                 },
                 plugins: {
@@ -831,8 +834,8 @@
                                 weight: '600'
                             },
                             padding: {
-                                top: 10,
-                                bottom: 0
+                                top: 15, /* Increased from 10 for better spacing */
+                                bottom: 5 /* Added bottom padding */
                             }
                         },
                         ticks: {
