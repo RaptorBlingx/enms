@@ -555,9 +555,15 @@
     // Load Recent Anomalies (can be called independently for real-time updates)
     async function loadRecentAnomalies() {
         try {
+            // Calculate 24-hour time window
+            const endTime = new Date();
+            const startTime = new Date(endTime.getTime() - (24 * 60 * 60 * 1000));
+            
             const anomaliesResponse = await axios.get(`${API_BASE}/anomaly/recent`, {
                 params: {
-                    hours: 24
+                    start_time: startTime.toISOString(),
+                    end_time: endTime.toISOString(),
+                    limit: 100
                 }
             });
             
