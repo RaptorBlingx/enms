@@ -417,13 +417,25 @@
             const severity = document.getElementById('severity-filter').value;
             const status = document.getElementById('status-filter').value;
             
-            const params = { limit: 200 };
+            // Calculate time window based on selected hours
+            const endTime = new Date();
+            const startTime = new Date(endTime.getTime() - (hours * 60 * 60 * 1000));
+            
+            const params = { 
+                limit: 200,
+                start_time: startTime.toISOString(),
+                end_time: endTime.toISOString()
+            };
             if (machineId) params.machine_id = machineId;
             if (severity) params.severity = severity;
             
             let response;
             if (status === 'active') {
-                response = await axios.get(`${API_BASE}/anomaly/active`, { params });
+                // Active anomalies don't need time filter (they're unresolved)
+                const activeParams = { limit: 200 };
+                if (machineId) activeParams.machine_id = machineId;
+                if (severity) activeParams.severity = severity;
+                response = await axios.get(`${API_BASE}/anomaly/active`, { params: activeParams });
             } else {
                 response = await axios.get(`${API_BASE}/anomaly/recent`, { params });
             }

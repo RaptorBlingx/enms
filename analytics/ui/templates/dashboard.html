@@ -390,12 +390,14 @@
             const healthResponse = await axios.get(`${API_BASE}/health`);
             displayServiceInfo(healthResponse.data);
             
-            // Load recent anomalies
-            const now = new Date();
-            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            // Load recent anomalies (24-hour window)
+            const endTime = new Date();
+            const startTime = new Date(endTime.getTime() - (24 * 60 * 60 * 1000));
             const anomaliesResponse = await axios.get(`${API_BASE}/anomaly/recent`, {
                 params: {
-                    hours: 24
+                    start_time: startTime.toISOString(),
+                    end_time: endTime.toISOString(),
+                    limit: 100
                 }
             });
             
