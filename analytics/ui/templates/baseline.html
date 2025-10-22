@@ -147,13 +147,16 @@
     }
     
     /* Chart Container - Primary Focus */
+    /* Override base.html fixed height - baseline needs dynamic height */
     .chart-container {
         background: var(--bg-elevated);
         border-radius: var(--radius-lg);
-        padding: var(--space-6);
+        padding: var(--space-6) var(--space-6) var(--space-8) var(--space-6) !important; /* Extra bottom padding */
         border: 1px solid var(--border-default);
         margin-bottom: var(--space-6);
-        overflow: visible; /* Allow content to flow naturally */
+        overflow: visible !important; /* Allow content to flow naturally */
+        height: auto !important; /* Override base.html fixed 400px height */
+        min-height: auto !important;
     }
     
     .chart-container h5 {

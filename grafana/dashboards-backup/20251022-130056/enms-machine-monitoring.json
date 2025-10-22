@@ -15,484 +15,24 @@
       }
     ]
   },
-  "description": "Real-time overview of factory energy consumption and machine status",
+  "description": "Detailed machine-level monitoring with production and environmental data",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 6,
+  "id": 7,
   "links": [],
   "liveNow": true,
   "panels": [
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
+      "description": "Current operational mode of the machine (RUNNING, IDLE, STOPPED, MAINTENANCE)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Machines\"\nFROM machines\nWHERE is_active = true;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Active Machines",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 50
-              },
-              {
-                "color": "red",
-                "value": 100
-              }
-            ]
-          },
-          "unit": "kwatt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nWHERE 1=1;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Current Total Power",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kwatth"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 0
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW());",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Energy Today",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "green",
-                  "index": 0,
-                  "text": "No Alerts"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 0
-      },
-      "id": 4,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Alerts\"\nFROM anomalies\nWHERE is_resolved = false;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Active Alerts",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kwatt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 4
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "time_series",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('1 minute', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '1 hour'\nGROUP BY time, m.name\nORDER BY time;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Power Consumption - Last Hour",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
           },
           "mappings": [
             {
@@ -531,82 +71,24 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Power (kW)"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "kwatt"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 30
-                    },
-                    {
-                      "color": "red",
-                      "value": 60
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Status"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 4
-      },
-      "id": 6,
+      "id": 1,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "/.*/",
+          "values": false
         },
-        "showHeader": true,
-        "sortBy": []
+        "textMode": "value"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -616,7 +98,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\nORDER BY m.name;",
+          "rawSql": "SELECT current_mode\nFROM machine_status\nWHERE machine_id = '$machine_id'::uuid\n\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -638,230 +120,108 @@
         }
       ],
       "title": "Machine Status",
-      "type": "table"
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": [],
-          "unit": "kwatth"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 12
-      },
-      "id": 7,
-      "options": {
-        "displayLabels": [
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "values": [
-            "value",
-            "percent"
-          ]
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY m.name\nORDER BY value DESC;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Energy by Machine (Today)",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": [],
-          "unit": "kwatth"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 12
-      },
-      "id": 8,
-      "options": {
-        "displayLabels": [
-          "percent"
-        ],
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "values": [
-            "value",
-            "percent"
-          ]
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY f.name\nORDER BY value DESC;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Energy by Factory (Today)",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
+      "description": "Real-time power consumption in kilowatts (kW)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "critical": {
-                  "color": "dark-red",
-                  "index": 0,
-                  "text": "CRITICAL"
-                },
-                "high": {
-                  "color": "red",
-                  "index": 1,
-                  "text": "High"
-                },
-                "low": {
-                  "color": "blue",
-                  "index": 3,
-                  "text": "Low"
-                },
-                "medium": {
-                  "color": "yellow",
-                  "index": 2,
-                  "text": "Medium"
-                }
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
               },
-              "type": "value"
-            }
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "unit": "kwatt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT current_power_kw\nFROM machine_status\nWHERE machine_id = '$machine_id'::uuid\n\nLIMIT 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Current Power",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "description": "Total energy consumed since midnight (kWh)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -870,85 +230,33 @@
                 "value": null
               }
             ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
           },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Deviation %"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 10
-                    },
-                    {
-                      "color": "red",
-                      "value": 25
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
+          "unit": "kwatth"
+        },
+        "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 12
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 0
       },
-      "id": 9,
+      "id": 3,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Time"
-          }
-        ]
+        "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -958,7 +266,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  TO_CHAR(a.detected_at, 'HH24:MI:SS') as \"Time\",\n  m.name as \"Machine\",\n  a.anomaly_type as \"Type\",\n  a.severity as \"Severity\",\n  ROUND(a.deviation_percent::numeric, 1) as \"Deviation %\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nWHERE a.is_resolved = false\nORDER BY a.detected_at DESC\nLIMIT 10;",
+          "rawSql": "SELECT COALESCE(SUM(energy_kwh), 0) as energy\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW()) AND machine_id = '$machine_id'::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
           "refId": "A",
           "sql": {
             "columns": [
@@ -979,14 +287,210 @@
           }
         }
       ],
-      "title": "Recent Alerts",
-      "type": "table"
+      "title": "Energy Today",
+      "type": "stat"
     },
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
+      "description": "Total production output since midnight",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(production_count), 0) as units\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND time >= DATE_TRUNC('day', NOW());",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Units Produced Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "description": "Time-series of power demand with min/max/mean statistics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  time AS time,\n  'Power' as metric,\n  power_kw as value\nFROM energy_readings\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Power Consumption",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "description": "Units produced over time with sum and mean calculations",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1034,7 +538,7 @@
               }
             ]
           },
-          "unit": "kwatth"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -1042,15 +546,18 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 15
       },
-      "id": 200,
+      "id": 7,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "sum",
+            "mean"
+          ],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "tooltip": {
           "mode": "single",
@@ -1065,30 +572,338 @@
             "uid": "TimescaleDB"
           },
           "editorMode": "code",
-          "format": "table",
+          "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Energy (kWh)\" DESC\nLIMIT 5;",
-          "refId": "A"
-        }
-      ],
-      "title": "Top 5 Energy Consumers (Last 24h)",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {}
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Units Produced' as metric,\n  SUM(production_count) as value\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nORDER BY time;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
           }
         }
       ],
-      "type": "barchart"
+      "title": "Production Output",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "postgres",
-        "uid": "TimescaleDB"
+        "uid": "P40AE60E18F02DE32"
       },
+      "description": "Machine temperature and indoor humidity levels (HVAC machines only)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temperature"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Humidity"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean",
+            "min"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  time AS time,\n  'Temperature' as metric,\n  machine_temp_c as value\nFROM environmental_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nORDER BY time;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  time AS time,\n  'Humidity' as metric,\n  indoor_humidity_percent as value\nFROM environmental_data\nWHERE machine_id = '$machine_id'::uuid\n  AND indoor_humidity_percent IS NOT NULL\n  AND $__timeFilter(time)\nORDER BY time;",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Environmental Conditions",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "description": "Percentage of defective units produced over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Defect Rate' as metric,\n  (SUM(production_count_bad)::float / NULLIF(SUM(production_count), 0) * 100) as value\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nHAVING SUM(production_count) > 0\nORDER BY time;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Quality - Defect Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P40AE60E18F02DE32"
+      },
+      "description": "Hourly breakdown of energy, production, and efficiency metrics for last 24 hours",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1116,103 +931,31 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Rank"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 70
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "SEC"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "none"
-              },
-              {
-                "id": "decimals",
-                "value": 5
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 0.05
-                    },
-                    {
-                      "color": "red",
-                      "value": 0.1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Load Factor (%)"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 50
-                    },
-                    {
-                      "color": "green",
-                      "value": 70
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "Energy (kWh)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kwatth"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Units"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Energy/Unit"
             },
             "properties": [
               {
@@ -1220,8 +963,30 @@
                 "value": "kwatth"
               },
               {
-                "id": "decimals",
-                "value": 1
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0.5
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -1229,11 +994,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 20
+        "w": 24,
+        "x": 0,
+        "y": 31
       },
-      "id": 201,
+      "id": 9,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -1242,11 +1007,17 @@
           "reducer": [
             "sum"
           ],
-          "show": false
+          "show": true
         },
-        "showHeader": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Hour"
+          }
+        ]
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -1256,27 +1027,68 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROW_NUMBER() OVER (\n    ORDER BY \n      COALESCE(SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0), 999) ASC\n  ) as \"Rank\",\n  m.name as \"Machine\",\n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0),\n    0\n  ) as \"SEC\",\n  COALESCE(\n    AVG(er.avg_power_kw) / NULLIF(MAX(er.max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nLEFT JOIN production_data_1hour pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Rank\" ASC;",
-          "refId": "A"
+          "rawSql": "SELECT \n  TO_CHAR(er.bucket, 'YYYY-MM-DD HH24:00') as \"Hour\",\n  ROUND(er.total_energy_kwh::numeric, 2) as \"Energy (kWh)\",\n  COALESCE(pd.total_production_count, 0) as \"Units\",\n  ROUND((er.total_energy_kwh / NULLIF(pd.total_production_count, 0))::numeric, 3) as \"Energy/Unit\",\n  ROUND(er.avg_power_kw::numeric, 2) as \"Avg Power (kW)\",\n  ROUND(er.max_power_kw::numeric, 2) as \"Peak (kW)\"\nFROM energy_readings_1hour er\nLEFT JOIN production_data_1hour pd ON \n  pd.machine_id = er.machine_id AND\n  pd.bucket = er.bucket\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= NOW() - INTERVAL '24 hours'\nORDER BY er.bucket DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
         }
       ],
-      "title": "Machine Efficiency Ranking (Last 24h)",
+      "title": "Hourly Performance Summary",
       "type": "table"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
-  "style": "dark",
   "tags": [
     "enms",
-    "overview",
-    "factory"
+    "machine",
+    "monitoring"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Compressor-1",
+          "value": "c0000000-0000-0000-0000-000000000001"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT id AS __value, name AS __text FROM machines WHERE is_active = true ORDER BY name;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Machine",
+        "multi": false,
+        "name": "machine_id",
+        "options": [],
+        "query": "SELECT id AS __value, name AS __text FROM machines WHERE is_active = true ORDER BY name;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-3m",
     "to": "now"
   },
   "timepicker": {
@@ -1285,12 +1097,13 @@
       "10s",
       "30s",
       "1m",
-      "5m"
+      "5m",
+      "15m"
     ]
   },
   "timezone": "browser",
-  "title": "Factory Overview",
-  "uid": "enms-factory-overview",
-  "version": 1334,
+  "title": "Machine Monitoring",
+  "uid": "enms-machine-monitoring",
+  "version": 1719,
   "weekStart": ""
 }

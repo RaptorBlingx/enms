@@ -28,6 +28,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Total number of machines currently active in the system",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -68,7 +69,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -78,7 +79,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Machines\"\nFROM machines\nWHERE is_active = true;",
+          "rawSql": "SELECT COUNT(*) as \"Active Machines\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nWHERE m.is_active = true\n  AND f.name IN ($factory);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -107,6 +108,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Real-time sum of power consumption across all machines (kW)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -155,7 +157,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -165,7 +167,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nWHERE 1=1;",
+          "rawSql": "SELECT \n  COALESCE(SUM(ms.current_power_kw), 0) as \"Total Power\"\nFROM machine_status ms\nJOIN machines m ON ms.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE f.name IN ($factory);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -194,6 +196,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Total energy consumed today across all machines since midnight",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -234,7 +237,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -244,7 +247,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings\nWHERE time >= DATE_TRUNC('day', NOW());",
+          "rawSql": "SELECT \n  COALESCE(SUM(er.energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.time >= DATE_TRUNC('day', NOW())\n  AND f.name IN ($factory);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -273,6 +276,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Number of unresolved anomalies and alerts requiring attention",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -332,7 +336,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -342,7 +346,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Alerts\"\nFROM anomalies\nWHERE is_resolved = false;",
+          "rawSql": "SELECT COUNT(*) as \"Active Alerts\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE a.is_resolved = false\n  AND f.name IN ($factory);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -371,12 +375,14 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Power consumption trends for all machines over the last hour (1-minute aggregation)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -390,6 +396,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
@@ -453,7 +460,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('1 minute', time) AS time,\n  m.name as metric,\n  AVG(power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE time >= NOW() - INTERVAL '1 hour'\nGROUP BY time, m.name\nORDER BY time;",
+          "rawSql": "SELECT \n  time_bucket('1 minute', er.time) AS time,\n  m.name as metric,\n  AVG(er.power_kw) as value\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.time >= NOW() - INTERVAL '1 hour'\n  AND f.name IN ($factory)\nGROUP BY time, m.name\nORDER BY time;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -482,6 +489,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Real-time status table showing machine mode, power, and last update time",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -606,7 +614,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -616,7 +624,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\nORDER BY m.name;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  m.type as \"Type\",\n  f.name as \"Factory\",\n  ms.current_mode as \"Status\",\n  ROUND(ms.current_power_kw::numeric, 2) as \"Power (kW)\",\n  TO_CHAR(ms.last_updated, 'HH24:MI:SS') as \"Last Update\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN LATERAL (\n  SELECT current_mode, current_power_kw, last_updated\n  FROM machine_status\n  WHERE machine_id = m.id\n  \n  LIMIT 1\n) ms ON true\nWHERE m.is_active = true\n  AND f.name IN ($factory)\nORDER BY m.name;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -645,6 +653,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Percentage breakdown of energy consumption by machine for today",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -705,7 +714,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY m.name\nORDER BY value DESC;",
+          "rawSql": "SELECT \n  m.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND f.name IN ($factory)\nGROUP BY m.name\nORDER BY value DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -734,6 +743,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Energy distribution across different factories for today",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -794,7 +804,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\nGROUP BY f.name\nORDER BY value DESC;",
+          "rawSql": "SELECT \n  f.name as metric,\n  COALESCE(SUM(er.total_energy_kwh), 0) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND f.name IN ($factory)\nGROUP BY f.name\nORDER BY value DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -823,6 +833,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "List of unresolved anomalies with severity, type, and deviation percentage",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -948,7 +959,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -958,7 +969,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  TO_CHAR(a.detected_at, 'HH24:MI:SS') as \"Time\",\n  m.name as \"Machine\",\n  a.anomaly_type as \"Type\",\n  a.severity as \"Severity\",\n  ROUND(a.deviation_percent::numeric, 1) as \"Deviation %\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nWHERE a.is_resolved = false\nORDER BY a.detected_at DESC\nLIMIT 10;",
+          "rawSql": "SELECT \n  TO_CHAR(a.detected_at, 'HH24:MI:SS') as \"Time\",\n  m.name as \"Machine\",\n  a.anomaly_type as \"Type\",\n  a.severity as \"Severity\",\n  ROUND(a.deviation_percent::numeric, 1) as \"Deviation %\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE a.is_resolved = false\n  AND f.name IN ($factory)\nORDER BY a.detected_at DESC\nLIMIT 10;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -987,6 +998,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Top 5 machines with highest energy consumption in the last 24 hours",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -998,8 +1010,6 @@
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
             "fillOpacity": 100,
             "gradientMode": "none",
             "hideFrom": {
@@ -1007,18 +1017,9 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
             "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -1046,16 +1047,25 @@
       },
       "id": 200,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": false
         },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -1067,7 +1077,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Energy (kWh)\" DESC\nLIMIT 5;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\n  AND f.name IN ($factory)\nGROUP BY m.name\nORDER BY \"Energy (kWh)\" DESC\nLIMIT 5;",
           "refId": "A"
         }
       ],
@@ -1089,6 +1099,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Machines ranked by energy efficiency (SEC) with load factor and total energy",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1246,7 +1257,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -1256,7 +1267,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROW_NUMBER() OVER (\n    ORDER BY \n      COALESCE(SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0), 999) ASC\n  ) as \"Rank\",\n  m.name as \"Machine\",\n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0),\n    0\n  ) as \"SEC\",\n  COALESCE(\n    AVG(er.avg_power_kw) / NULLIF(MAX(er.max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nLEFT JOIN production_data_1hour pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\nGROUP BY m.name\nORDER BY \"Rank\" ASC;",
+          "rawSql": "SELECT \n  ROW_NUMBER() OVER (\n    ORDER BY \n      COALESCE(SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0), 999) ASC\n  ) as \"Rank\",\n  m.name as \"Machine\",\n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0),\n    0\n  ) as \"SEC\",\n  COALESCE(\n    AVG(er.avg_power_kw) / NULLIF(MAX(er.max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN production_data_1hour pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= NOW() - INTERVAL '24 hours'\n  AND m.is_active = true\n  AND f.name IN ($factory)\nGROUP BY m.name\nORDER BY \"Rank\" ASC;",
           "refId": "A"
         }
       ],
@@ -1266,14 +1277,42 @@
   ],
   "refresh": "5s",
   "schemaVersion": 38,
-  "style": "dark",
   "tags": [
     "enms",
     "overview",
     "factory"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT name FROM factories ORDER BY name;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Factory",
+        "multi": true,
+        "name": "factory",
+        "options": [],
+        "query": "SELECT name FROM factories ORDER BY name;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -1291,6 +1330,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 1335,
+  "version": 1675,
   "weekStart": ""
 }

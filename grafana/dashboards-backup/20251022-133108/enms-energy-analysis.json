@@ -28,6 +28,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Specific Energy Consumption - Energy used per unit produced (kWh/unit)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -78,7 +79,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -88,7 +89,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0),\n    0\n  ) as \"SEC (kWh/unit)\"\nFROM energy_readings_1hour er\nLEFT JOIN production_data_1hour pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND er.machine_id::text IN (${machines:singlequote})",
+          "rawSql": "SELECT \n  COALESCE(\n    SUM(er.total_energy_kwh) / NULLIF(SUM(pd.total_production_count), 0),\n    0\n  ) as \"SEC (kWh/unit)\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nLEFT JOIN production_data_1min pd \n  ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND m.name IN ($machines)",
           "refId": "A"
         }
       ],
@@ -100,6 +101,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Total energy cost in USD (calculated at $0.15/kWh)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -153,7 +155,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -163,7 +165,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(total_energy_kwh) * $cost_per_kwh, 0) as \"Energy Cost (USD)\"\nFROM energy_readings_1hour\nWHERE bucket >= $__timeFrom() \n  AND bucket <= $__timeTo()\n  AND machine_id::text IN (${machines:singlequote})",
+          "rawSql": "SELECT \n  COALESCE(SUM(er.total_energy_kwh) * 0.15, 0) as \"Energy Cost (USD)\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND m.name IN ($machines)",
           "refId": "A"
         }
       ],
@@ -175,6 +177,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Carbon dioxide emissions in kg (calculated at 0.45 kg CO₂/kWh)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -190,16 +193,8 @@
                 "value": null
               },
               {
-                "color": "yellow",
-                "value": 500
-              },
-              {
-                "color": "orange",
-                "value": 1000
-              },
-              {
                 "color": "red",
-                "value": 2000
+                "value": 80
               }
             ]
           },
@@ -228,7 +223,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -238,7 +233,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(total_energy_kwh) * $carbon_factor, 0) as \"Carbon Emissions (kg CO2)\"\nFROM energy_readings_1hour\nWHERE bucket >= $__timeFrom() \n  AND bucket <= $__timeTo()\n  AND machine_id::text IN (${machines:singlequote})",
+          "rawSql": "SELECT \n  COALESCE(SUM(er.total_energy_kwh) * 0.45, 0) as \"Carbon Emissions (kg CO2)\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND m.name IN ($machines)",
           "refId": "A"
         }
       ],
@@ -250,6 +245,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Cumulative energy consumption in kilowatt-hours (kWh)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -261,7 +257,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "green",
                 "value": null
               }
             ]
@@ -291,7 +287,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -301,7 +297,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(total_energy_kwh), 0) as \"Total Energy (kWh)\"\nFROM energy_readings_1hour\nWHERE bucket >= $__timeFrom() \n  AND bucket <= $__timeTo()\n  AND machine_id::text IN (${machines:singlequote})",
+          "rawSql": "SELECT \n  COALESCE(SUM(er.total_energy_kwh), 0) as \"Total Energy (kWh)\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND m.name IN ($machines)",
           "refId": "A"
         }
       ],
@@ -313,6 +309,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Stacked area chart showing power usage trends per machine with dynamic interval aggregation",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -429,6 +426,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Energy consumption per machine aggregated by minute intervals",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -543,6 +541,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Maximum power demand per machine showing peak usage patterns",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -682,8 +681,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           }
@@ -711,8 +709,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "rgba(50, 172, 45, 0.1)",
-                      "value": null
+                      "color": "rgba(50, 172, 45, 0.1)"
                     },
                     {
                       "color": "rgba(237, 129, 40, 0.2)",
@@ -817,6 +814,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Load factor showing ratio of average to peak power (efficiency indicator)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -859,8 +857,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -929,6 +926,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Daily energy consumption for the last 30 days",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -971,8 +969,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1040,6 +1037,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Heatmap visualization of power consumption patterns over 7 days by hour",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -1135,6 +1133,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Daily Specific Energy Consumption trend per machine (energy efficiency over time)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1178,8 +1177,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "yellow",
@@ -1239,6 +1237,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Maximum power demand across all selected machines",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1250,8 +1249,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "yellow",
@@ -1293,7 +1291,7 @@
         "showPercentChange": false,
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -1303,7 +1301,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  MAX(max_power_kw) as \"Peak Demand (kW)\"\nFROM energy_readings_1hour\nWHERE bucket >= $__timeFrom() \n  AND bucket <= $__timeTo()\n  AND machine_id::text IN (${machines:singlequote})",
+          "rawSql": "SELECT \n  MAX(er.max_power_kw) as \"Peak Demand (kW)\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND m.name IN ($machines)",
           "refId": "A"
         }
       ],
@@ -1315,6 +1313,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "Average load factor percentage showing overall equipment utilization efficiency",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1328,8 +1327,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
-                "value": null
+                "color": "red"
               },
               {
                 "color": "yellow",
@@ -1353,6 +1351,8 @@
       },
       "id": 106,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -1365,7 +1365,7 @@
         "showThresholdMarkers": true,
         "text": {}
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.0",
       "targets": [
         {
           "datasource": {
@@ -1375,7 +1375,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(\n    AVG(avg_power_kw) / NULLIF(MAX(max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\"\nFROM energy_readings_1hour\nWHERE bucket >= $__timeFrom() \n  AND bucket <= $__timeTo()\n  AND machine_id::text IN (${machines:singlequote})",
+          "rawSql": "SELECT \n  COALESCE(\n    AVG(er.avg_power_kw) / NULLIF(MAX(er.max_power_kw), 0) * 100,\n    0\n  ) as \"Load Factor (%)\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.bucket >= $__timeFrom() \n  AND er.bucket <= $__timeTo()\n  AND m.name IN ($machines)",
           "refId": "A"
         }
       ],
@@ -1383,7 +1383,7 @@
       "type": "gauge"
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "schemaVersion": 38,
   "tags": [
     "enms",
@@ -1406,64 +1406,24 @@
           "type": "postgres",
           "uid": "TimescaleDB"
         },
-        "definition": "SELECT id, name FROM machines WHERE is_active = true ORDER BY name;",
+        "definition": "SELECT name FROM machines WHERE is_active = true ORDER BY name;",
         "hide": 0,
         "includeAll": true,
         "label": "Machines",
         "multi": true,
         "name": "machines",
         "options": [],
-        "query": "SELECT id, name FROM machines WHERE is_active = true ORDER BY name;",
+        "query": "SELECT name FROM machines WHERE is_active = true ORDER BY name;",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "0.15",
-          "value": "0.15"
-        },
-        "hide": 0,
-        "label": "Cost per kWh (USD)",
-        "name": "cost_per_kwh",
-        "options": [
-          {
-            "selected": true,
-            "text": "0.15",
-            "value": "0.15"
-          }
-        ],
-        "query": "0.15",
-        "skipUrlSync": false,
-        "type": "textbox"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "0.45",
-          "value": "0.45"
-        },
-        "hide": 0,
-        "label": "Carbon Factor (kg CO2/kWh)",
-        "name": "carbon_factor",
-        "options": [
-          {
-            "selected": true,
-            "text": "0.45",
-            "value": "0.45"
-          }
-        ],
-        "query": "0.45",
-        "skipUrlSync": false,
-        "type": "textbox"
       }
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -1480,6 +1440,6 @@
   "timezone": "browser",
   "title": "Energy Analysis",
   "uid": "enms-energy-analysis",
-  "version": 1329,
+  "version": 1678,
   "weekStart": ""
 }
