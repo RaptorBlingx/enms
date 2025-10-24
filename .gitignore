@@ -259,3 +259,4 @@ query-service/cache/
 # ----------------------------------------------------------------------------
 !.gitkeep
 mqtt/config/passwd
+backup_pre_production_*.dump

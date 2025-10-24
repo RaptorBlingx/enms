@@ -697,7 +697,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "tooltip": {
           "mode": "multi",
@@ -787,7 +787,7 @@
             "lastNotNull"
           ],
           "fields": "",
-          "values": false
+          "values": true
         },
         "tooltip": {
           "mode": "multi",
@@ -1330,6 +1330,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 1675,
+  "version": 1706,
   "weekStart": ""
 }

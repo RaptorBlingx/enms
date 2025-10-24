@@ -380,7 +380,10 @@ from api.routes.stats import router as stats_router
 from api.routes.production import router as production_router
 from api.routes.compare import router as compare_router
 from api.routes.ovos import router as ovos_router  # OVOS Integration
+from api.routes.ovos_training import router as ovos_training_router  # Phase 3: OVOS Training
 from api.websocket_routes import router as websocket_router  # Phase 4 Session 5
+from api.routes.seu import router as seu_router  # ISO 50001 EnPI
+from api.routes.energy_sources import router as energy_sources_router  # Energy Sources & Features API
 
 # Register API routes with prefix
 app.include_router(baseline_router, prefix=settings.API_PREFIX)
@@ -397,7 +400,10 @@ app.include_router(stats_router, prefix=settings.API_PREFIX)
 app.include_router(production_router, prefix=settings.API_PREFIX)
 app.include_router(compare_router, prefix=settings.API_PREFIX)
 app.include_router(ovos_router, prefix=settings.API_PREFIX)  # OVOS Integration
+app.include_router(ovos_training_router, prefix=f"{settings.API_PREFIX}/ovos", tags=["OVOS Training"])  # Phase 3: OVOS Training
 app.include_router(websocket_router, prefix=settings.API_PREFIX)  # Phase 4 Session 5: WebSocket Routes
+app.include_router(seu_router, prefix=settings.API_PREFIX)  # ISO 50001 EnPI
+app.include_router(energy_sources_router, prefix=settings.API_PREFIX)  # Energy Sources & Features API
 
 
 # ============================================================================
