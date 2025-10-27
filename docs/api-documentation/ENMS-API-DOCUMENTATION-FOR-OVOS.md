@@ -735,64 +735,115 @@ curl "http://localhost:8001/api/v1/anomaly/active"
 - ✅ Only returns anomalies NOT yet resolved
 - ✅ Includes severity summary for quick assessment
 - Use for alerting/monitoring dashboards
-- "What anomalies were detected today?"
-- "Tell me about the critical issue on Compressor-1"
 
 ---
 
 ## 📈 Baseline Models
 
 ### 12. List Baselines
-**Purpose:** Get trained baseline models
+**Purpose:** Get trained ML baseline models for a machine
+
+**Endpoint:** `GET /api/v1/baseline/models`
+
+**Parameters:**
+- `machine_id` (optional): Filter by specific machine (recommended)
+
+**OVOS Use Cases:**
+- "Does Compressor-1 have a baseline model?"
+- "When was the baseline last trained?"
+- "Show me baseline accuracy"
 
 ```bash
 curl "http://localhost:8001/api/v1/baseline/models?machine_id=c0000000-0000-0000-0000-000000000001"
+```
 
-# Response
+**Response:**
+```json
 {
   "machine_id": "c0000000-0000-0000-0000-000000000001",
-  "total_models": 19,
+  "total_models": 32,
   "models": [
     {
-      "id": "2ff03956-ef31-40c3-849c-c99eb42e43e9",
+      "id": "0fefe918-e709-4fb0-bcc4-c4adc77c078f",
       "machine_id": "c0000000-0000-0000-0000-000000000001",
-      "machine_name": "Compressor-1",
-      "model_version": 19,
-      "training_date": "2025-10-17T14:41:19Z",
-      "r_squared": 0.9667,
-      "mae": 0.43336,
-      "rmse": 1.416086,
+      "model_name": "baseline_v32",
+      "model_version": 32,
+      "training_samples": 6957,
+      "r_squared": 0.9862,
+      "rmse": 1.208739,
+      "mae": 0.273159,
       "is_active": true,
-      "training_samples": 168
+      "created_at": "2025-10-27T11:21:29.807115+00:00"
     }
   ]
 }
 ```
 
+**Response Fields:**
+- `is_active`: Currently used model (only one active per machine)
+- `r_squared`: Model accuracy (0-1, higher = better, >0.8 = good)
+- `rmse`: Root Mean Square Error (lower = better)
+- `mae`: Mean Absolute Error (lower = better)
+- `training_samples`: Number of data points used for training
+
+**Notes:**
+- ✅ R² > 0.85 indicates reliable predictions
+- ✅ Only one model is active per machine at a time
+- Models trained automatically weekly (see EP16 for manual training)
+
 ### 13. Predict Expected Energy
-**Purpose:** Get baseline prediction for specific conditions
+**Purpose:** Get baseline prediction for given operating conditions
+
+**Endpoint:** `POST /api/v1/baseline/predict`
+
+**Parameters (JSON body):**
+- `machine_id` (required): Machine UUID
+- `features` (required): Dict of feature values
+  - `total_production_count`: Production units
+  - `avg_outdoor_temp_c`: Ambient temperature (°C)
+  - `avg_pressure_bar`: Operating pressure (bar)
+
+**OVOS Use Cases:**
+- "What's the expected energy for current conditions?"
+- "Predict energy consumption for 500 units production"
+- "Baseline prediction for 22°C ambient temperature"
 
 ```bash
-curl -X POST http://localhost:8001/api/v1/baseline/predict \
+curl -X POST "http://localhost:8001/api/v1/baseline/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "machine_id": "c0000000-0000-0000-0000-000000000001",
     "features": {
       "total_production_count": 500,
-      "avg_outdoor_temp_c": 25.5,
-      "avg_pressure_bar": 7.2,
-      "avg_throughput_units_per_hour": 250,
-      "avg_machine_temp_c": 45.0
+      "avg_outdoor_temp_c": 22.0,
+      "avg_pressure_bar": 7.0
     }
   }'
+```
 
-# Response
+**Response:**
+```json
 {
   "machine_id": "c0000000-0000-0000-0000-000000000001",
-  "model_version": 19,
-  "features": {...},
-  "predicted_energy_kwh": 200.24
+  "model_version": 32,
+  "features": {
+    "total_production_count": 500.0,
+    "avg_outdoor_temp_c": 22.0,
+    "avg_pressure_bar": 7.0
+  },
+  "predicted_energy_kwh": 367.5
 }
+```
+
+**Response Fields:**
+- `predicted_energy_kwh`: Expected energy consumption (kWh)
+- `model_version`: Which baseline model was used
+- `features`: Echo of input features
+
+**Notes:**
+- ✅ Returns error if no active baseline model exists
+- ✅ Feature names must match training data
+- Use to compare actual vs. expected energy (anomaly detection)
 ```
 
 **OVOS Use Case:**  
