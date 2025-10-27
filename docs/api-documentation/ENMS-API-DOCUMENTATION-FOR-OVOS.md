@@ -65,153 +65,236 @@ Currently, APIs are **open** (no authentication required).
 ## 🏥 System Health & Statistics
 
 ### 1. Health Check
-**Purpose:** Check if EnMS is running and healthy
+**Purpose:** Check if EnMS Analytics service is running and healthy
+
+**Endpoint:** `GET /api/v1/health`
+
+**Parameters:** None
+
+**OVOS Use Case:**
+- "Is the energy system online?"
+- "Check system health"
+- System diagnostics before executing other commands
 
 ```bash
-# Get service health
 curl http://localhost:8001/api/v1/health
+```
 
-# Response
+**Response:**
+```json
 {
-  "service": "EnMS Analytics",
-  "version": "3.3.0",
+  "service": "EnMS Analytics Service",
+  "version": "1.0.0",
   "status": "healthy",
   "database": {
     "status": "connected",
-    "name": "enms_db",
+    "name": "enms",
     "host": "postgres",
-    "pool_size": 10
+    "pool_size": 1
   },
   "scheduler": {
     "enabled": true,
     "running": true,
-    "jobs": ["baseline_retrain", "anomaly_detect", "kpi_calculate"]
+    "job_count": 4,
+    "jobs": [
+      {
+        "id": "anomaly_detect",
+        "name": "Hourly Anomaly Detection",
+        "next_run": "2025-10-27T15:05:00+00:00"
+      }
+    ]
   },
-  "features": [
-    "baseline_regression",
-    "anomaly_detection",
-    "kpi_calculation",
-    "energy_forecasting",
-    "time_series_analytics"
-  ],
-  "active_machines": 3,
-  "baseline_models": 5,
-  "recent_anomalies": 12,
-  "timestamp": "2025-10-20T10:30:00Z"
+  "features": ["baseline_regression", "anomaly_detection", "kpi_calculation"],
+  "active_machines": 8,
+  "baseline_models": 49,
+  "recent_anomalies": 6,
+  "timestamp": "2025-10-27T14:39:13.662213"
 }
 ```
+
+**Response Fields:**
+- `status`: Service health (healthy/degraded/unhealthy)
+- `active_machines`: Number of machines currently monitored
+- `baseline_models`: Count of trained ML models
+- `recent_anomalies`: Anomalies in last 24 hours
+
+**Notes:**
+- ✅ No authentication required
+- ✅ Always responds quickly (<10ms)
+- Use `status == "healthy"` to verify system availability
 
 ### 2. System Statistics
-**Purpose:** Get real-time energy metrics for dashboard
+**Purpose:** Get real-time energy metrics across all machines
+
+**Endpoint:** `GET /api/v1/stats/system`
+
+**Parameters:** None
+
+**OVOS Use Cases:**
+- "How much energy are we using today?"
+- "What's our current power consumption?"
+- "How much is energy costing us?"
+- "What's our carbon footprint?"
 
 ```bash
-# Get comprehensive system stats
 curl http://localhost:8001/api/v1/stats/system
+```
 
-# Response
+**Response:**
+```json
 {
-  "total_readings": 1234567,
-  "total_energy": 45678,           # Total kWh
-  "data_rate": 12,                 # Readings per minute
-  "uptime_days": 45,
-  "uptime_percent": 99.7,
-  "readings_per_minute": 15,
-  "energy_per_hour": 125,
-  "peak_power": 350,               # kW
-  "avg_power": 180,
-  "efficiency": 51.4,              # %
-  "estimated_cost": 5481.36,       # USD
-  "cost_per_day": 120.50,
-  "carbon_footprint": 22839.0,     # kg CO2
-  "carbon_per_day": 505.2,
-  "total_anomalies": 234,
-  "active_machines_today": 3,
-  "timestamp": "2025-10-20T10:30:00Z"
+  "total_readings": 3398519,
+  "total_energy": 92484,           
+  "data_rate": 148,                
+  "uptime_days": 17,
+  "uptime_percent": 33.1,
+  "readings_per_minute": 147,
+  "energy_per_hour": 680,          
+  "peak_power": 2249,              
+  "avg_power": 58,
+  "efficiency": 2.6,               
+  "estimated_cost": 11098.08,      
+  "cost_per_day": 1957.06,
+  "carbon_footprint": 46242.0,     
+  "carbon_per_day": 8154.4,
+  "total_anomalies": 119,
+  "active_machines_today": 8,
+  "timestamp": "2025-10-27T14:40:02.119253"
 }
 ```
 
-**OVOS Use Case:**  
-- Voice query: "How much energy are we using today?"
-- Response: Parse `energy_per_hour` * hours or `cost_per_day`
+**Key Response Fields:**
+- `total_energy`: Total kWh consumed (all-time)
+- `energy_per_hour`: Current hourly consumption rate (kWh/h)
+- `peak_power`: Maximum power demand today (kW)
+- `avg_power`: Average power consumption (kW)
+- `estimated_cost`: Total energy cost (USD)
+- `cost_per_day`: Daily energy cost (USD/day)
+- `carbon_footprint`: Total CO₂ emissions (kg)
+- `active_machines_today`: Machines with activity today
+
+**Notes:**
+- ✅ Real-time calculations from live data
+- ✅ Cost assumes $0.12/kWh electricity rate
+- ✅ Carbon factor: 0.5 kg CO₂/kWh
 
 ---
 
 ## 🏭 Machines API
 
 ### 3. List All Machines
-**Purpose:** Get available machines with optional search
+**Purpose:** Get all machines with optional filtering
+
+**Endpoint:** `GET /api/v1/machines`
+
+**Parameters:**
+- `search` (optional): Filter by machine name (case-insensitive, partial match)
+- `is_active` (optional): Filter by active status (`true` or `false`)
+
+**OVOS Use Cases:**
+- "List all machines"
+- "Show me active machines"
+- "Find the compressor"
+- "Which HVAC units do we have?"
 
 ```bash
 # Get all machines
-curl http://localhost:8001/api/v1/machines
+curl "http://localhost:8001/api/v1/machines"
 
-# Filter by active status
-curl "http://localhost:8001/api/v1/machines?is_active=true"
-
-# Search by name (NEW - case-insensitive)
+# Search by name
 curl "http://localhost:8001/api/v1/machines?search=compressor"
-curl "http://localhost:8001/api/v1/machines?search=Compressor-1"
+
+# Filter active machines
+curl "http://localhost:8001/api/v1/machines?is_active=true"
 
 # Combine filters
 curl "http://localhost:8001/api/v1/machines?search=hvac&is_active=true"
+```
 
-# Response
+**Response:**
+```json
 [
   {
-    "id": "c0000000-0000-0000-0000-000000000001",
-    "name": "Compressor-1",
-    "type": "compressor",
-    "model": "Atlas Copco GA37",
-    "manufacturer": "Atlas Copco",
-    "rated_power": 37.0,
+    "id": "e9fcad45-1f7b-4425-8710-c368a681f15e",
+    "factory_id": "11111111-1111-1111-1111-111111111111",
+    "name": "Boiler-1",
+    "type": "boiler",
+    "rated_power_kw": "45.00",
     "is_active": true,
-    "location": "Production Floor A",
-    "installation_date": "2023-01-15",
-    "metadata": {
-      "department": "Production",
-      "criticality": "high"
-    }
+    "factory_name": "Demo Manufacturing Plant",
+    "factory_location": "Silicon Valley, CA, USA"
   },
   {
-    "id": "c0000000-0000-0000-0000-000000000002",
-    "name": "HVAC-Main",
-    "type": "hvac",
-    "model": "Carrier 50PSQ120",
-    "rated_power": 120.0,
-    "is_active": true
+    "id": "c0000000-0000-0000-0000-000000000001",
+    "factory_id": "11111111-1111-1111-1111-111111111111",
+    "name": "Compressor-1",
+    "type": "compressor",
+    "rated_power_kw": "55.00",
+    "is_active": true,
+    "factory_name": "Demo Manufacturing Plant",
+    "factory_location": "Silicon Valley, CA, USA"
   }
 ]
 ```
 
-**NEW: Search Parameter**
-- `search`: Case-insensitive partial match on machine name
-- Useful for OVOS to resolve machine names to UUIDs
-- Example: "Compressor-1", "compressor", "HVAC", "EU"
+**Response Fields:**
+- `id`: Machine UUID (use for other API calls)
+- `name`: Human-readable machine name
+- `type`: Machine category (compressor, hvac, boiler, pump, motor, injection_molding)
+- `rated_power_kw`: Maximum power rating (kW)
+- `is_active`: Whether machine is currently active
+- `factory_name`: Factory name
+- `factory_location`: Physical location
+
+**Notes:**
+- ✅ Search is case-insensitive and matches partial names
+- ✅ Returns empty array `[]` if no matches
+- Currently 8 active machines in system
 
 ### 4. Get Single Machine
-**Purpose:** Get detailed info about one machine
+**Purpose:** Get detailed information about a specific machine
+
+**Endpoint:** `GET /api/v1/machines/{machine_id}`
+
+**Parameters:**
+- `machine_id` (required): Machine UUID from `/machines` endpoint
+
+**OVOS Use Cases:**
+- "Tell me about Compressor-1"
+- "Show details for the boiler"
+- "What's the rated power of HVAC-Main?"
 
 ```bash
-curl http://localhost:8001/api/v1/machines/c0000000-0000-0000-0000-000000000001
+curl "http://localhost:8001/api/v1/machines/c0000000-0000-0000-0000-000000000001"
+```
 
-# Response
+**Response:**
+```json
 {
   "id": "c0000000-0000-0000-0000-000000000001",
+  "factory_id": "11111111-1111-1111-1111-111111111111",
   "name": "Compressor-1",
   "type": "compressor",
-  "rated_power": 37.0,
-  "current_power": 28.5,           # Current kW
-  "current_status": "running",
-  "last_reading": "2025-10-20T10:29:00Z",
-  "uptime_hours": 168.5,
-  "total_energy_today": 245.8,     # kWh today
-  "metadata": {...}
+  "rated_power_kw": "55.00",
+  "is_active": true,
+  "factory_name": "Demo Manufacturing Plant",
+  "factory_location": "Silicon Valley, CA, USA"
 }
 ```
 
-**OVOS Use Case:**  
-- "Tell me about Compressor-1"
-- "Is HVAC-1 running?"
+**Response Fields:**
+- `id`: Machine UUID
+- `name`: Machine name
+- `type`: Machine category
+- `rated_power_kw`: Maximum power rating (kW)
+- `is_active`: Current active status
+- `factory_id`: Parent factory UUID
+- `factory_name`: Factory name
+- `factory_location`: Physical location
+
+**Notes:**
+- ✅ Returns 404 if machine_id not found
+- Use `/machines?search={name}` first to get machine ID
 
 ---
 
@@ -220,103 +303,178 @@ curl http://localhost:8001/api/v1/machines/c0000000-0000-0000-0000-000000000001
 ### 5. Energy Time-Series
 **Purpose:** Get **aggregated** energy consumption with interval grouping (for charts/graphs)
 
-> **⚠️ NOTE**: This endpoint returns **electricity only**. For multi-energy machines (natural gas, steam), use Multi-Energy Endpoint 2 (§17.2) which provides raw readings with detailed metadata.
+**Endpoint:** `GET /api/v1/timeseries/energy`
 
-**Use Cases:**
-- Historical charts/graphs with time buckets
-- Aggregated kWh totals per interval
-- Quick electricity consumption overview
+**Parameters:**
+- `machine_id` (required): Machine UUID
+- `start_time` (required): ISO 8601 timestamp (e.g., `2025-10-27T00:00:00Z`)
+- `end_time` (required): ISO 8601 timestamp
+- `interval` (required): Time bucket size - `1min`, `5min`, `15min`, `1hour`, `1day`
+
+**OVOS Use Cases:**
+- "Show hourly energy consumption for Compressor-1 today"
+- "How much energy did the HVAC use yesterday?"
+- "Give me 15-minute energy data for last hour"
+
+> **⚠️ NOTE**: Returns **electricity only**. For multi-energy machines (natural gas, steam), use Multi-Energy Endpoint 2 (§17.2).
 
 ```bash
-# Hourly energy data (using current date - October 2025)
-curl -G http://localhost:8001/api/v1/timeseries/energy \
+# Example: 15-minute intervals
+curl -G "http://localhost:8001/api/v1/timeseries/energy" \
   --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
-  --data-urlencode "start_time=2025-10-20T00:00:00Z" \
-  --data-urlencode "end_time=2025-10-20T23:59:59Z" \
-  --data-urlencode "interval=1hour"
+  --data-urlencode "start_time=2025-10-27T12:00:00Z" \
+  --data-urlencode "end_time=2025-10-27T13:00:00Z" \
+  --data-urlencode "interval=15min"
+```
 
-# Response
+**Response:**
+```json
 {
   "machine_id": "c0000000-0000-0000-0000-000000000001",
   "machine_name": "Compressor-1",
   "metric": "energy",
-  "interval": "1hour",
-  "start_time": "2025-10-20T00:00:00Z",
-  "end_time": "2025-10-20T23:59:59Z",
+  "interval": "15min",
+  "start_time": "2025-10-27T12:00:00+00:00",
+  "end_time": "2025-10-27T13:00:00+00:00",
   "data_points": [
     {
-      "timestamp": "2025-10-20T00:00:00Z",
-      "value": 12.5,
+      "timestamp": "2025-10-27T12:00:00+00:00",
+      "value": 12.016017,
       "unit": "kWh"
     },
     {
-      "timestamp": "2025-10-20T01:00:00Z",
-      "value": 13.2,
+      "timestamp": "2025-10-27T12:15:00+00:00",
+      "value": 11.983654,
+      "unit": "kWh"
+    },
+    {
+      "timestamp": "2025-10-27T12:30:00+00:00",
+      "value": 1.578087,
       "unit": "kWh"
     }
-    // ... 24 data points
   ],
-  "total_points": 24,
+  "total_points": 3,
   "aggregation": "sum"
 }
 ```
 
+**Response Fields:**
+- `data_points`: Array of time-bucketed energy values
+- `value`: Energy consumed in that interval (kWh)
+- `aggregation`: Always "sum" (kWh totals per bucket)
+- `total_points`: Number of data points returned
+
 **Available Intervals:**
-- `1min` - Raw 1-minute data
+- `1min` - Raw 1-minute data (use for short periods)
 - `5min` - 5-minute buckets
-- `15min` - 15-minute buckets
-- `1hour` - Hourly buckets (recommended)
-- `1day` - Daily buckets
+- `15min` - 15-minute buckets (good for hourly analysis)
+- `1hour` - Hourly buckets (recommended for daily analysis)
+- `1day` - Daily buckets (for weekly/monthly trends)
+
+**Notes:**
+- ✅ Values are aggregated sums (kWh consumed per bucket)
+- ✅ Missing data points = no readings in that interval
+- Use hourly intervals for best performance on large date ranges
 
 ### 6. Power Time-Series
-**Purpose:** Get power demand (kW) over time
+**Purpose:** Get average power demand (kW) over time
+
+**Endpoint:** `GET /api/v1/timeseries/power`
+
+**Parameters:**
+- `machine_id` (required): Machine UUID
+- `start_time` (required): ISO 8601 timestamp
+- `end_time` (required): ISO 8601 timestamp
+- `interval` (required): `1min`, `5min`, `15min`, `1hour`, `1day`
+
+**OVOS Use Cases:**
+- "What was the average power demand this morning?"
+- "Show me power consumption pattern for last 6 hours"
+- "Power demand trends for Compressor-1"
 
 ```bash
-# 15-minute power data (using current date)
-curl -G http://localhost:8001/api/v1/timeseries/power \
+curl -G "http://localhost:8001/api/v1/timeseries/power" \
   --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
-  --data-urlencode "start_time=2025-10-20T00:00:00Z" \
-  --data-urlencode "end_time=2025-10-20T12:00:00Z" \
+  --data-urlencode "start_time=2025-10-27T13:00:00Z" \
+  --data-urlencode "end_time=2025-10-27T14:00:00Z" \
   --data-urlencode "interval=15min"
+```
 
-# Response
+**Response:**
+```json
 {
   "machine_id": "c0000000-0000-0000-0000-000000000001",
   "machine_name": "Compressor-1",
   "metric": "power",
   "interval": "15min",
+  "start_time": "2025-10-27T13:00:00+00:00",
+  "end_time": "2025-10-27T14:00:00+00:00",
   "data_points": [
     {
-      "timestamp": "2025-10-20T00:00:00Z",
-      "value": 28.5,     # Average kW in this 15min period
+      "timestamp": "2025-10-27T13:00:00+00:00",
+      "value": 47.958129,
+      "unit": "kW"
+    },
+    {
+      "timestamp": "2025-10-27T13:15:00+00:00",
+      "value": 48.057439,
       "unit": "kW"
     }
-    // ...
   ],
+  "total_points": 5,
   "aggregation": "average"
 }
 ```
 
+**Response Fields:**
+- `value`: Average power (kW) during that interval
+- `aggregation`: Always "average" (mean kW for bucket)
+- `unit`: "kW" (kilowatts)
+
+**Notes:**
+- ✅ Values are **averages** (not sums like energy endpoint)
+- ✅ Use for identifying peak demand periods
+- Complements EP5 (energy uses sum, power uses average)
+
 ### 7. Latest Reading
-**Purpose:** Get current/most recent reading
+**Purpose:** Get the most recent sensor reading for a machine
+
+**Endpoint:** `GET /api/v1/timeseries/latest/{machine_id}`
+
+**Parameters:**
+- `machine_id` (required): Machine UUID (in URL path)
+
+**OVOS Use Cases:**
+- "What's the current power consumption of Compressor-1?"
+- "Is the HVAC running right now?"
+- "Show me the latest reading for the boiler"
 
 ```bash
-curl http://localhost:8001/api/v1/timeseries/latest/c0000000-0000-0000-0000-000000000001
+curl "http://localhost:8001/api/v1/timeseries/latest/c0000000-0000-0000-0000-000000000001"
+```
 
-# Response
+**Response:**
+```json
 {
   "machine_id": "c0000000-0000-0000-0000-000000000001",
   "machine_name": "Compressor-1",
-  "timestamp": "2025-10-20T10:29:00Z",
-  "power_kw": 28.5,
-  "energy_kwh": 0.475,    # Energy in last minute
+  "timestamp": "2025-10-27T14:44:00+00:00",
+  "power_kw": 47.984517,
+  "energy_kwh": 0.799745,
   "status": "running"
 }
 ```
 
-**OVOS Use Case:**  
-- "What's the current power of Compressor-1?"
-- Answer: `power_kw` value
+**Response Fields:**
+- `timestamp`: When reading was taken (usually within last 60 seconds)
+- `power_kw`: Current power draw (kW)
+- `energy_kwh`: Energy consumed in last reading interval
+- `status`: Machine status ("running", "idle", "offline")
+
+**Notes:**
+- ✅ Always returns most recent data point
+- ✅ Fast response (~5ms) - good for real-time monitoring
+- Returns 404 if machine has no readings
 
 ### 8. Multi-Machine Comparison
 **Purpose:** Compare multiple machines
