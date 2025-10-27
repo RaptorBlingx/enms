@@ -218,7 +218,14 @@ curl http://localhost:8001/api/v1/machines/c0000000-0000-0000-0000-000000000001
 ## 📊 Time-Series Data
 
 ### 5. Energy Time-Series
-**Purpose:** Get historical energy consumption
+**Purpose:** Get **aggregated** energy consumption with interval grouping (for charts/graphs)
+
+> **⚠️ NOTE**: This endpoint returns **electricity only**. For multi-energy machines (natural gas, steam), use Multi-Energy Endpoint 2 (§17.2) which provides raw readings with detailed metadata.
+
+**Use Cases:**
+- Historical charts/graphs with time buckets
+- Aggregated kWh totals per interval
+- Quick electricity consumption overview
 
 ```bash
 # Hourly energy data (using current date - October 2025)
@@ -1271,7 +1278,18 @@ curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e
 
 #### Endpoint 2: Get Readings by Energy Type
 
-**Purpose:** Get detailed readings with original measurements for a specific energy type
+**Purpose:** Get **raw readings** with original measurements for a specific energy type
+
+> **✅ RECOMMENDED** for multi-energy machines. Provides detailed metadata (flow rates, pressure, temperature) not available in aggregated endpoints.
+
+**Use Cases:**
+- Detailed energy type inspection (electricity, natural gas, steam)
+- Access to original sensor measurements
+- Raw data for custom aggregations
+
+**Comparison with Endpoint 5:**
+- Endpoint 5: Aggregated kWh (electricity only, interval buckets)
+- This endpoint: Raw power_kw + metadata (all energy types, no aggregation)
 
 ```bash
 # Natural Gas
