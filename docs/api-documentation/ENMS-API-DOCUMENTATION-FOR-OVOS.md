@@ -853,9 +853,119 @@ curl -X POST "http://localhost:8001/api/v1/baseline/predict" \
 
 ---
 
+### EP14: GET /kpi/all - Calculate All KPIs
+
+**Endpoint**: `GET /api/v1/kpi/all`
+
+**Parameters**:
+- `machine_id` (string, required): Machine identifier
+- `start_time` (ISO 8601, required): Period start time
+- `end_time` (ISO 8601, required): Period end time
+
+**OVOS Use Cases**:
+- "Show me the KPIs for Compressor-1 today"
+- "What's the energy efficiency for HVAC-Main this week?"
+- "Calculate peak demand and load factor"
+- "How much carbon did Boiler-1 emit yesterday?"
+
+**curl Example**:
+```bash
+curl -G "http://localhost:8001/api/v1/kpi/all" \
+  --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
+  --data-urlencode "start_time=2025-10-27T00:00:00Z" \
+  --data-urlencode "end_time=2025-10-27T12:00:00Z"
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "sec": {
+      "value": 4.8e-05,
+      "unit": "kWh/unit",
+      "description": "Energy per production unit"
+    },
+    "peak_demand": {
+      "value": 55.603,
+      "unit": "kW",
+      "timestamp": "2025-10-27T08:30:00Z"
+    },
+    "load_factor": {
+      "value": 0.8257,
+      "percent": 82.57,
+      "description": "Average/Peak ratio"
+    },
+    "energy_cost": {
+      "value": 84.93,
+      "unit": "USD",
+      "rate": 0.12
+    },
+    "carbon_intensity": {
+      "value": 254.799,
+      "unit": "kg CO2",
+      "factor": 0.233
+    }
+  },
+  "timestamp": "2025-10-27T12:31:56.123Z"
+}
+```
+
+**Response Fields**:
+- `sec`: Specific Energy Consumption (kWh per production unit) - ISO 50001 key metric
+- `peak_demand`: Maximum power demand (kW) during period with timestamp
+- `load_factor`: Ratio of average to peak demand (0-1) - higher = better utilization
+- `energy_cost`: Total energy cost (USD) based on rate
+- `carbon_intensity`: Total CO₂ emissions (kg) based on grid factor
+
+**Notes**:
+- SEC only calculated if production_count > 0
+- Load factor indicates equipment utilization efficiency (>80% is excellent)
+- Carbon factor default 0.233 kg CO₂/kWh (grid mix dependent)
+- Period must contain both energy and production data
+
+---
+
+### EP15: GET /forecast/demand - Energy Demand Forecast
+
+**Endpoint**: `GET /api/v1/forecast/demand`
+
+**Parameters**:
+- `machine_id` (string, required): Machine identifier
+- `horizon` (string, optional): "short" (1-24h), "medium" (1-7d), "long" (1-4w) - default "short"
+- `periods` (integer, optional): Number of future periods - default 4
+
+**OVOS Use Cases**:
+- "Forecast energy demand for Compressor-1 next 4 hours"
+- "Predict power consumption for HVAC-Main next week"
+- "Show me the medium-term forecast"
+
+**curl Example**:
+```bash
+curl -G "http://localhost:8001/api/v1/forecast/demand" \
+  --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
+  --data-urlencode "horizon=short" \
+  --data-urlencode "periods=4"
+```
+
+**Response**:
+```json
+{
+  "success": false,
+  "message": "Forecasting feature coming soon - requires trained ARIMA/Prophet models"
+}
+```
+
+**Notes**:
+- ⚠️ Feature planned but not implemented (placeholder endpoint)
+- Will use ARIMA or Prophet for time-series forecasting
+- Requires historical baseline for accurate predictions
+
+---
+
 ## 🎙️ OVOS Voice Training (NEW)
 
-### 16. Train Baseline via Voice Command ⭐ PRODUCTION READY
+### EP16: POST /ovos/train-baseline - Train Baseline via Voice Command ⭐ PRODUCTION READY
 **Purpose:** Train energy baselines using natural language - Mr. Umut's key requirement
 
 **Endpoint:** `POST /api/v1/ovos/train-baseline`
@@ -1312,29 +1422,76 @@ EnMS supports **machines with multiple energy sources**! A single machine (e.g.,
 
 ### 📡 REST API Endpoints
 
-#### Endpoint 1: List Energy Types
+### M1: GET /machines/{id}/energy-types - List Energy Types
 
-**Purpose:** Get all energy types consumed by a machine
+**Endpoint**: `GET /api/v1/machines/{id}/energy-types`
 
+**Purpose**: Discover all energy types consumed by a machine (electricity, natural gas, steam)
+
+**Parameters**:
+- `hours` (integer, optional): Time window in hours - default 24
+
+**OVOS Use Cases**:
+- "What energy types does Boiler-1 use?"
+- "List all energy sources for HVAC-Main"
+- "Show me energy types for Compressor-1"
+
+**curl Example**:
 ```bash
-curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy-types?hours=2"
+curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy-types"
 ```
 
-**Parameters:**
-- `hours` (optional): Time window in hours (default: 24)
-
-**Response:**
+**Response**:
 ```json
 {
   "machine_id": "e9fcad45-1f7b-4425-8710-c368a681f15e",
   "machine_name": "Boiler-1",
-  "time_period_hours": 2,
+  "time_period_hours": 24,
   "energy_types": [
     {
       "energy_type": "electricity",
-      "reading_count": 5,
-      "avg_power_kw": 32.62,
-      "first_reading": "2025-10-27T11:40:05.720891+00:00",
+      "reading_count": 16,
+      "avg_power_kw": 30.45,
+      "first_reading": "2025-10-27T07:42:47.001529+00:00",
+      "last_reading": "2025-10-27T11:49:35.764289+00:00",
+      "unit": "kWh"
+    },
+    {
+      "energy_type": "natural_gas",
+      "reading_count": 180,
+      "avg_power_kw": 1847.37,
+      "first_reading": "2025-10-27T07:34:22.015350+00:00",
+      "last_reading": "2025-10-27T12:30:45.782885+00:00",
+      "unit": "m³"
+    },
+    {
+      "energy_type": "steam",
+      "reading_count": 392,
+      "avg_power_kw": 1329.4,
+      "first_reading": "2025-10-27T07:32:22.008534+00:00",
+      "last_reading": "2025-10-27T12:31:45.785710+00:00",
+      "unit": "kg"
+    }
+  ],
+  "total_energy_types": 3,
+  "timestamp": "2025-10-27T18:17:52.403374"
+}
+```
+
+**Response Fields**:
+- `energy_types`: Array of energy types with statistics
+- `reading_count`: Number of readings in time window
+- `avg_power_kw`: Average power consumption
+- `unit`: kWh (electricity), m³ (gas), kg (steam)
+
+**Notes**:
+- Use to discover available energy types before querying specific type
+- Boiler-1 example: 3 types (electricity, gas, steam)
+- Most machines have 1 type (electricity only)
+
+---
+
+### M2: GET /machines/{id}/energy/{type} - Get Readings by Energy Type
       "last_reading": "2025-10-27T11:49:35.764289+00:00",
       "unit": "kWh"
     },
@@ -1375,31 +1532,37 @@ curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e
 - Access to original sensor measurements
 - Raw data for custom aggregations
 
-**Comparison with Endpoint 5:**
-- Endpoint 5: Aggregated kWh (electricity only, interval buckets)
-- This endpoint: Raw power_kw + metadata (all energy types, no aggregation)
+### M2: GET /machines/{id}/energy/{type} - Get Readings by Energy Type
 
+**Endpoint**: `GET /api/v1/machines/{id}/energy/{type}`
+
+**Purpose**: Get raw readings with detailed metadata for specific energy type (electricity, natural_gas, steam)
+
+**Parameters**:
+- `start_time` (ISO 8601, optional): Period start time
+- `end_time` (ISO 8601, optional): Period end time
+- `interval` (string, optional): "15min", "1hour", etc - default no aggregation
+- `limit` (integer, optional): Number of readings - default 100, max 1000
+- `include_metadata` (boolean, optional): Include sensor details - default true
+
+**OVOS Use Cases**:
+- "Show me natural gas consumption for Boiler-1"
+- "What's the steam flow rate for HVAC-Main?"
+- "Get electricity readings for Compressor-1 with metadata"
+
+**curl Example**:
 ```bash
-# Natural Gas
-curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy/natural_gas?limit=5"
-
-# Steam
-curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy/steam?limit=5"
-
-# Electricity
-curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy/electricity?limit=5"
+# Natural Gas with time range
+curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy/natural_gas?start_time=2025-10-27T11:00:00Z&end_time=2025-10-27T12:00:00Z&interval=15min"
 ```
 
-**Parameters:**
-- `limit` (optional): Number of readings (default: 100, max: 1000)
-- `include_metadata` (optional): Include detailed measurements (default: true)
-
-**Response (Natural Gas):**
+**Response (Natural Gas)**:
 ```json
 {
   "success": true,
   "machine_id": "e9fcad45-1f7b-4425-8710-c368a681f15e",
   "energy_type": "natural_gas",
+  "interval": null,
   "data": [
     {
       "time": "2025-10-27T12:30:45.782885+00:00",
@@ -1409,52 +1572,103 @@ curl "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e
       "pressure_bar": 3.82,
       "temperature_c": 19.9,
       "calorific_value_kwh_m3": 10.55
-    },
-    {
-      "time": "2025-10-27T12:29:45.777609+00:00",
-      "power_kw": 1836.47,
-      "flow_rate_m3h": 174.073,
-      "consumption_m3": 1.4506,
-      "pressure_bar": 3.89,
-      "temperature_c": 21.0,
-      "calorific_value_kwh_m3": 10.55
     }
   ],
-  "count": 2,
-  "unit": "m³",
-  "timestamp": "2025-10-27T13:38:36.545982"
+  "count": 100,
+  "unit": "m³"
 }
 ```
 
-**Response (Steam):**
+**Response Fields**:
+- `power_kw`: Instantaneous power consumption
+- `flow_rate_m3h` / `flow_rate_kg_h`: Flow rate (gas/steam)
+- `consumption_m3` / `consumption_kg`: Total consumption
+- `pressure_bar`: System pressure
+- `temperature_c`: Gas/steam temperature
+- `calorific_value_kwh_m3`: Energy content (gas only)
+
+**Notes**:
+- ✅ Provides detailed sensor data not in EP5 (electricity aggregated endpoint)
+- Use for: detailed analysis, anomaly detection, efficiency calculations
+- Comparison with EP5: EP5 = aggregated kWh buckets, M2 = raw readings with metadata
+
+---
+
+### M3: GET /machines/{id}/energy-summary - Multi-Energy Summary
+
+**Endpoint**: `GET /api/v1/machines/{id}/energy-summary`
+
+**Purpose**: Get aggregated summary of all energy types for a machine in single request
+
+**Parameters**:
+- `start_time` (ISO 8601, required): Period start time
+- `end_time` (ISO 8601, required): Period end time
+
+**OVOS Use Cases**:
+- "Summarize all energy consumption for Boiler-1 today"
+- "Show me total energy usage for HVAC-Main this week"
+- "What's the energy breakdown for Compressor-1?"
+
+**curl Example**:
+```bash
+curl -G "http://localhost:8001/api/v1/machines/e9fcad45-1f7b-4425-8710-c368a681f15e/energy-summary" \
+  --data-urlencode "start_time=2025-10-27T11:00:00Z" \
+  --data-urlencode "end_time=2025-10-27T12:00:00Z"
+```
+
+**Response**:
 ```json
 {
   "success": true,
   "machine_id": "e9fcad45-1f7b-4425-8710-c368a681f15e",
-  "energy_type": "steam",
-  "data": [
+  "time_period": {
+    "start": "2025-10-27T11:00:00+00:00",
+    "end": "2025-10-27T12:00:00+00:00",
+    "hours": 1.0
+  },
+  "summary_by_type": [
     {
-      "time": "2025-10-27T12:31:45.785710+00:00",
-      "power_kw": 1298.98,
-      "flow_rate_kg_h": 574.77,
-      "consumption_kg": 4.79,
-      "pressure_bar": 9.84,
-      "temperature_c": 183.3,
-      "enthalpy_kj_kg": 2758
+      "energy_type": "electricity",
+      "reading_count": 11,
+      "avg_power_kw": 32.0,
+      "total_kwh": 32.0,
+      "unit": "kWh"
     },
     {
-      "time": "2025-10-27T12:31:15.785102+00:00",
-      "power_kw": 1436.094,
-      "flow_rate_kg_h": 635.44,
-      "consumption_kg": 5.295,
-      "pressure_bar": 9.85,
-      "temperature_c": 182.6,
-      "enthalpy_kj_kg": 2804
+      "energy_type": "natural_gas",
+      "reading_count": 33,
+      "avg_power_kw": 1887.3,
+      "total_kwh": 1887.3,
+      "unit": "m³"
+    },
+    {
+      "energy_type": "steam",
+      "reading_count": 70,
+      "avg_power_kw": 1340.08,
+      "total_kwh": 1340.08,
+      "unit": "kg"
     }
   ],
-  "count": 2,
-  "unit": "kg",
-  "timestamp": "2025-10-27T13:38:42.043539"
+  "total_energy_types": 3,
+  "timestamp": "2025-10-27T18:18:11.916109"
+}
+```
+
+**Response Fields**:
+- `summary_by_type`: Array with stats per energy type
+- `reading_count`: Number of readings in period
+- `avg_power_kw`: Average power consumption
+- `total_kwh`: Total energy consumed (note: units vary by type)
+- `unit`: kWh (electricity), m³ (gas), kg (steam)
+
+**Notes**:
+- ✅ Single request for all energy types (more efficient than multiple M2 calls)
+- Use for: dashboards, high-level reporting, multi-energy comparisons
+- Boiler-1 example: 32 kWh electricity + 1887 m³ gas + 1340 kg steam in 1 hour
+
+---
+
+**OVOS Voice Use Case:**
 }
 ```
 
