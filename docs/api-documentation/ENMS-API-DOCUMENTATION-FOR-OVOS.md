@@ -477,146 +477,264 @@ curl "http://localhost:8001/api/v1/timeseries/latest/c0000000-0000-0000-0000-000
 - Returns 404 if machine has no readings
 
 ### 8. Multi-Machine Comparison
-**Purpose:** Compare multiple machines
+**Purpose:** Compare energy consumption across multiple machines
+
+**Endpoint:** `GET /api/v1/timeseries/multi-machine/energy`
+
+**Parameters:**
+- `machine_ids` (required): Comma-separated machine UUIDs
+- `start_time` (required): ISO 8601 timestamp
+- `end_time` (required): ISO 8601 timestamp
+- `interval` (required): `15min`, `1hour`, `1day`
+
+**OVOS Use Cases:**
+- "Compare energy usage between Compressor-1 and HVAC-Main"
+- "Show me which machines use the most energy today"
+- "Compare all compressors this week"
 
 ```bash
-curl -G http://localhost:8001/api/v1/timeseries/multi-machine/energy \
+curl -G "http://localhost:8001/api/v1/timeseries/multi-machine/energy" \
   --data-urlencode "machine_ids=c0000000-0000-0000-0000-000000000001,c0000000-0000-0000-0000-000000000002" \
-  --data-urlencode "start_time=2025-10-20T00:00:00Z" \
-  --data-urlencode "end_time=2025-10-20T23:59:59Z" \
+  --data-urlencode "start_time=2025-10-27T12:00:00Z" \
+  --data-urlencode "end_time=2025-10-27T14:00:00Z" \
   --data-urlencode "interval=1hour"
+```
 
-# Response
+**Response:**
+```json
 {
   "interval": "1hour",
-  "start_time": "2025-10-20T00:00:00Z",
-  "end_time": "2025-10-20T23:59:59Z",
+  "start_time": "2025-10-27T12:00:00+00:00",
+  "end_time": "2025-10-27T14:00:00+00:00",
   "machines": [
     {
       "machine_id": "c0000000-0000-0000-0000-000000000001",
       "machine_name": "Compressor-1",
-      "data_points": [...]
+      "data_points": [
+        {
+          "timestamp": "2025-10-27T12:00:00+00:00",
+          "value": 25.577758,
+          "unit": "kWh"
+        },
+        {
+          "timestamp": "2025-10-27T13:00:00+00:00",
+          "value": 37.412106,
+          "unit": "kWh"
+        }
+      ]
     },
     {
       "machine_id": "c0000000-0000-0000-0000-000000000002",
       "machine_name": "HVAC-Main",
-      "data_points": [...]
+      "data_points": [
+        {
+          "timestamp": "2025-10-27T12:00:00+00:00",
+          "value": 7.920708,
+          "unit": "kWh"
+        }
+      ]
     }
   ],
   "total_machines": 2
 }
 ```
 
-**OVOS Use Case:**  
-- "Compare energy usage between Compressor-1 and HVAC-1"
+**Response Fields:**
+- `machines`: Array of machine data, aligned by timestamp
+- `data_points`: Time-series data for each machine (same structure as EP5)
+- All machines have synchronized timestamps
+
+**Notes:**
+- ✅ Can compare up to 10 machines simultaneously
+- ✅ Data points aligned by timestamp for easy comparison
+- Use `/machines?search=compressor` to get multiple machine IDs
 
 ---
 
 ## 🚨 Anomaly Detection
 
 ### 9. Detect Anomalies
-**Purpose:** Run anomaly detection for a time period
+**Purpose:** Run ML-based anomaly detection on machine data
+
+**Endpoint:** `POST /api/v1/anomaly/detect`
+
+**Parameters (JSON body):**
+- `machine_id` (required): Machine UUID
+- `start` (required): ISO 8601 timestamp
+- `end` (required): ISO 8601 timestamp
+- `contamination` (optional): Expected anomaly rate (default: 0.1 = 10%)
+- `use_baseline` (optional): Use baseline model if available (default: true)
+
+**OVOS Use Cases:**
+- "Check for anomalies in Compressor-1 today"
+- "Detect unusual patterns in last hour"
+- "Run anomaly detection on HVAC system"
 
 ```bash
-curl -X POST http://localhost:8001/api/v1/anomaly/detect \
+curl -X POST "http://localhost:8001/api/v1/anomaly/detect" \
   -H "Content-Type: application/json" \
   -d '{
     "machine_id": "c0000000-0000-0000-0000-000000000001",
-    "start": "2025-10-20T00:00:00Z",
-    "end": "2025-10-20T23:59:59Z",
-    "contamination": 0.1,
-    "use_baseline": true
+    "start": "2025-10-27T10:00:00Z",
+    "end": "2025-10-27T12:00:00Z"
   }'
+```
 
-# Response
+**Response:**
+```json
 {
-  "success": true,
   "machine_id": "c0000000-0000-0000-0000-000000000001",
   "machine_name": "Compressor-1",
   "detection_period": {
-    "start": "2025-10-20T00:00:00Z",
-    "end": "2025-10-20T23:59:59Z"
+    "start": "2025-10-27T10:00:00+00:00",
+    "end": "2025-10-27T12:00:00+00:00"
   },
-  "anomalies_detected": 3,
+  "baseline_model_version": 32,
+  "total_data_points": 3,
+  "anomalies_detected": 1,
+  "anomalies_saved": 1,
+  "contamination": 0.1,
   "anomalies": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440000",
-      "detected_at": "2025-10-20T14:35:00Z",
-      "anomaly_type": "power_spike",
-      "severity": "warning",
-      "metric_name": "power_kw",
-      "metric_value": 45.2,
-      "expected_value": 28.5,
-      "deviation_percent": 58.6,
-      "confidence_score": 0.92,
-      "is_resolved": false
+      "id": "fb0587cb-bf3b-4dfb-bc03-907865ab7caf",
+      "detected_at": "2025-10-27T12:00:00+00:00",
+      "anomaly_type": "unknown",
+      "severity": "normal",
+      "confidence_score": 0.0463
     }
   ]
 }
 ```
 
+**Response Fields:**
+- `anomalies_detected`: Number of anomalies found
+- `anomalies_saved`: Number saved to database (duplicates excluded)
+- `baseline_model_version`: ML model version used
+- `confidence_score`: ML confidence (0-1, higher = more confident)
+
+**Notes:**
+- ✅ Uses Isolation Forest ML algorithm
+- ✅ Requires baseline model trained for machine (see EP16)
+- ⚠️ Returns error if no baseline exists (use EP16 to train first)
+- Processing time: ~2-5 seconds per 1000 data points
+
 ### 10. Get Recent Anomalies
-**Purpose:** Get last 24 hours of anomalies
+**Purpose:** Get anomalies from last 7 days
+
+**Endpoint:** `GET /api/v1/anomaly/recent`
+
+**Parameters:**
+- `machine_id` (optional): Filter by specific machine
+- `severity` (optional): Filter by severity (`critical`, `warning`, `normal`)
+- `limit` (optional): Max results (default: 100)
+- `start_time` (optional): Custom start time
+- `end_time` (optional): Custom end time
+
+**OVOS Use Cases:**
+- "Show me recent anomalies"
+- "What critical issues happened today?"
+- "List anomalies for Compressor-1"
 
 ```bash
 # All recent anomalies
-curl http://localhost:8001/api/v1/anomaly/recent
+curl "http://localhost:8001/api/v1/anomaly/recent?limit=10"
 
 # Filter by machine
 curl "http://localhost:8001/api/v1/anomaly/recent?machine_id=c0000000-0000-0000-0000-000000000001"
 
 # Filter by severity
-curl "http://localhost:8001/api/v1/anomaly/recent?severity=critical&limit=20"
+curl "http://localhost:8001/api/v1/anomaly/recent?severity=critical"
+```
 
-# Response
+**Response:**
+```json
 {
-  "total_count": 12,
+  "total_count": 3,
   "filters": {
     "machine_id": null,
-    "severity": "critical",
-    "time_window": "24 hours"
+    "severity": null,
+    "time_window": "Last 7 days (default)"
   },
   "anomalies": [
     {
-      "id": "...",
-      "machine_id": "...",
+      "id": "62216d36-d263-48fd-8685-7eaf44f45dc0",
+      "machine_id": "c0000000-0000-0000-0000-000000000001",
+      "detected_at": "2025-10-27T06:00:00+00:00",
+      "anomaly_type": "unknown",
+      "severity": "normal",
+      "confidence_score": 0.0807,
+      "is_resolved": false,
       "machine_name": "Compressor-1",
-      "detected_at": "2025-10-20T14:35:00Z",
-      "anomaly_type": "power_spike",
-      "severity": "critical",
-      "metric_value": 45.2,
-      "deviation_percent": 58.6,
-      "is_resolved": false
+      "machine_type": "compressor"
     }
   ]
 }
 ```
+
+**Response Fields:**
+- `total_count`: Total anomalies matching filters
+- `is_resolved`: Whether anomaly was addressed
+- `anomaly_type`: Type detected (`spike`, `drop`, `pattern`, `unknown`)
+- `severity`: Impact level (`critical`, `warning`, `normal`)
+
+**Notes:**
+- ✅ Default time window: Last 7 days
+- ✅ Sorted by `detected_at` DESC (newest first)
+- Use `limit` to control response size
 
 ### 11. Get Active Anomalies
-**Purpose:** Get unresolved anomalies only
+**Purpose:** Get currently unresolved anomalies requiring attention
+
+**Endpoint:** `GET /api/v1/anomaly/active`
+
+**Parameters:** None
+
+**OVOS Use Cases:**
+- "Are there any active alerts?"
+- "Show me unresolved issues"
+- "What problems need attention?"
 
 ```bash
-curl http://localhost:8001/api/v1/anomaly/active
+curl "http://localhost:8001/api/v1/anomaly/active"
+```
 
-# Response
+**Response:**
+```json
 {
-  "total_count": 5,
+  "total_count": 116,
+  "by_severity": {
+    "critical": 6,
+    "warning": 1,
+    "info": 0
+  },
   "anomalies": [
     {
-      "id": "...",
-      "machine_name": "Compressor-1",
-      "detected_at": "2025-10-20T14:35:00Z",
+      "id": "938bd377-7290-4d56-aa08-43242f01a500",
+      "machine_id": "c0000000-0000-0000-0000-000000000001",
+      "detected_at": "2025-10-16T14:30:00+00:00",
+      "anomaly_type": "spike",
       "severity": "critical",
-      "anomaly_type": "power_spike",
-      "is_resolved": false,
-      "age_hours": 2.5
+      "metric_name": "temperature",
+      "metric_value": 95.5,
+      "expected_value": 75.0,
+      "deviation_percent": 27.33,
+      "confidence_score": 0.92,
+      "machine_name": "Compressor-1",
+      "machine_type": "compressor"
     }
   ]
 }
 ```
 
-**OVOS Use Case:**  
-- "Are there any active alerts?"
+**Response Fields:**
+- `total_count`: Number of active (unresolved) anomalies
+- `by_severity`: Breakdown by severity level
+- All returned anomalies have `is_resolved = false` or `resolved_at = null`
+
+**Notes:**
+- ✅ Only returns anomalies NOT yet resolved
+- ✅ Includes severity summary for quick assessment
+- Use for alerting/monitoring dashboards
 - "What anomalies were detected today?"
 - "Tell me about the critical issue on Compressor-1"
 
