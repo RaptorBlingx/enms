@@ -9,6 +9,7 @@ from machines.hvac import HVACSimulator
 from machines.motor import MotorSimulator
 from machines.pump import HydraulicPumpSimulator
 from machines.injection_molding import InjectionMoldingSimulator
+from machines.boiler import BoilerSimulator
 
 __all__ = [
     'BaseMachineSimulator',
@@ -17,4 +18,5 @@ __all__ = [
     'MotorSimulator',
     'HydraulicPumpSimulator',
     'InjectionMoldingSimulator',
+    'BoilerSimulator',
 ]

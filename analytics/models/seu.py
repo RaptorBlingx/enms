@@ -89,7 +89,7 @@ class TrainBaselineRequest(BaseModel):
     start_date: date
     end_date: date
     features: List[str] = Field(
-        default=["total_production_count", "avg_temp_c"],
+        default=["production_count", "outdoor_temp_c", "is_weekend"],
         min_items=1
     )
     

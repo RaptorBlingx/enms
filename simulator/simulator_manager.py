@@ -17,7 +17,8 @@ from machines import (
     HVACSimulator,
     MotorSimulator,
     HydraulicPumpSimulator,
-    InjectionMoldingSimulator
+    InjectionMoldingSimulator,
+    BoilerSimulator
 )
 
 logger = logging.getLogger(__name__)
@@ -220,6 +221,8 @@ class SimulatorManager:
             return HydraulicPumpSimulator(machine_id, machine_name, rated_power_kw, mqtt_topic)
         elif machine_type == "injection_molding":
             return InjectionMoldingSimulator(machine_id, machine_name, rated_power_kw, mqtt_topic)
+        elif machine_type == "boiler":
+            return BoilerSimulator(machine_id, machine_name, rated_power_kw, mqtt_topic)
         else:
             logger.warning(f"Unknown machine type: {machine_type}")
             return None
@@ -265,13 +268,25 @@ class SimulatorManager:
                 environmental_data = machine.generate_environmental_data(timestamp)
                 status_data = machine.generate_machine_status(timestamp)
                 
-                # Publish to MQTT
-                mqtt_publisher.publish_energy_reading(
-                    machine.machine_id,
-                    machine.mqtt_topic,
-                    energy_data
-                )
+                # Check if machine supports multi-energy (has _generate_sensor_data method)
+                if hasattr(machine, '_generate_sensor_data'):
+                    # Multi-energy machine (e.g., Boiler)
+                    sensor_data = machine._generate_sensor_data()
+                    sensor_data['timestamp'] = timestamp.isoformat()
+                    mqtt_publisher.publish_multi_energy_reading(
+                        machine.machine_id,
+                        machine.mqtt_topic,
+                        sensor_data
+                    )
+                else:
+                    # Legacy single-energy machine
+                    mqtt_publisher.publish_energy_reading(
+                        machine.machine_id,
+                        machine.mqtt_topic,
+                        energy_data
+                    )
                 
+                # Always publish production, environmental, and status
                 mqtt_publisher.publish_production_data(
                     machine.machine_id,
                     machine.mqtt_topic,

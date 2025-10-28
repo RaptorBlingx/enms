@@ -115,8 +115,67 @@ class MQTTPublisher:
             return False
     
     def publish_energy_reading(self, machine_id: str, mqtt_topic: str, data: Dict[str, Any]) -> bool:
-        """Publish energy reading"""
+        """Publish energy reading (electricity only - legacy)"""
         return self.publish(f"{mqtt_topic}/energy", data)
+    
+    def publish_multi_energy_reading(self, machine_id: str, mqtt_topic: str, sensor_data: Dict[str, Any]) -> bool:
+        """
+        Publish multi-energy readings to separate topics.
+        Detects energy types in sensor_data and publishes each separately.
+        
+        Supports:
+        - Electricity: power_kw, energy_kwh, voltage_v, current_a
+        - Natural Gas: flow_rate_m3h, consumption_m3, pressure_bar
+        - Steam: flow_rate_kg_h, consumption_kg, steam_pressure_bar
+        """
+        published_count = 0
+        
+        # Extract timestamp (should be in all sensor data)
+        timestamp = sensor_data.get('timestamp', datetime.utcnow().isoformat())
+        
+        # Publish electricity data (if present)
+        if 'power_kw' in sensor_data:
+            electricity_payload = {
+                'timestamp': timestamp,
+                'machine_id': machine_id,
+                'power_kw': sensor_data['power_kw'],
+                'energy_kwh': sensor_data.get('energy_kwh', 0),
+                'voltage_v': sensor_data.get('voltage_v'),
+                'current_a': sensor_data.get('current_a'),
+                'power_factor': sensor_data.get('power_factor', 0.95)
+            }
+            if self.publish(f"{mqtt_topic}/electricity", electricity_payload):
+                published_count += 1
+        
+        # Publish natural gas data (if present)
+        if 'flow_rate_m3h' in sensor_data or 'natural_gas_m3h' in sensor_data:
+            gas_payload = {
+                'timestamp': timestamp,
+                'machine_id': machine_id,
+                'flow_rate_m3h': sensor_data.get('flow_rate_m3h', sensor_data.get('natural_gas_m3h', 0)),
+                'consumption_m3': sensor_data.get('consumption_m3', sensor_data.get('natural_gas_m3', 0)),
+                'pressure_bar': sensor_data.get('pressure_bar', sensor_data.get('gas_pressure_bar')),
+                'temperature_c': sensor_data.get('temperature_c', sensor_data.get('gas_temp_c')),
+                'calorific_value_kwh_m3': sensor_data.get('calorific_value_kwh_m3', 10.55)
+            }
+            if self.publish(f"{mqtt_topic}/natural_gas", gas_payload):
+                published_count += 1
+        
+        # Publish steam data (if present)
+        if 'flow_rate_kg_h' in sensor_data or 'steam_production_kgh' in sensor_data:
+            steam_payload = {
+                'timestamp': timestamp,
+                'machine_id': machine_id,
+                'flow_rate_kg_h': sensor_data.get('flow_rate_kg_h', sensor_data.get('steam_production_kgh', 0)),
+                'consumption_kg': sensor_data.get('consumption_kg', sensor_data.get('steam_production_kg', 0)),
+                'pressure_bar': sensor_data.get('steam_pressure_bar', sensor_data.get('pressure_bar')),
+                'temperature_c': sensor_data.get('steam_temperature_c', sensor_data.get('steam_temp_c')),
+                'enthalpy_kj_kg': sensor_data.get('enthalpy_kj_kg')
+            }
+            if self.publish(f"{mqtt_topic}/steam", steam_payload):
+                published_count += 1
+        
+        return published_count > 0
     
     def publish_production_data(self, machine_id: str, mqtt_topic: str, data: Dict[str, Any]) -> bool:
         """Publish production data"""

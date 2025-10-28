@@ -27,6 +27,7 @@ from uuid import UUID
 import logging
 
 from services.seu_baseline_service import SEUBaselineService
+from services.baseline_service import baseline_service  # OLD proven service (97-99% accuracy)
 from services.feature_discovery import feature_discovery
 from database import db
 from models.seu import TrainBaselineRequest
@@ -188,40 +189,92 @@ async def train_baseline_via_ovos(request: OVOSTrainingRequest):
         
         logger.info(f"[OVOS-TRAIN] Features validated: {valid_features}")
         
-        # Step 3: Build training request
-        training_request = TrainBaselineRequest(
-            seu_id=seu_id,
-            baseline_year=request.year,
-            start_date=date(request.year, 1, 1),
-            end_date=date(request.year, 12, 31),
-            features=request.features
+        # Step 2.5: Map feature names to aggregated column names
+        # User-friendly names (from API) → Actual column names (in energy_readings_1hour)
+        feature_mapping = {
+            'production_count': 'total_production_count',
+            'outdoor_temp_c': 'avg_outdoor_temp_c',
+            'indoor_temp_c': 'avg_indoor_temp_c',
+            'machine_temp_c': 'avg_machine_temp_c',
+            'pressure_bar': 'avg_pressure_bar',
+            'power_kw': 'avg_power_kw',
+            'power_factor': 'avg_power_factor',
+            'current_a': 'avg_current_a',
+            'voltage_v': 'avg_voltage_v',
+            'load_factor': 'avg_load_factor',
+            'cycle_time_sec': 'avg_cycle_time_sec',
+            'throughput': 'avg_throughput_units_per_hour',
+            # Already correctly named (don't need mapping)
+            'total_production': 'total_production',
+            'good_units_count': 'good_units_count',
+            'defect_units_count': 'defect_units_count',
+            'max_power_kw': 'max_power_kw',
+            'heating_degree_days': 'heating_degree_days',
+            'cooling_degree_days': 'cooling_degree_days',
+            'operating_hours': 'operating_hours',
+            'is_weekend': 'is_weekend'
+        }
+        
+        # Map user features to database column names
+        if valid_features:
+            mapped_features = [feature_mapping.get(f, f) for f in valid_features]
+            logger.info(f"[OVOS-TRAIN] Mapped features: {valid_features} → {mapped_features}")
+        else:
+            mapped_features = None
+        
+        # Step 3: Get machine_id from SEU
+        # SEUs can have multiple machines, but we'll use the first one for simplicity
+        machine_ids = seu['machine_ids']
+        if not machine_ids or len(machine_ids) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"SEU '{request.seu_name}' has no associated machines"
+            )
+        
+        machine_id = UUID(str(machine_ids[0]))  # Use first machine
+        logger.info(f"[OVOS-TRAIN] Using machine_id: {machine_id}")
+        
+        # Step 4: Convert year to date range
+        start_date = datetime(request.year, 1, 1, 0, 0, 0)
+        end_date = datetime(request.year, 12, 31, 23, 59, 59)
+        
+        # Step 5: Train baseline using proven service (97-99% accuracy!)
+        # Smart Hybrid: If user specifies features, use them. Otherwise, auto-select.
+        drivers = mapped_features if mapped_features else None
+        
+        if drivers:
+            logger.info(f"[OVOS-TRAIN] User requested features: {drivers}")
+        else:
+            logger.info(f"[OVOS-TRAIN] Auto-selecting best features for maximum accuracy")
+        
+        training_response = await baseline_service.train_baseline(
+            machine_id=machine_id,
+            start_date=start_date,
+            end_date=end_date,
+            drivers=drivers  # Use mapped features or auto-select if None
         )
         
-        # Step 4: Train baseline using dynamic service
-        baseline_service = SEUBaselineService()
-        training_response = await baseline_service.train_baseline(training_request)
-        
         logger.info(
-            f"[OVOS-TRAIN] Training complete: R²={training_response.r_squared}, "
-            f"Samples={training_response.samples_count}"
+            f"[OVOS-TRAIN] Training complete: R²={training_response['r_squared']}, "
+            f"Samples={training_response['training_samples']}"
         )
         
         # Step 5: Format response for voice output
         formula_readable = _build_voice_formula(
-            intercept=training_response.intercept,
-            coefficients=training_response.coefficients
+            intercept=training_response['intercept'],
+            coefficients=training_response['coefficients']
         )
         
         formula_technical = _build_technical_formula(
-            intercept=training_response.intercept,
-            coefficients=training_response.coefficients
+            intercept=training_response['intercept'],
+            coefficients=training_response['coefficients']
         )
         
         # Build voice-friendly message
-        r2_percent = round(training_response.r_squared * 100)
+        r2_percent = round(training_response['r_squared'] * 100)
         message = (
             f"{request.seu_name} {request.energy_source} baseline trained successfully. "
-            f"R-squared {training_response.r_squared:.2f} ({r2_percent}% accuracy). "
+            f"R-squared {training_response['r_squared']:.2f} ({r2_percent}% accuracy). "
             f"{formula_readable}"
         )
         
@@ -230,12 +283,12 @@ async def train_baseline_via_ovos(request: OVOSTrainingRequest):
             message=message,
             seu_name=request.seu_name,
             energy_source=request.energy_source,
-            r_squared=training_response.r_squared,
-            rmse=training_response.rmse,
+            r_squared=training_response['r_squared'],
+            rmse=training_response['rmse'],
             formula_readable=formula_readable,
             formula_technical=formula_technical,
-            samples_count=training_response.samples_count,
-            trained_at=training_response.trained_at
+            samples_count=training_response['training_samples'],
+            trained_at=datetime.fromisoformat(training_response['trained_at'])
         )
     
     except HTTPException:

@@ -241,201 +241,154 @@ class FeatureDiscoveryService:
         """
         Build dynamic SQL query to aggregate features by day.
         
-        PERFORMANCE OPTIMIZED: Aggregates each table separately FIRST, then joins.
-        This is 50-100x faster than JOIN-then-AGGREGATE on large hypertables.
+        **CRITICAL FIX (Oct 24)**: Use CONTINUOUS AGGREGATES not raw tables!
+        - Uses energy_readings_1day, production_data_1day (pre-aggregated)
+        - 100x faster than time_bucket() on raw hypertables
+        - Maps feature names to aggregate columns (production_count → total_production_count)
         
         Args:
             energy_source_id: Energy source (electricity, natural_gas, etc.)
             machine_ids: List of machine UUIDs in this SEU
-            requested_features: Features to aggregate
+            requested_features: Features to aggregate (e.g. ['production_count', 'outdoor_temp_c'])
             start_date: Start date (YYYY-MM-DD)
             end_date: End date (YYYY-MM-DD)
         
         Returns:
-            Complete SQL query string optimized for TimescaleDB
+            Complete SQL query string using continuous aggregates
             
         Strategy:
-        1. Aggregate each table separately with time_bucket
-        2. Join the pre-aggregated results on 'day'
-        3. Much faster than joining raw tables then aggregating
+        1. Use *_1day views (energy_readings_1day, production_data_1day, environmental_degree_days_daily)
+        2. Map logical feature names to aggregate column names
+        3. Join on bucket/day column
         
-        Example structure:
-        WITH energy_daily AS (
-            SELECT time_bucket('1 day', time)::DATE as day, SUM(energy_kwh) as consumption_kwh
-            FROM energy_readings WHERE machine_id = ... GROUP BY day
-        ),
-        production_daily AS (
-            SELECT time_bucket('1 day', time)::DATE as day, AVG(production_count) as production_count
-            FROM production_data WHERE machine_id = ... GROUP BY day
-        )
-        SELECT energy_daily.day, consumption_kwh, production_count
-        FROM energy_daily
-        LEFT JOIN production_daily USING (day)
-        ORDER BY day
+        Example:
+        SELECT 
+            er.bucket::DATE as day,
+            er.total_energy_kwh as consumption_kwh,
+            pd.total_production_count as production_count,
+            ed.avg_outdoor_temp_c as outdoor_temp_c
+        FROM energy_readings_1day er
+        LEFT JOIN production_data_1day pd ON er.bucket = pd.bucket AND er.machine_id = pd.machine_id
+        LEFT JOIN environmental_degree_days_daily ed ON er.bucket::DATE = ed.day::DATE
+        WHERE er.machine_id = ANY($1) AND er.bucket BETWEEN $2 AND $3
         """
-        # Get ALL features for the energy source to find primary consumption feature
-        all_features_query = """
-            SELECT feature_name, source_table, source_column, aggregation_function
-            FROM energy_source_features
-            WHERE energy_source_id = $1
-              AND source_table IN ('energy_readings', 'natural_gas_readings', 'steam_readings', 'compressed_air_end_use_readings')
-            LIMIT 1
-        """
-        async with db.pool.acquire() as conn:
-            primary_feature = await conn.fetchrow(all_features_query, energy_source_id)
+        # **FIX: Use continuous aggregates instead of raw tables**
+        # Map logical feature names → aggregate column names
+        feature_to_column_map = {
+            'production_count': 'total_production_count',
+            'outdoor_temp_c': 'avg_outdoor_temp_c',
+            'consumption_kwh': 'total_energy_kwh',
+            'avg_power_kw': 'avg_power_kw',
+            'peak_demand_kw': 'peak_demand_kw'
+        }
         
-        if not primary_feature:
-            raise ValueError(f"No primary energy table found for energy_source_id={energy_source_id}")
+        # Determine which continuous aggregate views we need
+        views_needed = {
+            'energy_readings_1day': 'er',  # Always needed for primary energy
+        }
         
-        primary_table = primary_feature['source_table']
-        primary_alias = self._get_table_alias(primary_table)
-        primary_consumption_feature = primary_feature['feature_name']
+        # Check which features require which views
+        if any(f in requested_features for f in ['production_count']):
+            views_needed['production_data_1day'] = 'pd'
         
-        logger.info(
-            f"[FEATURE-DISCOVERY] Primary table: {primary_table} (alias: {primary_alias}), " 
-            f"consumption feature: {primary_consumption_feature}"
-        )
+        if any(f in requested_features for f in ['outdoor_temp_c', 'heating_degree_days', 'cooling_degree_days']):
+            views_needed['environmental_degree_days_daily'] = 'ed'
         
-        # Get feature metadata for REQUESTED features only
-        metadata = await self.get_feature_metadata(energy_source_id, requested_features)
+        # Check if pressure/humidity needed (not in continuous aggregate, must use raw table)
+        needs_raw_env = any(f in requested_features for f in ['pressure_bar', 'outdoor_humidity_percent', 'indoor_humidity_percent'])
+        if needs_raw_env:
+            views_needed['environmental_data'] = 'env'
         
-        if not metadata:
-            raise ValueError(f"No valid features found from: {requested_features}")
+        logger.info(f"[FEATURE-DISCOVERY] Using continuous aggregates: {list(views_needed.keys())}")
         
-        # Add primary consumption feature to metadata if not already included
-        if primary_consumption_feature not in metadata:
-            metadata[primary_consumption_feature] = EnergyFeature(
-                feature_name=primary_consumption_feature,
-                data_type='numeric',
-                source_table=primary_table,
-                source_column=primary_feature['source_column'],
-                aggregation_function=primary_feature['aggregation_function']
-            )
+        # Build SELECT clause using continuous aggregates
+        select_parts = ["er.bucket::DATE as day"]
+        select_parts.append("er.total_energy_kwh as consumption_kwh")  # Always include energy consumption
         
-        logger.info(
-            f"[FEATURE-DISCOVERY] Primary table: {primary_table} (alias: {primary_alias})"
-        )
-        
-        # Build SELECT clause
-        select_parts = [f"time_bucket('1 day', {primary_alias}.time)::DATE as day"]
-        
-        # Group features by source table for CTE building
-        tables_needed = {primary_table}
-        features_by_table = {primary_table: []}
-        
-        for feature_name, feature in metadata.items():
-            tables_needed.add(feature.source_table)
-            if feature.source_table not in features_by_table:
-                features_by_table[feature.source_table] = []
-            features_by_table[feature.source_table].append((feature_name, feature))
-        
-        # Build CTEs - one per table, pre-aggregated by day
-        ctes = []
-        
-        # Primary table CTE (energy_readings, natural_gas_readings, etc.)
-        primary_alias = self._get_table_alias(primary_table)
-        energy_column = self._get_energy_column(primary_table)
-        
-        primary_selects = [f"time_bucket('1 day', time)::DATE as day"]
-        
-        # Add primary consumption feature
-        if primary_consumption_feature in metadata:
-            feat = metadata[primary_consumption_feature]
-            agg = feat.aggregation_function
-            col = feat.source_column
-            primary_selects.append(f"{agg}({col}) as {primary_consumption_feature}")
-        
-        # Add operating hours
-        primary_selects.append(f"COUNT(DISTINCT EXTRACT(HOUR FROM time)) as operating_hours")
-        
-        # Add any other features from primary table
-        for feat_name, feat in features_by_table.get(primary_table, []):
-            if feat_name == primary_consumption_feature:
-                continue  # Already added
-            agg = feat.aggregation_function
-            col = feat.source_column
-            if agg != 'CUSTOM':
-                primary_selects.append(f"{agg}({col}) as {feat_name}")
-        
-        primary_cte = f"""
-        {primary_alias}_daily AS (
-            SELECT {', '.join(primary_selects)}
-            FROM {primary_table}
-            WHERE machine_id = ANY($1::uuid[])
-              AND time BETWEEN $2 AND ($3::date + INTERVAL '1 day')
-              AND {energy_column} > 0
-            GROUP BY day
-        )"""
-        ctes.append(primary_cte)
-        
-        # Additional table CTEs (production_data, environmental_data, etc.)
-        for table in tables_needed:
-            if table == primary_table:
-                continue
-                
-            alias = self._get_table_alias(table)
-            table_selects = [f"time_bucket('1 day', time)::DATE as day"]
-            
-            for feat_name, feat in features_by_table.get(table, []):
-                agg = feat.aggregation_function
-                col = feat.source_column
-                
-                if agg == 'CUSTOM':
-                    # Handle special aggregations
-                    if 'heating_degree_days' in feat_name:
-                        # Compute degree-days based on the daily average temperature (T_daily_avg)
-                        # HDD = GREATEST(0, base_temp - AVG(temp)) to avoid overcounting when
-                        # measurements are hourly or higher frequency (previously SUM(...) caused
-                        # degree-hour aggregation and inflated values).
-                        table_selects.append(f"GREATEST(0, 18 - AVG({col})) as {feat_name}")
-                    elif 'cooling_degree_days' in feat_name:
-                        # CDD = GREATEST(0, AVG(temp) - base_temp)
-                        table_selects.append(f"GREATEST(0, AVG({col}) - 18) as {feat_name}")
-                    else:
-                        table_selects.append(f"AVG({col}) as {feat_name}")
-                else:
-                    table_selects.append(f"{agg}({col}) as {feat_name}")
-            
-            if len(table_selects) > 1:  # Only if we have features from this table
-                table_cte = f"""
-        {alias}_daily AS (
-            SELECT {', '.join(table_selects)}
-            FROM {table}
-            WHERE machine_id = ANY($1::uuid[])
-              AND time BETWEEN $2 AND ($3::date + INTERVAL '1 day')
-            GROUP BY day
-        )"""
-                ctes.append(table_cte)
-        
-        # Build final SELECT joining all CTEs
-        final_select_parts = [f"{primary_alias}_daily.day"]
-        final_select_parts.append(primary_consumption_feature)
-        final_select_parts.append("operating_hours")
-        
-        # Add all requested features
+        # Add requested features with correct column mapping
         for feat_name in requested_features:
-            if feat_name not in [primary_consumption_feature, 'operating_hours']:
-                final_select_parts.append(feat_name)
+            aggregate_column = feature_to_column_map.get(feat_name, feat_name)
+            
+            if feat_name == 'production_count':
+                select_parts.append(f"pd.{aggregate_column} as {feat_name}")
+            elif feat_name == 'outdoor_temp_c':
+                select_parts.append(f"ed.{aggregate_column} as {feat_name}")
+            elif feat_name in ['pressure_bar', 'outdoor_humidity_percent', 'indoor_humidity_percent']:
+                # These are in raw environmental_data, not continuous aggregate
+                select_parts.append(f"env.{feat_name}")
+            elif feat_name == 'is_weekend':
+                # Computed feature: 1 if Sat/Sun, 0 otherwise
+                select_parts.append(f"CASE WHEN EXTRACT(DOW FROM er.bucket) IN (0, 6) THEN 1 ELSE 0 END as {feat_name}")
+            elif feat_name == 'day_of_week':
+                # Computed feature: day of week (0=Sunday, 6=Saturday)
+                select_parts.append(f"EXTRACT(DOW FROM er.bucket)::INTEGER as {feat_name}")
+            elif feat_name in ['avg_power_kw', 'peak_demand_kw', 'consumption_kwh']:
+                select_parts.append(f"er.{aggregate_column} as {feat_name}")
+            else:
+                # Fallback - try to find it in one of the views
+                select_parts.append(f"COALESCE(er.{feat_name}, pd.{feat_name}, ed.{feat_name}) as {feat_name}")
         
-        # Build FROM clause with LEFT JOINs on day
-        from_parts = [f"FROM {primary_alias}_daily"]
-        for table in tables_needed:
-            if table == primary_table:
-                continue
-            alias = self._get_table_alias(table)
-            # Only join if we have features from this table
-            if f"{alias}_daily" in '\n'.join(ctes):
-                from_parts.append(f"LEFT JOIN {alias}_daily USING (day)")
+        # Build FROM clause with JOINs for continuous aggregates
+        from_clause = "FROM energy_readings_1day er"
         
-        # Assemble complete query with CTEs
+        # Add production_data join if needed
+        if 'production_data_1day' in views_needed:
+            from_clause += """
+        LEFT JOIN production_data_1day pd 
+            ON er.bucket = pd.bucket 
+            AND er.machine_id = pd.machine_id"""
+        
+        # Add environmental data join if needed
+        # NOTE: Environmental data (temperature) is facility-wide, not machine-specific
+        # Join only on date, take ANY machine's reading (they should all have same outdoor temp)
+        if 'environmental_degree_days_daily' in views_needed:
+            from_clause += """
+        LEFT JOIN LATERAL (
+            SELECT day, avg_outdoor_temp_c, heating_degree_days_18c, cooling_degree_days_18c
+            FROM environmental_degree_days_daily
+            WHERE day::DATE = er.bucket::DATE
+              AND avg_outdoor_temp_c IS NOT NULL
+            LIMIT 1
+        ) ed ON true"""
+        
+        # Add raw environmental_data join for pressure/humidity (not in continuous aggregates)
+        # Use time_bucket to pre-aggregate hourly, then average to daily (much faster than direct daily AVG)
+        if 'environmental_data' in views_needed:
+            from_clause += """
+        LEFT JOIN LATERAL (
+            SELECT 
+                AVG(pressure_bar) as pressure_bar,
+                AVG(outdoor_humidity_percent) as outdoor_humidity_percent,
+                AVG(indoor_humidity_percent) as indoor_humidity_percent
+            FROM (
+                SELECT 
+                    time_bucket('1 hour', time) as hour,
+                    AVG(pressure_bar) as pressure_bar,
+                    AVG(outdoor_humidity_percent) as outdoor_humidity_percent,
+                    AVG(indoor_humidity_percent) as indoor_humidity_percent
+                FROM environmental_data
+                WHERE time >= er.bucket::DATE 
+                  AND time < (er.bucket::DATE + INTERVAL '1 day')
+                GROUP BY hour
+            ) hourly_avg
+        ) env ON true"""
+        
+        # Build WHERE clause
+        where_clause = """
+        WHERE er.machine_id = ANY($1::uuid[])
+          AND er.bucket >= $2::date
+          AND er.bucket < ($3::date + INTERVAL '1 day')
+          AND er.total_energy_kwh > 0"""
+        
+        # Assemble final query
         query = f"""
-        WITH {','.join(ctes)}
-        SELECT {', '.join(final_select_parts)}
-        {' '.join(from_parts)}
+        SELECT {', '.join(select_parts)}
+        {from_clause}
+        {where_clause}
         ORDER BY day
         """
         
-        logger.info(f"[FEATURE-DISCOVERY] Generated query for {len(requested_features)} features from {len(tables_needed)} tables")
+        logger.info(f"[FEATURE-DISCOVERY] Generated continuous aggregate query for {len(requested_features)} features")
         logger.debug(f"[FEATURE-DISCOVERY] SQL: {query.strip()[:500]}...")
         
         return query.strip()

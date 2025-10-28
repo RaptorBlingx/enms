@@ -1,0 +1,767 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": 9,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 200
+              },
+              {
+                "color": "red",
+                "value": 400
+              }
+            ]
+          },
+          "unit": "kwatth"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT SUM(power_kw * EXTRACT(EPOCH FROM (time - LAG(time) OVER (ORDER BY time)))/3600) as total_energy FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'electricity' AND time >= $__timeFrom() AND time <= $__timeTo()",
+          "refId": "A"
+        }
+      ],
+      "title": "Electricity Consumption",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5000
+              },
+              {
+                "color": "red",
+                "value": 10000
+              }
+            ]
+          },
+          "unit": "m³"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT SUM((metadata->>'consumption_m3')::numeric) as total_gas FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo()",
+          "refId": "A"
+        }
+      ],
+      "title": "Natural Gas Consumption",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20000
+              },
+              {
+                "color": "red",
+                "value": 40000
+              }
+            ]
+          },
+          "unit": "kg"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT SUM((metadata->>'consumption_kg')::numeric) as total_steam FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo()",
+          "refId": "A"
+        }
+      ],
+      "title": "Steam Production",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT AVG((metadata->>'boiler_efficiency')::numeric * 100) as efficiency FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'boiler_efficiency' IS NOT NULL AND time >= $__timeFrom() AND time <= $__timeTo()",
+          "refId": "A"
+        }
+      ],
+      "title": "Boiler Efficiency",
+      "type": "stat"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kw"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Electricity"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Natural Gas (equiv)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Steam (equiv)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", power_kw as \"Electricity\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'electricity' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "A"
+        },
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", power_kw as \"Natural Gas (equiv)\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "B"
+        },
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", power_kw as \"Steam (equiv)\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "C"
+        }
+      ],
+      "title": "Multi-Energy Power Trends (kW Equivalent)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "table",
+          "rawSql": "SELECT metadata->>'energy_type' as \"Energy Type\", SUM(power_kw * 0.5) as \"Total kWh\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND time >= $__timeFrom() AND time <= $__timeTo() GROUP BY metadata->>'energy_type'",
+          "refId": "A"
+        }
+      ],
+      "title": "Energy Distribution by Type",
+      "type": "piechart"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "m³/h"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", (metadata->>'flow_rate_m3h')::numeric as \"Gas Flow Rate\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Natural Gas Flow Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kg/h"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", (metadata->>'flow_rate_kg_h')::numeric as \"Steam Flow Rate\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Steam Production Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "pressurembar"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Gas Pressure"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Steam Pressure"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", (metadata->>'pressure_bar')::numeric * 1000 as \"Gas Pressure\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "A"
+        },
+        {
+          "datasource": "PostgreSQL",
+          "format": "time_series",
+          "rawSql": "SELECT time as \"time\", (metadata->>'pressure_bar')::numeric * 1000 as \"Steam Pressure\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
+          "refId": "B"
+        }
+      ],
+      "title": "Pressure Monitoring",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "energy",
+    "multi-energy",
+    "boiler",
+    "demo"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Boiler Multi-Energy Analysis",
+  "uid": "boiler-multi-energy",
+  "version": 2,
+  "weekStart": ""
+}

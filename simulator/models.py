@@ -16,6 +16,7 @@ class MachineType(str, Enum):
     MOTOR = "motor"
     PUMP = "pump"
     INJECTION_MOLDING = "injection_molding"
+    BOILER = "boiler"
 
 
 class OperatingMode(str, Enum):

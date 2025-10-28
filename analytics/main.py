@@ -384,6 +384,7 @@ from api.routes.ovos_training import router as ovos_training_router  # Phase 3: 
 from api.websocket_routes import router as websocket_router  # Phase 4 Session 5
 from api.routes.seu import router as seu_router  # ISO 50001 EnPI
 from api.routes.energy_sources import router as energy_sources_router  # Energy Sources & Features API
+from api.routes.multi_energy import router as multi_energy_router  # Multi-Energy Machine Support (Oct 27, 2025)
 
 # Register API routes with prefix
 app.include_router(baseline_router, prefix=settings.API_PREFIX)
@@ -404,6 +405,7 @@ app.include_router(ovos_training_router, prefix=f"{settings.API_PREFIX}/ovos", t
 app.include_router(websocket_router, prefix=settings.API_PREFIX)  # Phase 4 Session 5: WebSocket Routes
 app.include_router(seu_router, prefix=settings.API_PREFIX)  # ISO 50001 EnPI
 app.include_router(energy_sources_router, prefix=settings.API_PREFIX)  # Energy Sources & Features API
+app.include_router(multi_energy_router, prefix=settings.API_PREFIX)  # Multi-Energy Machine Support (Oct 27, 2025)
 
 
 # ============================================================================

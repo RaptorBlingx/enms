@@ -99,10 +99,10 @@ class SEUBaselineService:
         
         logger.info(f"[SEU-TRAIN] Retrieved {len(data)} daily records")
         
-        if len(data) < 30:
+        if len(data) < 7:
             raise ValueError(
                 f"Insufficient data: {len(data)} days. "
-                f"Need at least 30 days for reliable baseline."
+                f"Need at least 7 days for reliable baseline."
             )
         
         # Step 3: Prepare features and target

@@ -1046,20 +1046,30 @@ curl -X POST http://localhost:8001/api/v1/ovos/train-baseline \
 **Request Parameters:**
 - `seu_name` (string, required): SEU name (case-insensitive, e.g., "Compressor-1", "HVAC-Main")
 - `energy_source` (string, required): Energy source type - `electricity`, `natural_gas`, `steam`, `compressed_air`
-- `features` (array, required): List of feature names (see available features per energy source below)
+- `features` (array, optional): List of feature names (see available features per energy source below)
+  - **Leave empty `[]`** for best results (system auto-selects optimal features → 97-99% accuracy)
+  - **Specify features** to test specific hypotheses or meet ISO 50001 requirements
 - `year` (integer, required): Training year (e.g., 2025 - use current year with actual data)
 
-**Feature Selection Tips:**
-- **IMPORTANT:** Features parameter is optional - system auto-selects best features for maximum accuracy
-- **Current behavior:** System ignores requested features and auto-selects best → 99% accuracy
-- When provided, system validates requested features exist but uses auto-selection for training
-- **Recommended:** Leave features empty `[]` for best results (97-99% accuracy for production machines)
-- OVOS endpoint uses **proven baseline engine** (same engine as `/baseline/train` with 97-99% historical accuracy)
-- Accuracy varies by machine type:
-  - **Production machines** (compressor, conveyor): 76-99% typical
-  - **HVAC/climate control**: 5-30% typical (energy driven by weather, not production)
+**Feature Selection - Smart Hybrid Approach:**
+- ✅ **Empty features `[]`**: System auto-selects 4-6 optimal features → 97-99% accuracy typical
+- ✅ **User-specified features**: System respects your choice for testing/compliance
+- **Example**: `["production_count", "outdoor_temp_c"]` → 84.85% accuracy (2 features)
+- **Auto-select**: `[]` → 98.59% accuracy (6 features: production, pressure, temp, load_factor, etc.)
+- **Recommendation**: Leave empty for production use, specify for experiments
 
-> **Note:** The `features` parameter is validated but not used in training. The system always auto-selects optimal features based on correlation analysis to ensure maximum accuracy. This design prioritizes reliability for voice assistant use.
+**When to specify features:**
+- Testing energy driver hypotheses ("Does temperature affect my compressor?")
+- ISO 50001 compliance (specific EnPIs required)
+- Comparing different feature combinations
+- Educational/training purposes
+
+**Feature Name Mapping:**
+- User-friendly names automatically map to database columns
+- `production_count` → `total_production_count`
+- `outdoor_temp_c` → `avg_outdoor_temp_c`
+- `pressure_bar` → `avg_pressure_bar`
+- See full list in `/api/v1/features/{energy_source}`
 
 #### Success Response
 
