@@ -858,9 +858,9 @@ curl -X POST "http://localhost:8001/api/v1/baseline/predict" \
 **Endpoint**: `GET /api/v1/kpi/all`
 
 **Parameters**:
-- `machine_id` (string, required): Machine identifier
-- `start_time` (ISO 8601, required): Period start time
-- `end_time` (ISO 8601, required): Period end time
+- `machine_id` (UUID, required): Machine identifier
+- `start` (ISO 8601, required): Period start time
+- `end` (ISO 8601, required): Period end time
 
 **OVOS Use Cases**:
 - "Show me the KPIs for Compressor-1 today"
@@ -872,57 +872,73 @@ curl -X POST "http://localhost:8001/api/v1/baseline/predict" \
 ```bash
 curl -G "http://localhost:8001/api/v1/kpi/all" \
   --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
-  --data-urlencode "start_time=2025-10-27T00:00:00Z" \
-  --data-urlencode "end_time=2025-10-27T12:00:00Z"
+  --data-urlencode "start=2025-10-27T00:00:00Z" \
+  --data-urlencode "end=2025-10-27T12:00:00Z"
 ```
 
 **Response**:
 ```json
 {
-  "success": true,
-  "data": {
+  "machine_id": "c0000000-0000-0000-0000-000000000001",
+  "machine_name": "Compressor-1",
+  "machine_type": "compressor",
+  "time_period": {
+    "start": "2025-10-27T00:00:00+00:00",
+    "end": "2025-10-27T12:00:00+00:00",
+    "hours": 12.0
+  },
+  "kpis": {
     "sec": {
       "value": 4.8e-05,
       "unit": "kWh/unit",
-      "description": "Energy per production unit"
+      "description": "Specific Energy Consumption"
     },
     "peak_demand": {
       "value": 55.603,
       "unit": "kW",
-      "timestamp": "2025-10-27T08:30:00Z"
+      "description": "Maximum Power Demand"
     },
     "load_factor": {
       "value": 0.8257,
       "percent": 82.57,
-      "description": "Average/Peak ratio"
+      "unit": "ratio",
+      "description": "Average/Peak Power Ratio"
     },
     "energy_cost": {
       "value": 84.93,
+      "cost_per_unit": 7.2e-06,
       "unit": "USD",
-      "rate": 0.12
+      "description": "Total Energy Cost (Time-of-Use Tariff)"
     },
     "carbon_intensity": {
       "value": 254.799,
+      "co2_per_unit": 2.16e-05,
       "unit": "kg CO2",
-      "factor": 0.233
+      "description": "Total Carbon Emissions"
     }
   },
-  "timestamp": "2025-10-27T12:31:56.123Z"
+  "totals": {
+    "total_energy_kwh": 566.22,
+    "avg_power_kw": 45.91,
+    "total_production_units": 11794823
+  }
 }
 ```
 
 **Response Fields**:
-- `sec`: Specific Energy Consumption (kWh per production unit) - ISO 50001 key metric
-- `peak_demand`: Maximum power demand (kW) during period with timestamp
-- `load_factor`: Ratio of average to peak demand (0-1) - higher = better utilization
-- `energy_cost`: Total energy cost (USD) based on rate
-- `carbon_intensity`: Total CO₂ emissions (kg) based on grid factor
+- `kpis.sec`: Specific Energy Consumption (kWh per production unit) - ISO 50001 key metric
+- `kpis.peak_demand`: Maximum power demand (kW) during period
+- `kpis.load_factor`: Ratio of average to peak demand (0-1) - higher = better utilization
+- `kpis.energy_cost`: Total energy cost (USD) with Time-of-Use tariff
+- `kpis.carbon_intensity`: Total CO₂ emissions (kg) based on grid factor
+- `totals`: Summary including total energy, average power, production units
 
 **Notes**:
+- ⚠️ **Parameter names**: Use `start` and `end` (NOT `start_time`/`end_time`)
 - SEC only calculated if production_count > 0
 - Load factor indicates equipment utilization efficiency (>80% is excellent)
 - Carbon factor default 0.233 kg CO₂/kWh (grid mix dependent)
-- Period must contain both energy and production data
+- Includes cost_per_unit and co2_per_unit for efficiency analysis
 
 ---
 
