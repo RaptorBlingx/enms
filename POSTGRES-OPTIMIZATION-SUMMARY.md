@@ -9,14 +9,25 @@ Reduced PostgreSQL resource consumption while maintaining dashboard functionalit
 
 ## 📊 Results
 
-### Before vs After
+## Results
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **PostgreSQL CPU** | 87% | 33% | **-62%** ✅ |
-| **PostgreSQL RAM** | 3.6 GB | 1.27 GB | **-65%** ✅ |
-| **Daily Aggregate Ops** | 1,824 | 432 | **-76%** ✅ |
-| **System Stability** | CPU spikes every 60s | Smooth operation | ✅ |
+**Before Optimization:**
+- CPU usage: 87% sustained, spikes to 94%
+- RAM usage: 3.6 GB PostgreSQL container
+- System stability: Regular 60-second spikes every aggregate refresh
+
+**After Optimization:**
+- CPU usage: 0-10% idle, spikes to 50-95% during workload bursts
+- RAM usage: 1.38 GB PostgreSQL container (62% reduction)
+- System stability: Aggregate refresh no longer causes spikes
+- **Note**: High CPU/RAM observed during active workloads (data ingestion, ML training, API calls) is normal behavior
+
+**System Limitations Identified:**
+- 6 GB total RAM with no swap space (dangerous for production)
+- VS Code Server: 1.5 GB RAM (24.8%) - largest single consumer
+- Multiple PostgreSQL backend processes can hold 2+ GB combined during heavy queries
+- Btrfs filesystem prevents traditional swap file creation
+- Running in LXD container without zram kernel module
 
 ---
 
