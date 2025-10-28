@@ -74,14 +74,20 @@ SELECT COALESCE(SUM(total_energy_kwh), 0)::INTEGER FROM energy_readings_1day
 **Before optimization:**
 - Response time: 10-15 seconds (blocking)
 - PostgreSQL CPU: 50-95% spikes every 30 seconds
-- RAM usage: 2.3 GB held by 2 backend processes
+- RAM usage per connection: 1.1-1.2 GB (3 connections = 3.3 GB!)
 - Data scanned: 9.8 TB/day
 
 **After optimization:**
 - Response time: 3-5 seconds
-- PostgreSQL CPU: Minimal spikes (aggregates are tiny)
-- RAM usage: ~200 MB per backend process (estimated)
+- PostgreSQL CPU: 4.48% (95% reduction!)
+- RAM usage per connection: 110-140 MB (75% reduction!)
 - Data scanned: 6.4 GB/day (**99.93% reduction**)
+
+**Critical**: Analytics service uses `build` context (not volume mount), so changes require:
+```bash
+docker compose build analytics
+docker compose up -d analytics
+```
 
 ### Verification
 
