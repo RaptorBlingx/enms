@@ -1104,53 +1104,64 @@ curl http://localhost:8001/api/v1/features/natural_gas
 curl http://localhost:8001/api/v1/energy-sources
 ```
 
-**Electricity Features (20 available):**
-- `consumption_kwh` - Total energy consumption
-- `avg_power_kw` - Average power demand
-- `max_power_kw` - Peak power
-- `power_factor` - Electrical efficiency
-- `avg_current_a` - Current draw
-- `production_count` - Production output
-- `good_production_count` - Quality output
-- `bad_production_count` - Defects
-- `avg_cycle_time_sec` - Cycle time
-- `outdoor_temp_c` - Outdoor temperature
-- `indoor_temp_c` - Indoor temperature
-- `humidity_percent` - Humidity level
-- `heating_degree_days` - Heating load indicator
-- `cooling_degree_days` - Cooling load indicator
-- `total_production` - Aggregate production
-- `total_good_production` - Aggregate quality
-- `total_runtime_hours` - Operating hours
-- `avg_production_rate` - Throughput
-- `peak_demand_kw` - Maximum demand
-- `min_power_kw` - Minimum power
+**Energy Sources (4 active):**
+- `electricity` - Electrical power from grid (kWh) - Cost: $0.15/kWh, Carbon: 0.45 kg CO₂/kWh
+- `natural_gas` - Natural gas for heating/boilers (m³) - Cost: $0.50/m³, Carbon: 2.03 kg CO₂/m³
+- `steam` - Process steam (kg) - Cost: $0.08/kg, Carbon: 0.35 kg CO₂/kg
+- `compressed_air` - Compressed air for pneumatic systems (Nm³) - Cost: $0.03/Nm³, Carbon: 0.12 kg CO₂/Nm³
 
-**Natural Gas Features (9 available):**
-- `consumption_m3` - Gas consumption (cubic meters)
-- `flow_rate_m3h` - Flow rate
-- `pressure_bar` - Gas pressure
-- `outdoor_temp_c` - Outdoor temperature
-- `heating_degree_days` - Heating load
-- `total_consumption` - Aggregate consumption
-- `avg_flow_rate` - Average flow
-- `max_flow_rate` - Peak flow
-- `min_pressure` - Minimum pressure
+**Electricity Features (22 available):**
+- `consumption_kwh` - Total electrical energy consumed (kWh)
+- `avg_power_kw` - Average electrical power demand (kW)
+- `max_power_kw` - Peak electrical power demand (kW)
+- `avg_power_factor` - Average power factor (0-1)
+- `avg_current_a` - Average current draw (A)
+- `avg_voltage_v` - Average supply voltage (V)
+- `avg_load_factor` - Average load factor (actual load / rated capacity)
+- `production_count` - Total production units
+- `good_units_count` - Total good units produced
+- `defect_units_count` - Total defective units
+- `avg_cycle_time_sec` - Average cycle time (seconds)
+- `avg_throughput` - Average throughput rate
+- `outdoor_temp_c` - Average outdoor temperature (°C)
+- `indoor_temp_c` - Average indoor temperature (°C)
+- `machine_temp_c` - Average machine temperature (°C)
+- `outdoor_humidity_percent` - Average outdoor humidity (%)
+- `pressure_bar` - Average operating pressure (bar)
+- `heating_degree_days` - Heating degree days (ISO 50006)
+- `cooling_degree_days` - Cooling degree days (ISO 50006)
+- `operating_hours` - Hours machine was active
+- `is_weekend` - Binary indicator (1=weekend, 0=weekday)
+- `total_production` - Total production units
 
-**Steam Features (6 available):**
-- `consumption_kg` - Steam consumption (kilograms)
-- `pressure_bar` - Steam pressure
-- `temperature_c` - Steam temperature
-- `outdoor_temp_c` - Outdoor temperature
-- `total_consumption` - Aggregate steam
-- `avg_pressure` - Average pressure
+**Natural Gas Features (10 available):**
+- `consumption_m3` - Total natural gas consumed (m³)
+- `avg_flow_rate_m3h` - Average gas flow rate (m³/h)
+- `max_flow_rate_m3h` - Peak gas flow rate (m³/h)
+- `avg_pressure_bar` - Average gas supply pressure (bar)
+- `avg_gas_temp_c` - Average gas temperature (°C)
+- `avg_calorific_value` - Average gas energy content (kWh/m³)
+- `outdoor_temp_c` - Average outdoor temperature (°C)
+- `heating_degree_days` - Heating degree days (primary driver for boiler gas consumption)
+- `production_count` - Total production units (for process heating load)
+- `is_weekend` - Binary indicator (1=weekend, 0=weekday)
 
-**Compressed Air Features (5 available):**
-- `consumption_nm3` - Air consumption (normal cubic meters)
-- `pressure_bar` - Air pressure
-- `flow_rate_nm3h` - Flow rate
-- `total_consumption` - Aggregate consumption
-- `avg_pressure` - Average pressure
+**Steam Features (7 available):**
+- `consumption_kg` - Total steam consumed (kg)
+- `avg_flow_rate_kg_h` - Average steam mass flow rate (kg/h)
+- `avg_pressure_bar` - Average steam pressure (bar)
+- `avg_temperature_c` - Average steam temperature (°C)
+- `avg_enthalpy_kj_kg` - Average steam energy content (kJ/kg)
+- `production_count` - Total production units (steam process load)
+- `is_weekend` - Binary indicator (1=weekend, 0=weekday)
+
+**Compressed Air Features (6 available):**
+- `consumption_m3` - Total compressed air consumed (m³)
+- `avg_flow_rate_m3h` - Average air consumption rate (m³/h)
+- `avg_pressure_bar` - Average air pressure at point of use (bar)
+- `avg_dewpoint_c` - Average air dewpoint (indicates air quality, °C)
+- `production_count` - Total production units (pneumatic equipment load)
+- `is_weekend` - Binary indicator (1=weekend, 0=weekday)
 
 #### Testing Examples
 
