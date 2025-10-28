@@ -1,5 +1,14 @@
 # Grafana SOTA (State-of-the-Art) Review & Enhancement Roadmap
 
+## 🎯 NEW STRATEGY: Build SOTA Dashboards From Scratch
+
+**Approach**: Create completely new dashboards with modern design and optimized queries  
+**Benefit**: Clean implementation without legacy constraints  
+**Timeline**: 8-12 hours total, implemented in batches  
+**Outcome**: Keep SOTA versions if superior, delete old dashboards  
+
+---
+
 ## 📊 Executive Summary
 
 **Current Status**: Good foundation with 6 dashboards, but **NOT leveraging full EnMS capabilities**  
@@ -7,7 +16,7 @@
 **Performance Issue**: **17 queries still using raw `energy_readings` table** (should use aggregates)  
 **Missing Features**: 8+ critical dashboards not built yet
 
-**Goal**: Transform into **SOTA industrial energy management dashboards**
+**Goal**: Build **SOTA industrial energy management dashboards** from scratch
 
 ---
 
@@ -519,47 +528,46 @@
 
 ---
 
-## 🎯 Implementation Priority
+## 🎯 NEW Implementation Priority - Build From Scratch
 
-### **Phase 1: Critical Fixes (TODAY - 2-3 hours)**
-1. ✅ Optimize 17 raw table queries → use continuous aggregates
-2. ✅ Fix Boiler dashboard hardcoded machine_id → add variable
-3. ✅ Add missing indexes if needed
+### **Batch 1: Foundation Dashboards (2-3 hours)** 🚀
+1. **SOTA Factory Overview** - Real-time operational command center
+2. **SOTA Machine Health** - Individual machine deep-dive with ML insights
 
-**Impact**: 99% query performance improvement, system stability
-
----
-
-### **Phase 2: High-Value Dashboards (THIS WEEK - 6-8 hours)**
-4. ✅ Build **Anomaly Detection & Alerts** dashboard (1.5h)
-5. ✅ Build **Predictive Analytics & Forecasting** dashboard (2h)
-6. ✅ Build **Energy Cost Analytics** dashboard (2h)
-7. ✅ Enhance **Factory Overview** with new panels (1h)
-8. ✅ Enhance **Machine Monitoring** with health scores (1.5h)
-
-**Impact**: Unlock existing data value, provide actionable insights
+**Focus**: Core operational visibility with modern design
 
 ---
 
-### **Phase 3: Operational Dashboards (NEXT WEEK - 8-10 hours)**
-9. ✅ Build **ML Model Performance Tracking** (2h)
-10. ✅ Build **Operational Efficiency (OEE)** (2h)
-11. ✅ Build **Environmental Impact** (2h)
-12. ✅ Build **Real-Time Production** (1.5h)
-13. ✅ Build **Executive Summary** (1.5h)
+### **Batch 2: Analytics & Intelligence (3-4 hours)** 🔮
+3. **Anomaly Detection & Alerts** - Visualize hidden anomalies with ML insights
+4. **Predictive Analytics & Forecasting** - 124 forecasts dashboard
+5. **Energy Cost Analytics** - ROI and cost optimization
 
-**Impact**: Complete SOTA monitoring suite, enterprise-ready
+**Focus**: Unlock ML capabilities and business value
 
 ---
 
-### **Phase 4: Advanced Features (FUTURE - 10-15 hours)**
-14. ✅ Implement alerting rules (email/Slack/webhook)
-15. ✅ Add drill-down dashboard links
-16. ✅ Create dashboard playlists for rotation
-17. ✅ Build mobile-optimized dashboards
-18. ✅ Add user annotations for events
-19. ✅ Implement dashboard snapshots/reporting
-20. ✅ Create Grafana API integration for automation
+### **Batch 3: Performance & Compliance (2-3 hours)** 📊
+6. **ML Model Performance Tracking** - Data science monitoring
+7. **Operational Efficiency (OEE)** - Production metrics
+8. **ISO 50001 EnPI SOTA** - Compliance reporting reimagined
+
+**Focus**: Advanced metrics and regulatory compliance
+
+---
+
+### **Batch 4: Sustainability & Executive (2-3 hours)** 🌍
+9. **Environmental Impact** - Carbon footprint and ESG metrics
+10. **Real-Time Production** - Factory floor big screen
+11. **Executive Summary** - C-level KPI dashboard
+
+**Focus**: Sustainability reporting and executive visibility
+
+---
+
+### **Total Timeline**: 10-13 hours (across 4 batches)
+**Strategy**: Implement → Test → User Confirm → Mark Complete → Next Batch
+**Decision Point**: After all batches complete, compare old vs SOTA and delete legacy
 
 ---
 
