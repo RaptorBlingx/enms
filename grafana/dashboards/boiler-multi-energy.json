@@ -19,7 +19,10 @@
   "links": [],
   "panels": [
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -69,7 +72,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "table",
           "rawSql": "SELECT SUM(power_kw * EXTRACT(EPOCH FROM (time - LAG(time) OVER (ORDER BY time)))/3600) as total_energy FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'electricity' AND time >= $__timeFrom() AND time <= $__timeTo()",
           "refId": "A"
@@ -79,7 +85,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -103,7 +112,7 @@
               }
             ]
           },
-          "unit": "m³"
+          "unit": "m\u00b3"
         }
       },
       "gridPos": {
@@ -129,7 +138,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "table",
           "rawSql": "SELECT SUM((metadata->>'consumption_m3')::numeric) as total_gas FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo()",
           "refId": "A"
@@ -139,7 +151,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -189,7 +204,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "table",
           "rawSql": "SELECT SUM((metadata->>'consumption_kg')::numeric) as total_steam FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo()",
           "refId": "A"
@@ -199,7 +217,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -249,7 +270,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "table",
           "rawSql": "SELECT AVG((metadata->>'boiler_efficiency')::numeric * 100) as efficiency FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'boiler_efficiency' IS NOT NULL AND time >= $__timeFrom() AND time <= $__timeTo()",
           "refId": "A"
@@ -259,7 +283,10 @@
       "type": "stat"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -380,19 +407,28 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", power_kw as \"Electricity\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'electricity' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "A"
         },
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", power_kw as \"Natural Gas (equiv)\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "B"
         },
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", power_kw as \"Steam (equiv)\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "C"
@@ -402,7 +438,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -444,7 +483,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "table",
           "rawSql": "SELECT metadata->>'energy_type' as \"Energy Type\", SUM(power_kw * 0.5) as \"Total kWh\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND time >= $__timeFrom() AND time <= $__timeTo() GROUP BY metadata->>'energy_type'",
           "refId": "A"
@@ -454,7 +496,10 @@
       "type": "piechart"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -500,7 +545,7 @@
               }
             ]
           },
-          "unit": "m³/h"
+          "unit": "m\u00b3/h"
         }
       },
       "gridPos": {
@@ -528,7 +573,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", (metadata->>'flow_rate_m3h')::numeric as \"Gas Flow Rate\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "A"
@@ -538,7 +586,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -612,7 +663,10 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", (metadata->>'flow_rate_kg_h')::numeric as \"Steam Flow Rate\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "A"
@@ -622,7 +676,10 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -727,13 +784,19 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", (metadata->>'pressure_bar')::numeric * 1000 as \"Gas Pressure\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'natural_gas' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "A"
         },
         {
-          "datasource": "PostgreSQL",
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
           "format": "time_series",
           "rawSql": "SELECT time as \"time\", (metadata->>'pressure_bar')::numeric * 1000 as \"Steam Pressure\" FROM energy_readings WHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e' AND metadata->>'energy_type' = 'steam' AND time >= $__timeFrom() AND time <= $__timeTo() ORDER BY time",
           "refId": "B"
