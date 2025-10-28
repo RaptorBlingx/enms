@@ -538,85 +538,89 @@ async def system_statistics():
     """
     try:
         async with db.pool.acquire() as conn:
-            # Total energy readings
+            # Total energy readings (estimate from pg_class for speed)
             total_readings = await conn.fetchval(
-                "SELECT COUNT(*) FROM energy_readings"
+                """
+                SELECT reltuples::BIGINT 
+                FROM pg_class 
+                WHERE relname = 'energy_readings'
+                """
             )
             
-            # Total energy consumption (kWh)
+            # Total energy consumption (kWh) - use 1-day aggregate instead of raw table
             total_energy = await conn.fetchval(
                 """
-                SELECT COALESCE(SUM(energy_kwh), 0)::INTEGER 
-                FROM energy_readings
+                SELECT COALESCE(SUM(total_energy_kwh), 0)::INTEGER 
+                FROM energy_readings_1day
                 """
             )
             
-            # Data rate: count readings in last minute
+            # Data rate: count readings in last minute (use 1min aggregate)
             data_rate = await conn.fetchval(
                 """
-                SELECT COUNT(*) 
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '1 minute'
+                SELECT COALESCE(COUNT(*), 0)::INTEGER
+                FROM energy_readings_1min
+                WHERE bucket > NOW() - INTERVAL '1 minute'
                 """
             )
             
-            # Readings per minute (average from last hour)
+            # Readings per minute (average from last hour - use 1min aggregate)
             readings_per_minute = await conn.fetchval(
                 """
                 SELECT COALESCE(COUNT(*) / 60, 0)::INTEGER
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '1 hour'
+                FROM energy_readings_1min
+                WHERE bucket > NOW() - INTERVAL '1 hour'
                 """
             )
             
-            # Energy per hour (average from last 24 hours)
+            # Energy per hour (average from last 24 hours - use 1hour aggregate)
             energy_per_hour = await conn.fetchval(
                 """
-                SELECT COALESCE(SUM(energy_kwh) / 24, 0)::INTEGER
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '24 hours'
+                SELECT COALESCE(SUM(total_energy_kwh) / 24, 0)::INTEGER
+                FROM energy_readings_1hour
+                WHERE bucket > NOW() - INTERVAL '24 hours'
                 """
             )
             
-            # Peak power in last 24 hours (kW)
+            # Peak power in last 24 hours (kW) - use 1hour aggregate
             peak_power = await conn.fetchval(
                 """
-                SELECT COALESCE(MAX(power_kw), 0)::INTEGER
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '24 hours'
+                SELECT COALESCE(MAX(max_power_kw), 0)::INTEGER
+                FROM energy_readings_1hour
+                WHERE bucket > NOW() - INTERVAL '24 hours'
                 """
             )
             
-            # Average power (kW)
+            # Average power (kW) - use 1hour aggregate
             avg_power = await conn.fetchval(
                 """
-                SELECT COALESCE(AVG(power_kw), 0)::INTEGER
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '24 hours'
+                SELECT COALESCE(AVG(avg_power_kw), 0)::INTEGER
+                FROM energy_readings_1hour
+                WHERE bucket > NOW() - INTERVAL '24 hours'
                 """
             )
             
             # Estimated cost (assuming $0.12 per kWh)
             estimated_cost = round(total_energy * 0.12, 2) if total_energy else 0
             
-            # Cost per day (last 24h)
+            # Cost per day (last 24h) - use 1hour aggregate
             cost_per_day = await conn.fetchval(
                 """
-                SELECT COALESCE(SUM(energy_kwh) * 0.12, 0)::NUMERIC(10,2)
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '24 hours'
+                SELECT COALESCE(SUM(total_energy_kwh) * 0.12, 0)::NUMERIC(10,2)
+                FROM energy_readings_1hour
+                WHERE bucket > NOW() - INTERVAL '24 hours'
                 """
             )
             
             # Carbon footprint (kg CO2) - assuming 0.5 kg CO2 per kWh
             carbon_footprint = round(total_energy * 0.5, 2) if total_energy else 0
             
-            # Carbon per day
+            # Carbon per day - use 1hour aggregate
             carbon_per_day = await conn.fetchval(
                 """
-                SELECT COALESCE(SUM(energy_kwh) * 0.5, 0)::NUMERIC(10,2)
-                FROM energy_readings 
-                WHERE time > NOW() - INTERVAL '24 hours'
+                SELECT COALESCE(SUM(total_energy_kwh) * 0.5, 0)::NUMERIC(10,2)
+                FROM energy_readings_1hour
+                WHERE bucket > NOW() - INTERVAL '24 hours'
                 """
             )
             
