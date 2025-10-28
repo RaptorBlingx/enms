@@ -15,6 +15,7 @@
       }
     ]
   },
+  "description": "ISO 50001 Energy Performance Indicator (EnPI) dashboard - Monthly performance tracking with quarterly aggregation",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -125,7 +126,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  compliance_status\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND report_period LIKE '2025-%'\nORDER BY period_start DESC\nLIMIT 1;",
+          "rawSql": "SELECT \n  compliance_status\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND EXTRACT(YEAR FROM period_start) = $year::integer\nORDER BY period_start DESC\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -225,7 +226,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  deviation_percent\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND report_period LIKE '2025-%'\nORDER BY period_start DESC\nLIMIT 1;",
+          "rawSql": "SELECT \n  deviation_percent\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND EXTRACT(YEAR FROM period_start) = $year::integer\nORDER BY period_start DESC\nLIMIT 1;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -365,7 +366,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  report_period as \"Quarter\",\n  actual_consumption as \"Actual\",\n  expected_consumption as \"Expected\"\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND report_period LIKE '$year-%'\nORDER BY period_start;",
+          "rawSql": "SELECT \n  period_start as time,\n  actual_consumption as \"Actual (kWh)\",\n  expected_consumption as \"Expected (kWh)\"\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND EXTRACT(YEAR FROM period_start) = $year::integer\nORDER BY period_start;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -549,7 +550,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  report_period as \"Quarter\",\n  ROUND(actual_consumption::numeric, 2) as \"Actual (kWh)\",\n  ROUND(expected_consumption::numeric, 2) as \"Expected (kWh)\",\n  ROUND(deviation_kwh::numeric, 2) as \"Deviation (kWh)\",\n  ROUND(deviation_percent::numeric, 1) as \"Deviation %\",\n  compliance_status as \"Status\"\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND report_period LIKE '$year-%'\nORDER BY period_start;",
+          "rawSql": "SELECT \n  TO_CHAR(period_start, 'YYYY-MM') as \"Month\",\n  ROUND(actual_consumption::numeric, 2) as \"Actual (kWh)\",\n  ROUND(expected_consumption::numeric, 2) as \"Expected (kWh)\",\n  ROUND(deviation_kwh::numeric, 2) as \"Deviation (kWh)\",\n  ROUND(deviation_percent::numeric, 1) as \"Deviation %\",\n  compliance_status as \"Status\"\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND EXTRACT(YEAR FROM period_start) = $year::integer\nORDER BY period_start;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -570,7 +571,7 @@
           }
         }
       ],
-      "title": "Quarterly Performance Breakdown",
+      "title": "Monthly Performance Breakdown",
       "type": "table"
     },
     {
@@ -850,7 +851,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  (monthly_breakdown->>'month')::text as \"Month\",\n  (monthly_breakdown->>'deviation_percent')::numeric as \"Deviation %\"\nFROM seu_energy_performance,\n     jsonb_array_elements(monthly_breakdown) as monthly_breakdown\nWHERE seu_id = '$seu_id'\n  AND report_period = '$quarter'\nORDER BY \n  CASE (monthly_breakdown->>'month')::text\n    WHEN 'Jan' THEN 1 WHEN 'Feb' THEN 2 WHEN 'Mar' THEN 3\n    WHEN 'Apr' THEN 4 WHEN 'May' THEN 5 WHEN 'Jun' THEN 6\n    WHEN 'Jul' THEN 7 WHEN 'Aug' THEN 8 WHEN 'Sep' THEN 9\n    WHEN 'Oct' THEN 10 WHEN 'Nov' THEN 11 WHEN 'Dec' THEN 12\n  END;",
+          "rawSql": "SELECT \n  TO_CHAR(period_start, 'Mon') as \"Month\",\n  deviation_percent as \"Deviation %\"\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\n  AND EXTRACT(YEAR FROM period_start) = $year::integer\n  AND EXTRACT(QUARTER FROM period_start) = \n    CASE \n      WHEN '$quarter' LIKE '%-Q1' THEN 1\n      WHEN '$quarter' LIKE '%-Q2' THEN 2\n      WHEN '$quarter' LIKE '%-Q3' THEN 3\n      WHEN '$quarter' LIKE '%-Q4' THEN 4\n      ELSE EXTRACT(QUARTER FROM CURRENT_DATE)\n    END\nORDER BY period_start;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -896,14 +897,14 @@
           "type": "postgres",
           "uid": "TimescaleDB"
         },
-        "definition": "SELECT id as __value, name as __text FROM seus WHERE is_active = true ORDER BY name;",
+        "definition": "SELECT DISTINCT s.id as __value, s.name as __text \nFROM seus s\nINNER JOIN seu_energy_performance sep ON s.id = sep.seu_id\nWHERE s.is_active = true \nORDER BY s.name;",
         "hide": 0,
         "includeAll": false,
         "label": "SEU",
         "multi": false,
         "name": "seu_id",
         "options": [],
-        "query": "SELECT id as __value, name as __text FROM seus WHERE is_active = true ORDER BY name;",
+        "query": "SELECT DISTINCT s.id as __value, s.name as __text \nFROM seus s\nINNER JOIN seu_energy_performance sep ON s.id = sep.seu_id\nWHERE s.is_active = true \nORDER BY s.name;",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -971,14 +972,14 @@
           "type": "postgres",
           "uid": "TimescaleDB"
         },
-        "definition": "SELECT DISTINCT report_period as __text FROM seu_energy_performance WHERE seu_id = '$seu_id' ORDER BY report_period DESC;",
+        "definition": "SELECT DISTINCT \n  EXTRACT(YEAR FROM period_start)::text || '-Q' || EXTRACT(QUARTER FROM period_start)::text as __text\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\nORDER BY 1 DESC;",
         "hide": 0,
         "includeAll": false,
         "label": "Quarter",
         "multi": false,
         "name": "quarter",
         "options": [],
-        "query": "SELECT DISTINCT report_period as __text FROM seu_energy_performance WHERE seu_id = '$seu_id' ORDER BY report_period DESC;",
+        "query": "SELECT DISTINCT \n  EXTRACT(YEAR FROM period_start)::text || '-Q' || EXTRACT(QUARTER FROM period_start)::text as __text\nFROM seu_energy_performance\nWHERE seu_id = '$seu_id'\nORDER BY 1 DESC;",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -995,6 +996,6 @@
   "timezone": "",
   "title": "ISO 50001 EnPI Report",
   "uid": "iso-50001-enpi",
-  "version": 9,
+  "version": 17,
   "weekStart": ""
 }

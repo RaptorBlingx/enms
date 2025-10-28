@@ -785,124 +785,6 @@
         "type": "postgres",
         "uid": "P40AE60E18F02DE32"
       },
-      "description": "Percentage of defective units produced over time",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 23
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "mean",
-            "max"
-          ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "time_series",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  time_bucket('$__interval', time) AS time,\n  'Defect Rate' as metric,\n  (SUM(production_count_bad)::float / NULLIF(SUM(production_count), 0) * 100) as value\nFROM production_data\nWHERE machine_id = '$machine_id'::uuid\n  AND $__timeFilter(time)\nGROUP BY time\nHAVING SUM(production_count) > 0\nORDER BY time;",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "parameters": [],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Quality - Defect Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "P40AE60E18F02DE32"
-      },
       "description": "Hourly breakdown of energy, production, and efficiency metrics for last 24 hours",
       "fieldConfig": {
         "defaults": {
@@ -996,7 +878,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 23
       },
       "id": 9,
       "options": {
@@ -1104,6 +986,6 @@
   "timezone": "browser",
   "title": "Machine Monitoring",
   "uid": "enms-machine-monitoring",
-  "version": 1750,
+  "version": 1755,
   "weekStart": ""
 }

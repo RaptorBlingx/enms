@@ -476,6 +476,96 @@ curl "http://localhost:8001/api/v1/timeseries/latest/c0000000-0000-0000-0000-000
 - ✅ Fast response (~5ms) - good for real-time monitoring
 - Returns 404 if machine has no readings
 
+---
+
+### 💡 Quick Reference: Last 24 Hours Energy Consumption
+
+**Question:** "How do I get the last 24 hours of energy consumption for Compressor-1?"
+
+**Answer:** Use EP5 (`/timeseries/energy`) with dynamic date calculation:
+
+```bash
+# Method 1: Last 24 hours with hourly intervals (recommended)
+curl -G "http://localhost:8001/api/v1/timeseries/energy" \
+  --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
+  --data-urlencode "start_time=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "end_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "interval=1hour"
+
+# Method 2: Last 24 hours with 15-minute intervals (more detailed)
+curl -G "http://localhost:8001/api/v1/timeseries/energy" \
+  --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
+  --data-urlencode "start_time=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "end_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "interval=15min"
+
+# Method 3: Static dates (example: Oct 27, 2025)
+curl -G "http://localhost:8001/api/v1/timeseries/energy" \
+  --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
+  --data-urlencode "start_time=2025-10-27T00:00:00Z" \
+  --data-urlencode "end_time=2025-10-27T23:59:59Z" \
+  --data-urlencode "interval=1hour"
+```
+
+**Expected Response (24 data points for 1hour interval):**
+```json
+{
+  "machine_id": "c0000000-0000-0000-0000-000000000001",
+  "machine_name": "Compressor-1",
+  "metric": "energy",
+  "interval": "1hour",
+  "start_time": "2025-10-27T15:00:00+00:00",
+  "end_time": "2025-10-28T15:00:00+00:00",
+  "data_points": [
+    {
+      "timestamp": "2025-10-27T15:00:00+00:00",
+      "value": 48.2,
+      "unit": "kWh"
+    },
+    {
+      "timestamp": "2025-10-27T16:00:00+00:00",
+      "value": 47.8,
+      "unit": "kWh"
+    }
+    // ... 22 more hourly data points
+  ],
+  "total_points": 24,
+  "aggregation": "sum"
+}
+```
+
+**Key Points:**
+- ✅ **Use EP5** (`/timeseries/energy`) NOT EP7 (`/timeseries/latest`)
+- ✅ **Dynamic dates** with `date -u -d '24 hours ago'` auto-calculates from current time
+- ✅ **Interval choice:** `1hour` = 24 data points, `15min` = 96 data points
+- ✅ **Total energy:** Sum all `data_points[].value` to get 24h total kWh
+
+**Common Intervals for 24h Queries:**
+- `1hour` → 24 data points (hourly buckets) - **recommended for dashboards**
+- `15min` → 96 data points (quarter-hourly) - detailed analysis
+- `5min` → 288 data points (5-minute buckets) - high-resolution monitoring
+
+**OVOS Use Cases:**
+- "How much energy did Compressor-1 use in the last 24 hours?"
+- "Show me hourly energy consumption for the past day"
+- "What's the energy trend for Compressor-1 since yesterday?"
+
+**Calculate Total Energy:**
+```bash
+# Get 24h data and sum all values with jq
+curl -s -G "http://localhost:8001/api/v1/timeseries/energy" \
+  --data-urlencode "machine_id=c0000000-0000-0000-0000-000000000001" \
+  --data-urlencode "start_time=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "end_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --data-urlencode "interval=1hour" | \
+  jq '[.data_points[].value] | add'
+
+# Output example: 1156.8 (kWh consumed in last 24h)
+```
+
+**Note:** EP7 (`/timeseries/latest`) returns only the **single most recent reading** (~last 60 seconds), not historical data. For time ranges, always use EP5.
+
+
 ### 8. Multi-Machine Comparison
 **Purpose:** Compare energy consumption across multiple machines
 
