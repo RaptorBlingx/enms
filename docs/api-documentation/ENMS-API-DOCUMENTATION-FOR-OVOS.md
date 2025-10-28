@@ -947,7 +947,7 @@ curl -G "http://localhost:8001/api/v1/kpi/all" \
 **Endpoint**: `GET /api/v1/forecast/demand`
 
 **Parameters**:
-- `machine_id` (string, required): Machine identifier
+- `machine_id` (UUID, required): Machine identifier
 - `horizon` (string, optional): "short" (1-24h), "medium" (1-7d), "long" (1-4w) - default "short"
 - `periods` (integer, optional): Number of future periods - default 4
 
@@ -967,15 +967,52 @@ curl -G "http://localhost:8001/api/v1/forecast/demand" \
 **Response**:
 ```json
 {
-  "success": false,
-  "message": "Forecasting feature coming soon - requires trained ARIMA/Prophet models"
+  "model_type": "ARIMA",
+  "machine_id": "c0000000-0000-0000-0000-000000000001",
+  "horizon": "short",
+  "periods": 4,
+  "frequency": "15T",
+  "predictions": [
+    48.27471354446655,
+    48.257647528627174,
+    48.25008136485857,
+    48.26161245535257
+  ],
+  "timestamps": null,
+  "lower_bound": null,
+  "upper_bound": null,
+  "confidence_intervals": {
+    "lower": [
+      47.67264494179428,
+      47.59091910972686,
+      47.52440251179147,
+      47.478047592503785
+    ],
+    "upper": [
+      48.87678214713882,
+      48.92437594752749,
+      48.975760217925675,
+      49.045177318201354
+    ],
+    "alpha": 0.05
+  },
+  "forecasted_at": "2025-10-28T06:13:23.260550"
 }
 ```
 
+**Response Fields**:
+- `model_type`: Forecasting algorithm used (ARIMA)
+- `predictions`: Forecasted power values (kW) for each period
+- `frequency`: Time interval between predictions (15T = 15 minutes)
+- `confidence_intervals`: Upper/lower bounds at 95% confidence (alpha=0.05)
+- `horizon`: Forecast timeframe (short/medium/long)
+
 **Notes**:
-- ⚠️ Feature planned but not implemented (placeholder endpoint)
-- Will use ARIMA or Prophet for time-series forecasting
-- Requires historical baseline for accurate predictions
+- ✅ Uses ARIMA time-series model for predictions
+- Predictions are in kW (power demand)
+- Frequency "15T" = 15-minute intervals
+- Confidence intervals show uncertainty range (95% confidence)
+- Example: Predicts ~48 kW for next 4 periods (1 hour total)
 
 ---
 
