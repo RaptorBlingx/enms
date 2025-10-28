@@ -570,7 +570,7 @@
           }
         }
       ],
-      "title": "Quarterly Performance Breakdown",
+      "title": "Monthly Performance Breakdown",
       "type": "table"
     },
     {
@@ -896,14 +896,14 @@
           "type": "postgres",
           "uid": "TimescaleDB"
         },
-        "definition": "SELECT id as __value, name as __text FROM seus WHERE is_active = true ORDER BY name;",
+        "definition": "SELECT DISTINCT s.id as __value, s.name as __text \nFROM seus s\nINNER JOIN seu_energy_performance sep ON s.id = sep.seu_id\nWHERE s.is_active = true \nORDER BY s.name;",
         "hide": 0,
         "includeAll": false,
         "label": "SEU",
         "multi": false,
         "name": "seu_id",
         "options": [],
-        "query": "SELECT id as __value, name as __text FROM seus WHERE is_active = true ORDER BY name;",
+        "query": "SELECT DISTINCT s.id as __value, s.name as __text \nFROM seus s\nINNER JOIN seu_energy_performance sep ON s.id = sep.seu_id\nWHERE s.is_active = true \nORDER BY s.name;",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
