@@ -41,7 +41,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "# \ud83d\udcca ISO 50001 EnPI Performance Report\n\n**Purpose:** Track energy performance against 2024 baseline \u2022 **Compliance Target:** \u00b13% deviation \u2022 **Reporting Period:** Quarterly",
+        "content": "# \ud83d\udcca ISO 50001 EnPI Performance Report\n\n**Purpose:** Track energy performance against 2024 baseline \u2022 **Compliance Target:** \u00b13% deviation \u2022 **Reporting Period:** Monthly",
         "mode": "markdown"
       },
       "pluginVersion": "10.0.0",
@@ -956,10 +956,15 @@
             "value": "2025"
           }
         ],
-        "query": "2024,2025",
-        "queryValue": "",
+        "query": "SELECT DISTINCT EXTRACT(YEAR FROM period_start)::text as __text\nFROM seu_energy_performance\nORDER BY 1 DESC;",
         "skipUrlSync": false,
-        "type": "custom"
+        "type": "query",
+        "datasource": {
+          "type": "postgres",
+          "uid": "TimescaleDB"
+        },
+        "definition": "SELECT DISTINCT EXTRACT(YEAR FROM period_start)::text as __text\nFROM seu_energy_performance\nORDER BY 1 DESC;",
+        "refresh": 1
       },
       {
         "current": {
@@ -997,5 +1002,5 @@
   "uid": "iso-50001-enpi",
   "version": 1,
   "weekStart": "",
-  "description": "ISO 50001 Energy Performance Indicator (EnPI) dashboard - Monthly performance tracking with quarterly aggregation"
+  "description": "ISO 50001 Energy Performance Indicator (EnPI) dashboard - Monthly performance tracking against 2024 baseline"
 }
