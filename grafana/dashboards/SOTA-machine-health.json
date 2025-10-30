@@ -905,7 +905,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  detected_at as time,\n  anomaly_type as metric,\n  severity as value\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom() AND detected_at <= $__timeTo()\nORDER BY detected_at;",
+          "rawSql": "SELECT \n  detected_at as time,\n  anomaly_type as metric,\n  CASE \n    WHEN severity = 'normal' THEN 1\n    WHEN severity = 'warning' THEN 2\n    WHEN severity = 'critical' THEN 3\n    ELSE 0\n  END as value\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom() AND detected_at <= $__timeTo()\nORDER BY detected_at;",
           "refId": "A"
         }
       ],
