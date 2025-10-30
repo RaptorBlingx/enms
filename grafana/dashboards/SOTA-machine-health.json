@@ -992,7 +992,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  DATE_TRUNC('hour', er.bucket) as \"Hour\",\n  SUM(pd.production_count) as \"Production Count\",\n  SUM(er.total_energy_kwh) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nLEFT JOIN production_data pd ON er.machine_id = pd.machine_id \n  AND DATE_TRUNC('hour', pd.time) = er.bucket\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= NOW() - INTERVAL '7 days'\nGROUP BY DATE_TRUNC('hour', er.bucket)\nHAVING SUM(pd.production_count) > 0\nORDER BY \"Hour\";",
+          "rawSql": "SELECT \n  TO_CHAR(DATE_TRUNC('hour', er.bucket), 'Mon DD HH24:00') as \"Hour\",\n  COALESCE(SUM(pd.production_count), 0) as \"Production Count\",\n  COALESCE(SUM(er.total_energy_kwh), 0) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nLEFT JOIN production_data pd ON er.machine_id = pd.machine_id \n  AND DATE_TRUNC('hour', pd.time) = er.bucket\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= NOW() - INTERVAL '7 days'\nGROUP BY DATE_TRUNC('hour', er.bucket)\nORDER BY DATE_TRUNC('hour', er.bucket);",
           "refId": "A"
         }
       ],
