@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "id": 11,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -90,7 +90,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND(\n    CASE \n      WHEN COUNT(*) FILTER (WHERE a.is_resolved = false) = 0 THEN 95\n      WHEN COUNT(*) FILTER (WHERE a.is_resolved = false) <= 2 THEN 85\n      WHEN COUNT(*) FILTER (WHERE a.is_resolved = false) <= 5 THEN 70\n      ELSE 50\n    END\n  ) as \"Health Score\"\nFROM anomalies a\nWHERE a.machine_id = '$machine_id'::uuid;\n",
+          "rawSql": "WITH anomaly_count AS (\n  SELECT COUNT(*) as cnt\n  FROM anomalies\n  WHERE machine_id = '$machine_id'::uuid\n    AND resolved_at IS NULL\n),\nbaseline_variance AS (\n  SELECT \n    COALESCE(AVG(ABS(er.avg_power_kw - eb.expected_power) / NULLIF(eb.expected_power, 0) * 100), 0) as variance_pct\n  FROM energy_readings_1hour er\n  LEFT JOIN energy_baselines eb ON er.machine_id = eb.machine_id\n  WHERE er.machine_id = '$machine_id'::uuid\n    AND er.bucket >= NOW() - INTERVAL '24 hours'\n)\nSELECT \n  ROUND(\n    100 - \n    LEAST(\n      (SELECT cnt FROM anomaly_count) * 5,\n      50\n    ) - \n    LEAST(\n      (SELECT variance_pct FROM baseline_variance) / 2,\n      30\n    )\n  ) as \"Health Score\";\n",
           "refId": "A"
         }
       ],
@@ -149,11 +149,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        }
+        },
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -298,11 +298,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        }
+        },
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -314,7 +314,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Anomalies\"\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND is_resolved = false;",
+          "rawSql": "SELECT COUNT(*) as \"Active Anomalies\"\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND resolved_at IS NULL;",
           "refId": "A"
         }
       ],
@@ -326,7 +326,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Model performance metrics (R\u00b2, RMSE, MAE)",
+      "description": "Model performance metrics (R², RMSE, MAE)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -354,14 +354,14 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "R\u00b2 Score"
+              "options": "R² Score"
             },
             "properties": [
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "gauge",
-                  "mode": "gradient"
+                  "mode": "gradient",
+                  "type": "gauge"
                 }
               },
               {
@@ -425,7 +425,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  model_type as \"Model\",\n  ROUND(r_squared::numeric, 4) as \"R\u00b2 Score\",\n  ROUND(rmse::numeric, 2) as \"RMSE\",\n  ROUND(mae::numeric, 2) as \"MAE\"\nFROM model_performance_metrics\nWHERE machine_id = '$machine_id'::uuid\nORDER BY evaluation_date DESC\nLIMIT 1;",
+          "rawSql": "SELECT \n  model_type as \"Model\",\n  ROUND(r2_score::numeric, 4) as \"R² Score\",\n  ROUND(rmse::numeric, 2) as \"RMSE\",\n  ROUND(mae::numeric, 2) as \"MAE\"\nFROM model_performance_metrics\nWHERE machine_id = '$machine_id'::uuid\nORDER BY evaluated_at DESC\nLIMIT 1;",
           "refId": "A"
         }
       ],
@@ -484,11 +484,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        }
+        },
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -500,7 +500,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(\n    ROUND(\n      (STDDEV(avg_power_kw) / NULLIF(AVG(avg_power_kw), 0) * 100)::numeric,\n      2\n    ),\n    0\n  ) as \"Baseline Variance\"\nFROM energy_readings_1hour\nWHERE machine_id = '$machine_id'::uuid\n  AND bucket >= NOW() - INTERVAL '24 hours';",
+          "rawSql": "SELECT \n  COALESCE(\n    ROUND(\n      AVG(ABS(er.avg_power_kw - eb.expected_power) / NULLIF(eb.expected_power, 0) * 100)::numeric,\n      2\n    ),\n    0\n  ) as \"Baseline Variance\"\nFROM energy_readings_1hour er\nLEFT JOIN energy_baselines eb ON er.machine_id = eb.machine_id\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= NOW() - INTERVAL '24 hours';",
           "refId": "A"
         }
       ],
@@ -551,11 +551,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        }
+        },
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -595,9 +595,9 @@
             "fillOpacity": 20,
             "gradientMode": "opacity",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -707,9 +707,9 @@
             "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -814,7 +814,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  er.bucket as time,\n  'Actual' as metric,\n  AVG(er.avg_power_kw) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() AND er.bucket <= $__timeTo()\nGROUP BY er.bucket\n\nUNION ALL\n\nSELECT \n  er.bucket as time,\n  'Baseline (MA-24h)' as metric,\n  AVG(er.avg_power_kw) OVER (ORDER BY er.bucket ROWS BETWEEN 24 PRECEDING AND CURRENT ROW) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() - INTERVAL '24 hours' AND er.bucket <= $__timeTo()\n\nORDER BY time;",
+          "rawSql": "SELECT \n  er.bucket as time,\n  'Actual' as metric,\n  AVG(er.avg_power_kw) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() AND er.bucket <= $__timeTo()\nGROUP BY er.bucket\n\nUNION ALL\n\nSELECT \n  er.bucket as time,\n  'Baseline' as metric,\n  eb.expected_power as value\nFROM energy_readings_1hour er\nLEFT JOIN energy_baselines eb ON er.machine_id = eb.machine_id\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() AND er.bucket <= $__timeTo()\n  AND eb.expected_power IS NOT NULL\nGROUP BY er.bucket, eb.expected_power\n\nORDER BY time;",
           "refId": "A"
         }
       ],
@@ -842,9 +842,9 @@
             "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
             "lineInterpolation": "linear",
             "lineWidth": 1,
@@ -931,9 +931,9 @@
             "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
+              "legend": false,
               "tooltip": false,
-              "viz": false,
-              "legend": false
+              "viz": false
             },
             "lineWidth": 1,
             "scaleDistribution": {
@@ -1126,7 +1126,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  anomaly_type as \"Type\",\n  severity as \"Severity\",\n  ROUND(metric_value::numeric, 2) as \"Power (kW)\",\n  detected_at as \"Detected At\",\n  CASE WHEN is_resolved = false THEN 'Active' ELSE 'Resolved' END as \"Status\",\n  description as \"Description\"\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom()\nORDER BY detected_at DESC\nLIMIT 20;",
+          "rawSql": "SELECT \n  anomaly_type as \"Type\",\n  severity as \"Severity\",\n  ROUND(power_kw::numeric, 2) as \"Power (kW)\",\n  detected_at as \"Detected At\",\n  CASE WHEN resolved_at IS NULL THEN 'Active' ELSE 'Resolved' END as \"Status\",\n  description as \"Description\"\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom()\nORDER BY detected_at DESC\nLIMIT 20;",
           "refId": "A"
         }
       ],
@@ -1183,6 +1183,6 @@
   "timezone": "browser",
   "title": "SOTA Machine Health",
   "uid": "sota-machine-health",
-  "version": 1,
+  "version": 14,
   "weekStart": ""
 }
