@@ -160,7 +160,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH current_month AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= DATE_TRUNC('month', NOW())\n    AND bucket < DATE_TRUNC('month', NOW()) + INTERVAL '1 month'\n),\nlast_month AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= DATE_TRUNC('month', NOW() - INTERVAL '1 month')\n    AND bucket < DATE_TRUNC('month', NOW())\n)\nSELECT \n  ROUND(((c.kwh - l.kwh) / NULLIF(l.kwh, 0) * 100)::numeric, 2) as \"Cost Variance\"\nFROM current_month c, last_month l;",
+          "rawSql": "-- Compare last 30 days vs previous 30 days\nWITH recent_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '30 days'\n    AND bucket < NOW()\n),\nprevious_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '60 days'\n    AND bucket < NOW() - INTERVAL '30 days'\n)\nSELECT \n  COALESCE(ROUND(((r.kwh - p.kwh) / NULLIF(p.kwh, 0) * 100)::numeric, 2), 0) as \"Cost Variance\"\nFROM recent_period r, previous_period p;",
           "refId": "A"
         }
       ],
@@ -393,7 +393,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  bucket as time,\n  'Monthly Cost' as metric,\n  ROUND((SUM(total_energy_kwh) * 0.18)::numeric, 2) as value\nFROM energy_readings_1day\nWHERE bucket >= $__timeFrom()\n  AND bucket <= $__timeTo()\nGROUP BY DATE_TRUNC('month', bucket)\nORDER BY time;",
+          "rawSql": "SELECT \n  DATE_TRUNC('month', bucket) as time,\n  'Monthly Cost' as metric,\n  ROUND((SUM(total_energy_kwh) * 0.18)::numeric, 2) as value\nFROM energy_readings_1day\nWHERE bucket >= $__timeFrom()\n  AND bucket <= $__timeTo()\nGROUP BY DATE_TRUNC('month', bucket)\nORDER BY time;",
           "refId": "A"
         }
       ],
