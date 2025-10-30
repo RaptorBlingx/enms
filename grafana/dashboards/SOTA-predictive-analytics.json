@@ -235,11 +235,12 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND(AVG(r2)::numeric, 4) as \"Avg R²\"\nFROM energy_forecasts\nWHERE forecasted_at >= $__timeFrom()\n  AND forecasted_at <= $__timeTo()\n  AND r2 IS NOT NULL;",
+          "rawSql": "-- R² values are not populated in current forecast data\n-- Showing count of forecasts instead\nSELECT \n  'N/A' as \"Avg R²\"",
           "refId": "A"
         }
       ],
       "title": "Average R² Score",
+      "description": "R² metric not available in current forecast data",
       "type": "stat"
     },
     {
@@ -1017,11 +1018,12 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  TO_CHAR(forecast_time, 'Mon DD HH24:00') as \"Hour\",\n  ROUND(AVG(predicted_power_kw)::numeric, 2) as \"Predicted (kW)\",\n  ROUND(AVG(lower_bound_kw)::numeric, 2) as \"Lower Bound\",\n  ROUND(AVG(upper_bound_kw)::numeric, 2) as \"Upper Bound\",\n  ROUND(AVG(confidence_level)::numeric * 100, 0) as \"Confidence %\"\nFROM energy_forecasts\nWHERE forecast_time >= NOW()\n  AND forecast_time <= NOW() + INTERVAL '24 hours'\nGROUP BY forecast_time\nORDER BY forecast_time\nLIMIT 24;",
+          "rawSql": "-- Showing most recent 24 hourly forecasts (historical)\nSELECT \n  TO_CHAR(forecast_time, 'Mon DD HH24:00') as \"Hour\",\n  ROUND(AVG(predicted_power_kw)::numeric, 2) as \"Predicted (kW)\",\n  ROUND(AVG(lower_bound_kw)::numeric, 2) as \"Lower Bound\",\n  ROUND(AVG(upper_bound_kw)::numeric, 2) as \"Upper Bound\",\n  ROUND(AVG(confidence_level)::numeric * 100, 0) as \"Confidence %\"\nFROM energy_forecasts\nWHERE forecast_time >= (SELECT MAX(forecast_time) - INTERVAL '24 hours' FROM energy_forecasts)\nGROUP BY forecast_time\nORDER BY forecast_time DESC\nLIMIT 24;",
           "refId": "A"
         }
       ],
-      "title": "Next 24-Hour Power Forecast",
+      "title": "Recent 24-Hour Forecasts (Historical)",
+      "description": "Showing most recent historical forecasts. Future forecasts not available in current data.",
       "type": "table"
     }
   ],
