@@ -180,7 +180,7 @@ class BoilerSimulator(BaseMachineSimulator):
         """
         sensor_data = self._generate_sensor_data()
         return {
-            "timestamp": timestamp.isoformat(),
+            "time": timestamp.isoformat(),
             "machine_id": self.machine_id,
             "production_count": int(sensor_data["consumption_kg"]),  # kg of steam produced
             "production_rate": sensor_data["flow_rate_kg_h"],  # kg/h
@@ -199,7 +199,7 @@ class BoilerSimulator(BaseMachineSimulator):
         """
         sensor_data = self._generate_sensor_data()
         return {
-            "timestamp": timestamp.isoformat(),
+            "time": timestamp.isoformat(),
             "machine_id": self.machine_id,
             "temperature_c": sensor_data.get("outdoor_temp_c", 15.0),
             "humidity_percent": 60.0 + random.uniform(-10, 10),
