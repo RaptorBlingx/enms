@@ -277,7 +277,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2713 No active anomalies detected. Machine operating within normal parameters."
         },
         "overrides": []
       },
@@ -795,7 +796,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "\u2713 No active anomalies! System operating normally."
         },
         "overrides": [
           {

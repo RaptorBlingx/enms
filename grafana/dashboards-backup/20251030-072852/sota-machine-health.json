@@ -814,7 +814,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  er.bucket as time,\n  'Actual' as metric,\n  AVG(er.avg_power_kw) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() AND er.bucket <= $__timeTo()\nGROUP BY er.bucket\n\nUNION ALL\n\nSELECT \n  er.bucket as time,\n  'Baseline (MA-24h)' as metric,\n  AVG(er.avg_power_kw) OVER (ORDER BY er.bucket ROWS BETWEEN 24 PRECEDING AND CURRENT ROW) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() - INTERVAL '24 hours' AND er.bucket <= $__timeTo()\n\nORDER BY time;",
+          "rawSql": "SELECT \n  er.bucket as time,\n  'Actual' as metric,\n  AVG(er.avg_power_kw) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= $__timeFrom() AND er.bucket <= $__timeTo()\nGROUP BY er.bucket\n\nUNION ALL\n\nSELECT \n  er.bucket as time,\n  'Baseline (MA-24h)' as metric,\n  AVG(er.avg_power_kw) OVER (ORDER BY er.bucket ROWS BETWEEN 24 PRECEDING AND CURRENT ROW) as value\nFROM energy_readings_1hour er\nWHERE er.machine_id = '$machine_id'::uuid\n  AND er.bucket >= ($__timeFrom()::timestamptz - INTERVAL '24 hours')\n  AND er.bucket <= $__timeTo()\n\nORDER BY time;",
           "refId": "A"
         }
       ],
@@ -905,7 +905,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  detected_at as time,\n  anomaly_type as metric,\n  severity as value\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom() AND detected_at <= $__timeTo()\nORDER BY detected_at;",
+          "rawSql": "SELECT \n  detected_at as time,\n  anomaly_type as metric,\n  CASE \n    WHEN severity = 'normal' THEN 1\n    WHEN severity = 'warning' THEN 2\n    WHEN severity = 'critical' THEN 3\n    ELSE 0\n  END as value\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom() AND detected_at <= $__timeTo()\nORDER BY detected_at;",
           "refId": "A"
         }
       ],
@@ -1126,7 +1126,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  anomaly_type as \"Type\",\n  severity as \"Severity\",\n  ROUND(metric_value::numeric, 2) as \"Power (kW)\",\n  detected_at as \"Detected At\",\n  CASE WHEN is_resolved = false THEN 'Active' ELSE 'Resolved' END as \"Status\",\n  description as \"Description\"\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom()\nORDER BY detected_at DESC\nLIMIT 20;",
+          "rawSql": "SELECT \n  anomaly_type as \"Type\",\n  severity as \"Severity\",\n  ROUND(metric_value::numeric, 2) as \"Power (kW)\",\n  detected_at as \"Detected At\",\n  CASE WHEN is_resolved = false THEN 'Active' ELSE 'Resolved' END as \"Status\",\n  detection_method as \"Detection Method\"\nFROM anomalies\nWHERE machine_id = '$machine_id'::uuid\n  AND detected_at >= $__timeFrom()\nORDER BY detected_at DESC\nLIMIT 20;",
           "refId": "A"
         }
       ],
@@ -1168,7 +1168,7 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {
@@ -1183,6 +1183,6 @@
   "timezone": "browser",
   "title": "SOTA Machine Health",
   "uid": "sota-machine-health",
-  "version": 1,
+  "version": 9,
   "weekStart": ""
 }

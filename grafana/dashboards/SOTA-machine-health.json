@@ -275,7 +275,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2713 No active anomalies detected. Machine operating within normal parameters."
         },
         "overrides": []
       },
@@ -348,7 +349,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "\u2139\ufe0f No model metrics available for this machine. Train a baseline model first or select Compressor-1 which has trained models."
         },
         "overrides": [
           {
@@ -461,7 +463,8 @@
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percent",
+          "noValue": "\u2139\ufe0f Insufficient data in time range. Need at least 24 hours of readings. Expand time range to see variance."
         },
         "overrides": []
       },
@@ -737,7 +740,8 @@
               }
             ]
           },
-          "unit": "kwatt"
+          "unit": "kwatt",
+          "noValue": "\u2139\ufe0f No power readings in selected time range. Expand time range to see consumption patterns."
         },
         "overrides": [
           {
@@ -872,7 +876,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2713 No anomalies detected in selected time range. Try expanding to last 7 days or last 30 days."
         },
         "overrides": []
       },
@@ -953,7 +958,8 @@
               }
             ]
           },
-          "unit": "kwatth"
+          "unit": "kwatth",
+          "noValue": "\u2139\ufe0f No production data in time range. Expand to last 7 days to see correlation patterns."
         },
         "overrides": []
       },
@@ -1020,7 +1026,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "\u2713 No anomalies found in selected time range. This is good! Expand time range to see historical anomalies."
         },
         "overrides": [
           {
