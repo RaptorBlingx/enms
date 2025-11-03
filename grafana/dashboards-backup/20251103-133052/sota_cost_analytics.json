@@ -4,8 +4,8 @@
       {
         "builtIn": 1,
         "datasource": {
-          "type": "datasource",
-          "uid": "grafana"
+          "type": "grafana",
+          "uid": "-- Grafana --"
         },
         "enable": true,
         "hide": true,
@@ -15,20 +15,18 @@
       }
     ]
   },
-  "description": "SOTA Factory Command Center - Real-time operational overview with ML insights",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 10,
+  "id": 13,
   "links": [],
-  "liveNow": true,
+  "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Total number of active machines",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -44,42 +42,41 @@
               },
               {
                 "color": "yellow",
-                "value": 5
+                "value": 30000
               },
               {
                 "color": "red",
-                "value": 3
+                "value": 50000
               }
             ]
           },
-          "unit": "short"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 0,
         "y": 0
       },
       "id": 1,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ],
           "fields": "",
           "values": false
         },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -91,11 +88,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Machines\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nWHERE m.is_active = true\n  AND f.name IN ($factory);",
+          "rawSql": "SELECT \n  ROUND(SUM(total_energy_kwh) * 0.18, 2) as \"Monthly Cost\"\nFROM energy_readings_1day\nWHERE bucket >= DATE_TRUNC('month', NOW())\n  AND bucket < DATE_TRUNC('month', NOW()) + INTERVAL '1 month';",
           "refId": "A"
         }
       ],
-      "title": "Active Machines",
+      "title": "Current Month Cost",
       "type": "stat"
     },
     {
@@ -103,7 +100,6 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Total energy consumed today (using 1-hour aggregates)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -114,34 +110,34 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
                 "color": "yellow",
-                "value": 5000
+                "value": 0
               },
               {
-                "color": "red",
-                "value": 8000
+                "color": "green",
+                "value": 5
               }
             ]
           },
-          "unit": "kwatth"
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 6,
         "y": 0
       },
       "id": 2,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -150,11 +146,10 @@
           "fields": "",
           "values": false
         },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -166,11 +161,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COALESCE(SUM(total_energy_kwh), 0) as \"Energy Today\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND f.name IN ($factory);",
+          "rawSql": "-- Compare last 30 days vs previous 30 days\nWITH recent_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '30 days'\n    AND bucket < NOW()\n),\nprevious_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '60 days'\n    AND bucket < NOW() - INTERVAL '30 days'\n)\nSELECT \n  COALESCE(ROUND(((r.kwh - p.kwh) / NULLIF(p.kwh, 0) * 100)::numeric, 2), 0) as \"Cost Variance\"\nFROM recent_period r, previous_period p;",
           "refId": "A"
         }
       ],
-      "title": "Energy Today",
+      "title": "Monthly Cost Variance",
       "type": "stat"
     },
     {
@@ -178,7 +173,6 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Estimated cost today (using default tariff rate)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -194,29 +188,29 @@
               },
               {
                 "color": "yellow",
-                "value": 500
+                "value": 0.15
               },
               {
                 "color": "red",
-                "value": 800
+                "value": 0.25
               }
             ]
           },
-          "unit": "currencyUSD"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 12,
         "y": 0
       },
       "id": 3,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -225,11 +219,10 @@
           "fields": "",
           "values": false
         },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -241,11 +234,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(er.total_energy_kwh * 0.12), 0) as \"Cost Today\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND f.name IN ($factory);",
+          "rawSql": "SELECT \n  ROUND((AVG(rate_per_kwh))::numeric, 4) as \"Average Rate\"\nFROM energy_tariffs\nWHERE is_active = true;",
           "refId": "A"
         }
       ],
-      "title": "Cost Today",
+      "title": "Average Energy Rate",
       "type": "stat"
     },
     {
@@ -253,46 +246,36 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Number of unresolved anomalies detected",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "✓ No active anomalies detected. Machine operating within normal parameters.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 5
-              },
-              {
-                "color": "red",
-                "value": 20
               }
             ]
           },
-          "unit": "short"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 18,
         "y": 0
       },
       "id": 4,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -301,11 +284,10 @@
           "fields": "",
           "values": false
         },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -317,11 +299,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Active Anomalies\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE a.is_resolved = false\n  AND f.name IN ($factory);",
+          "rawSql": "-- Estimate potential savings by shifting 20% of peak to off-peak\nWITH peak_usage AS (\n  SELECT SUM(er.energy_kwh) as kwh\n  FROM energy_readings er\n  WHERE EXTRACT(HOUR FROM er.time) BETWEEN 9 AND 20\n    AND er.time >= NOW() - INTERVAL '30 days'\n)\nSELECT \n  ROUND((p.kwh * 0.20 * (0.25 - 0.10))::numeric, 2) as \"Potential Savings\"\nFROM peak_usage p;",
           "refId": "A"
         }
       ],
-      "title": "Active Anomalies",
+      "title": "Potential Monthly Savings",
       "type": "stat"
     },
     {
@@ -329,90 +311,16 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Real-time total power consumption across all machines",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 500,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 300
-              },
-              {
-                "color": "red",
-                "value": 400
-              }
-            ]
-          },
-          "unit": "kwatt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 5
-      },
-      "id": 5,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": true,
-        "showThresholdMarkers": true,
-        "text": {
-          "valueSize": 48
-        }
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  COALESCE(SUM(avg_power_kw), 0) as \"Current Power\"\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket = (\n  SELECT MAX(bucket) FROM energy_readings_1min\n)\n  AND f.name IN ($factory);",
-          "refId": "A"
-        }
-      ],
-      "title": "Current Power",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "description": "Live power consumption (last 6 hours, 1-minute resolution)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Power (kW)",
+            "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -423,13 +331,14 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -449,23 +358,22 @@
               }
             ]
           },
-          "unit": "kwatt"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 8,
-        "y": 5
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 4
       },
-      "id": 6,
+      "id": 5,
       "options": {
         "legend": {
           "calcs": [
-            "mean",
-            "max",
-            "min"
+            "sum",
+            "mean"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -476,7 +384,7 @@
           "sort": "desc"
         }
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
@@ -486,11 +394,11 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  bucket as time,\n  m.name as metric,\n  AVG(er.avg_power_kw) as value\nFROM energy_readings_1min er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= NOW() - INTERVAL '6 hours'\n  AND f.name IN ($factory)\nGROUP BY er.bucket, m.name\nORDER BY er.bucket;",
+          "rawSql": "SELECT \n  DATE_TRUNC('month', bucket) as time,\n  'Monthly Cost' as metric,\n  ROUND((SUM(total_energy_kwh) * 0.18)::numeric, 2) as value\nFROM energy_readings_1day\nWHERE bucket >= $__timeFrom()\n  AND bucket <= $__timeTo()\nGROUP BY DATE_TRUNC('month', bucket)\nORDER BY time;",
           "refId": "A"
         }
       ],
-      "title": "Live Power Consumption (6h)",
+      "title": "Monthly Cost Trend (12 Months)",
       "type": "timeseries"
     },
     {
@@ -498,16 +406,89 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Energy consumption by machine today (using 1-hour aggregates)",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyEUR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "displayLabels": [
+          "percent",
+          "value"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH hourly_costs AS (\n  SELECT \n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 'Peak (9AM-9PM)'\n      ELSE 'Off-Peak (9PM-9AM)'\n    END as period,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 0.25\n      ELSE 0.10\n    END as rate,\n    energy_kwh\n  FROM energy_readings\n  WHERE time >= NOW() - INTERVAL '30 days'\n)\nSELECT \n  period as \"Period\",\n  ROUND((SUM(energy_kwh) * MAX(rate))::numeric, 2) as \"Cost\"\nFROM hourly_costs\nGROUP BY period\nORDER BY \"Cost\" DESC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Time-of-Use Period",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "Energy (kWh)",
+            "axisLabel": "",
             "axisPlacement": "auto",
             "fillOpacity": 80,
             "gradientMode": "none",
@@ -519,6 +500,9 @@
             "lineWidth": 1,
             "scaleDistribution": {
               "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
           },
           "mappings": [],
@@ -531,7 +515,7 @@
               }
             ]
           },
-          "unit": "kwatth"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
@@ -544,13 +528,15 @@
       "id": 7,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.97,
+        "barWidth": 0.9,
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "horizontal",
@@ -563,7 +549,7 @@
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
@@ -573,11 +559,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  COALESCE(SUM(er.total_energy_kwh), 0) as \"Energy (kWh)\"\nFROM energy_readings_1hour er\nJOIN machines m ON er.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE er.bucket >= DATE_TRUNC('day', NOW())\n  AND f.name IN ($factory)\nGROUP BY m.name\nORDER BY SUM(er.total_energy_kwh) DESC;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  ROUND((SUM(er.energy_kwh) * 0.18)::numeric, 2) as \"Cost (EUR)\"\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.time >= NOW() - INTERVAL '30 days'\nGROUP BY m.name\nORDER BY SUM(er.energy_kwh) DESC\nLIMIT 8;",
           "refId": "A"
         }
       ],
-      "title": "Energy by Machine (Today)",
+      "title": "Top Cost Contributors (Last 30 Days)",
       "type": "barchart"
     },
     {
@@ -585,7 +571,6 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Current machine status with health indicators",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -613,9 +598,41 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Health Score"
+              "options": "Opportunity"
             },
             "properties": [
+              {
+                "id": "custom.width",
+                "value": 435
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Category"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 217
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Potential Savings"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 339
+              },
+              {
+                "id": "unit",
+                "value": "currencyEUR"
+              },
               {
                 "id": "custom.cellOptions",
                 "value": {
@@ -624,49 +641,9 @@
                 }
               },
               {
-                "id": "thresholds",
+                "id": "color",
                 "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 75
-                    },
-                    {
-                      "color": "green",
-                      "value": 90
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "min",
-                "value": 0
-              },
-              {
-                "id": "max",
-                "value": 100
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Current Power"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "kwatt"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
+                  "mode": "thresholds"
                 }
               },
               {
@@ -680,11 +657,11 @@
                     },
                     {
                       "color": "yellow",
-                      "value": 40
+                      "value": 500
                     },
                     {
-                      "color": "red",
-                      "value": 60
+                      "color": "orange",
+                      "value": 1000
                     }
                   ]
                 }
@@ -694,33 +671,52 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Anomalies"
+              "options": "Priority"
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
+                "id": "custom.width",
+                "value": 165
               },
               {
-                "id": "thresholds",
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "High": {
+                        "color": "red",
+                        "text": "🔴 High"
+                      }
+                    },
+                    "type": "value",
+                    "value": "High"
+                  },
+                  {
+                    "options": {
+                      "Medium": {
+                        "color": "orange",
+                        "text": "🟠 Medium"
+                      }
+                    },
+                    "type": "value",
+                    "value": "Medium"
+                  },
+                  {
+                    "options": {
+                      "Low": {
+                        "color": "yellow",
+                        "text": "🟡 Low"
+                      }
+                    },
+                    "type": "value",
+                    "value": "Low"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
                 "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 1
-                    },
-                    {
-                      "color": "red",
-                      "value": 5
-                    }
-                  ]
+                  "type": "color-text"
                 }
               }
             ]
@@ -748,7 +744,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Health Score"
+            "displayName": "Potential Savings"
           }
         ]
       },
@@ -762,11 +758,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH latest_readings AS (\n  SELECT DISTINCT ON (machine_id)\n    machine_id,\n    avg_power_kw,\n    bucket\n  FROM energy_readings_1min\n  ORDER BY machine_id, bucket DESC\n),\nmachine_anomalies AS (\n  SELECT \n    machine_id,\n    COUNT(*) as anomaly_count\n  FROM anomalies\n  WHERE is_resolved = false\n  GROUP BY machine_id\n)\nSELECT \n  m.name as \"Machine\",\n  CASE WHEN m.is_active THEN 'Active' ELSE 'Inactive' END as \"Status\",\n  COALESCE(lr.avg_power_kw, 0) as \"Current Power\",\n  COALESCE(ma.anomaly_count, 0) as \"Anomalies\",\n  ROUND(\n    CASE \n      WHEN COALESCE(ma.anomaly_count, 0) = 0 THEN 95\n      WHEN COALESCE(ma.anomaly_count, 0) <= 5 THEN 85\n      WHEN COALESCE(ma.anomaly_count, 0) <= 10 THEN 70\n      ELSE 50\n    END\n  ) as \"Health Score\"\nFROM machines m\nJOIN factories f ON m.factory_id = f.id\nLEFT JOIN latest_readings lr ON m.id = lr.machine_id\nLEFT JOIN machine_anomalies ma ON m.id = ma.machine_id\nWHERE m.is_active = true\n  AND f.name IN ($factory)\nORDER BY \"Health Score\" ASC, \"Anomalies\" DESC;",
+          "rawSql": "-- Static cost savings opportunities based on analysis\nSELECT \n  'Shift 20% peak usage to off-peak hours' as \"Opportunity\",\n  'Load Shifting' as \"Category\",\n  'High' as \"Priority\",\n  ROUND(((\n    SELECT SUM(energy_kwh) \n    FROM energy_readings \n    WHERE EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 \n      AND time >= NOW() - INTERVAL '30 days'\n  ) * 0.20 * (0.25 - 0.10))::numeric, 2) as \"Potential Savings\"\n\nUNION ALL\n\nSELECT \n  'Optimize Compressor-1 efficiency during peak hours',\n  'Equipment Upgrade',\n  'High',\n  ROUND(((\n    SELECT SUM(er.energy_kwh) \n    FROM energy_readings er\n    JOIN machines m ON er.machine_id = m.id\n    WHERE m.name = 'Compressor-1'\n      AND EXTRACT(HOUR FROM er.time) BETWEEN 9 AND 20\n      AND er.time >= NOW() - INTERVAL '30 days'\n  ) * 0.15 * 0.25)::numeric, 2)\n\nUNION ALL\n\nSELECT \n  'Implement power factor correction',\n  'Infrastructure',\n  'Medium',\n  ROUND(((\n    SELECT SUM(energy_kwh)\n    FROM energy_readings\n    WHERE time >= NOW() - INTERVAL '30 days'\n  ) * 0.05 * 0.18)::numeric, 2)\n\nUNION ALL\n\nSELECT \n  'Schedule maintenance during off-peak hours',\n  'Operations',\n  'Low',\n  ROUND(((\n    SELECT SUM(energy_kwh)\n    FROM energy_readings\n    WHERE EXTRACT(HOUR FROM time) BETWEEN 9 AND 20\n      AND time >= NOW() - INTERVAL '30 days'\n  ) * 0.02 * (0.25 - 0.10))::numeric, 2)\n\nORDER BY \"Potential Savings\" DESC;",
           "refId": "A"
         }
       ],
-      "title": "Machine Status & Health",
+      "title": "Cost Savings Opportunities",
       "type": "table"
     },
     {
@@ -774,21 +770,44 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Recent unresolved anomalies requiring attention",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "inspect": false
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
-          "noValue": "✓ No active anomalies! System operating normally.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -797,39 +816,21 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "currencyEUR"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Peak Cost"
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
+                "id": "color",
                 "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 2
-                    },
-                    {
-                      "color": "red",
-                      "value": 3
-                    }
-                  ]
+                  "fixedColor": "red",
+                  "mode": "fixed"
                 }
               }
             ]
@@ -837,43 +838,43 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value"
+              "options": "Off-Peak Cost"
             },
             "properties": [
               {
-                "id": "unit",
-                "value": "short"
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
               }
             ]
           }
         ]
       },
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 24,
         "x": 0,
         "y": 21
       },
       "id": 9,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "legend": {
+          "calcs": [
+            "sum",
+            "mean"
           ],
-          "show": false
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Detected At"
-          }
-        ]
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
@@ -881,64 +882,43 @@
             "uid": "TimescaleDB"
           },
           "editorMode": "code",
-          "format": "table",
+          "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  a.anomaly_type as \"Type\",\n  a.severity as \"Severity\",\n  COALESCE(ROUND(a.metric_value::numeric, 2), 0) as \"Value\",\n  a.detected_at as \"Detected At\",\n  ROUND(EXTRACT(EPOCH FROM (NOW() - a.detected_at))/3600, 1) as \"Hours Ago\"\nFROM anomalies a\nJOIN machines m ON a.machine_id = m.id\nJOIN factories f ON m.factory_id = f.id\nWHERE a.is_resolved = false\n  AND f.name IN ($factory)\nORDER BY a.detected_at DESC\nLIMIT 10;",
+          "rawSql": "WITH hourly_data AS (\n  SELECT \n    DATE_TRUNC('hour', time) as hour,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 'Peak Cost'\n      ELSE 'Off-Peak Cost'\n    END as period,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 0.25\n      ELSE 0.10\n    END as rate,\n    SUM(energy_kwh) as kwh\n  FROM energy_readings\n  WHERE time >= $__timeFrom()\n    AND time <= $__timeTo()\n  GROUP BY hour, period, rate\n)\nSELECT \n  hour as time,\n  period as metric,\n  ROUND((kwh * rate)::numeric, 2) as value\nFROM hourly_data\nORDER BY time, period;",
           "refId": "A"
         }
       ],
-      "title": "Active Anomalies (Unresolved)",
-      "type": "table"
+      "title": "Peak vs Off-Peak Cost Breakdown",
+      "type": "timeseries"
     }
   ],
-  "refresh": "30s",
+  "refresh": "5m",
   "schemaVersion": 38,
-  "style": "dark",
   "tags": [
-    "SOTA",
-    "factory",
-    "overview",
-    "real-time"
+    "sota",
+    "cost",
+    "tariff",
+    "optimization"
   ],
   "templating": {
-    "list": [
-      {
-        "current": {},
-        "datasource": {
-          "type": "postgres",
-          "uid": "TimescaleDB"
-        },
-        "definition": "SELECT name as __text, name as __value FROM factories ORDER BY name;",
-        "hide": 0,
-        "includeAll": true,
-        "multi": false,
-        "name": "factory",
-        "options": [],
-        "query": "SELECT name as __text, name as __value FROM factories ORDER BY name;",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      }
-    ]
+    "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m"
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "1d"
     ]
   },
   "timezone": "browser",
-  "title": "SOTA Factory Overview",
-  "uid": "sota-factory-overview",
-  "version": 37,
+  "title": "SOTA Energy Cost Analytics",
+  "uid": "sota_cost_analytics",
+  "version": 11,
   "weekStart": ""
 }
