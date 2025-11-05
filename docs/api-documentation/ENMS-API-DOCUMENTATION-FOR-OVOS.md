@@ -2,16 +2,46 @@
 
 **Author:** Mohamad  
 **Date:** October 2025  
-**Last Updated:** November 4, 2025  
+**Last Updated:** November 5, 2025  
 **Status:** ✅ PRODUCTION READY + 🔥 MULTI-ENERGY SUPPORT + 🎯 ENHANCED BASELINE ENDPOINTS + 🧪 COMPREHENSIVE TEST SUITE  
 **Purpose:** Complete API reference for Burak's OVOS project integration
 
-**Recent Enhancements (November 4, 2025)**:
-- ✅ **Task 2**: Enhanced `/baseline/predict` - Dual input (UUID OR SEU name) + voice messages
-- ✅ **Task 3**: Enhanced `/baseline/model/{id}` - Optional natural language explanations
-- ✅ **Task 4**: Enhanced `/baseline/models` - Dual input filter + batch explanations
-- ✅ **Task 5**: Created `model_explainer.py` service - Natural language ML explanations
-- ✅ **Task 7**: Comprehensive integration test suite - 27/27 tests passing (100%)
+---
+
+## ⚠️ **IMPORTANT: API CLEANUP IN PROGRESS (Phase 1 - November 5, 2025)**
+
+**EnMS v3 Transformation** - Removing `/ovos/*` naming confusion. APIs are being reorganized for clarity.
+
+### What's Changing:
+- ❌ **DEPRECATED**: All `/ovos/*` endpoints (confusing naming)
+- ✅ **NEW**: Clean RESTful endpoints (`/seus`, `/factory/summary`, `/analytics/top-consumers`)
+- 🔄 **Backward Compatible**: Old endpoints still work until January 1, 2026
+
+### Migration Status:
+| Old Endpoint | New Endpoint | Status |
+|--------------|--------------|--------|
+| `/api/v1/ovos/train-baseline` | `/api/v1/baseline/train-seu` | ✅ Available (old works) |
+| `/api/v1/ovos/seus` | `/api/v1/seus` | ✅ Available (old works) |
+| `/api/v1/ovos/energy-sources` | `/api/v1/energy-sources` | ✅ Available |
+| `/api/v1/ovos/summary` | `/api/v1/factory/summary` | ✅ Available (old works) |
+| `/api/v1/ovos/top-consumers` | `/api/v1/analytics/top-consumers` | ✅ Available (old works) |
+| `/api/v1/ovos/machines/{name}/status` | `/api/v1/machines/status/{name}` | 🚧 In Progress |
+| `/api/v1/ovos/forecast/tomorrow` | `/api/v1/forecast/short-term` | 🚧 In Progress |
+
+**Timeline:**
+- **November 5 - December 31, 2025**: Both old and new endpoints work
+- **January 1, 2026**: Old `/ovos/*` endpoints removed
+
+**Action Required:** Update your OVOS integration to use new endpoints. See migration examples below.
+
+---
+
+**Recent Enhancements**:
+- ✅ **November 5, 2025**: Phase 0 complete - v2 foundation validated (58/58 tests passing)
+- ✅ **November 5, 2025**: Phase 1 started - API cleanup, created `/seus`, `/factory/summary`, `/analytics/top-consumers`
+- ✅ **November 4, 2025**: Enhanced `/baseline/predict` - Dual input (UUID OR SEU name) + voice messages
+- ✅ **November 4, 2025**: Enhanced `/baseline/models` - Dual input filter + batch explanations
+- ✅ **November 4, 2025**: Created `model_explainer.py` service - Natural language ML explanations
 
 ---
 
@@ -1629,12 +1659,16 @@ curl -G "http://localhost:8001/api/v1/forecast/demand" \
 
 ---
 
-## 🎙️ OVOS Voice Training (NEW)
+## 🎙️ Voice-Friendly Training Endpoints
 
-### EP16: POST /ovos/train-baseline - Train Baseline via Voice Command ⭐ PRODUCTION READY
+### EP16: POST /baseline/train-seu - Train Baseline via Voice Command ⭐ PRODUCTION READY
 **Purpose:** Train energy baselines using natural language - Mr. Umut's key requirement
 
-**Endpoint:** `POST /api/v1/ovos/train-baseline`
+**⚠️ ENDPOINT UPDATED (November 5, 2025):**
+- ❌ **Old (deprecated):** `POST /api/v1/ovos/train-baseline` (still works until Jan 2026)
+- ✅ **New:** `POST /api/v1/baseline/train-seu`
+
+**Endpoint:** `POST /api/v1/baseline/train-seu`
 
 **What Makes This Special:**
 - ✅ **Zero Hardcoding** - Works for ANY energy source (electricity, natural_gas, steam, compressed_air)
@@ -1646,6 +1680,17 @@ curl -G "http://localhost:8001/api/v1/forecast/demand" \
 #### Request Format
 
 ```bash
+# NEW ENDPOINT (use this)
+curl -X POST http://localhost:8001/api/v1/baseline/train-seu \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seu_name": "Compressor-1",
+    "energy_source": "electricity",
+    "features": ["production_count", "outdoor_temp_c"],
+    "year": 2025
+  }'
+
+# OLD ENDPOINT (deprecated, still works)
 curl -X POST http://localhost:8001/api/v1/ovos/train-baseline \
   -H "Content-Type: application/json" \
   -d '{
@@ -1936,12 +1981,13 @@ curl -X POST http://localhost:8001/api/v1/ovos/train-baseline \
 
 > **Note:** Features array left empty (`[]`) for auto-selection (recommended for maximum accuracy 97-99%)
 
-**OVOS Skill Steps:**
+**OVOS Skill Steps (UPDATED for v3):**
 1. **Parse voice input** → Extract SEU name, energy source, features, year
-2. **Validate energy source** → Query `/api/v1/energy-sources` (cache this)
-3. **Validate features** → Query `/api/v1/features/{energy_source}` (cache per source)
-4. **Train baseline** → POST to `/api/v1/ovos/train-baseline`
-5. **Speak response** → Use `response.message` field directly for TTS
+2. **Discover SEUs** → Query `/api/v1/seus` or `/api/v1/seus?energy_source=electricity` (NEW endpoint)
+3. **Validate energy source** → Query `/api/v1/energy-sources` (cache this)
+4. **Validate features** → Query `/api/v1/features/{energy_source}` (cache per source)
+5. **Train baseline** → POST to `/api/v1/baseline/train-seu` (NEW endpoint, old still works)
+6. **Speak response** → Use `response.message` field directly for TTS
 
 **Example OVOS Response (Text-to-Speech):**
 ```
@@ -1966,6 +2012,251 @@ Energy equals 218.857 plus 0.156473 times production count minus 0.014546 times 
 - ✅ **Dynamic Expansion** - Add new energy source = just database insert (no code changes)
 - ✅ **Production Quality** - 85-99% accuracy, <5s response time
 - ✅ **ISO 50001 Ready** - Baseline models stored for compliance reporting
+
+---
+
+## 🏭 SEU Management & Factory Analytics (NEW - November 2025)
+
+### EP-SEU-1: GET /seus - List All SEUs ⭐ NEW
+**Purpose:** Discover available Significant Energy Uses (ISO 50001 boundaries)
+
+**⚠️ ENDPOINT CREATED (November 5, 2025):**
+- ✅ **New:** `GET /api/v1/seus`
+- ❌ **Old (deprecated):** `GET /api/v1/ovos/seus` (still works until Jan 2026)
+
+**Endpoint:** `GET /api/v1/seus`
+
+**Parameters:**
+- `energy_source` (optional): Filter by energy source (`electricity`, `natural_gas`, `steam`, `compressed_air`)
+
+**Use Cases:**
+- "List all available SEUs"
+- "Show me electricity SEUs"
+- "Which machines can I train baselines for?"
+
+**Example:**
+```bash
+# Get all SEUs
+curl "http://localhost:8001/api/v1/seus"
+
+# Get only electricity SEUs
+curl "http://localhost:8001/api/v1/seus?energy_source=electricity"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "seus": [
+    {
+      "id": "seu-uuid-1",
+      "name": "Compressor-1",
+      "energy_source": "electricity",
+      "unit": "kWh",
+      "machine_count": 1,
+      "baseline_year": 2025,
+      "r_squared": 0.99,
+      "has_baseline": true
+    },
+    {
+      "id": "seu-uuid-2",
+      "name": "Boiler-1 Electrical System",
+      "energy_source": "electricity",
+      "unit": "kWh",
+      "machine_count": 1,
+      "baseline_year": 2025,
+      "r_squared": 0.98,
+      "has_baseline": true
+    },
+    {
+      "id": "seu-uuid-3",
+      "name": "Boiler-1 Natural Gas Burner",
+      "energy_source": "natural_gas",
+      "unit": "m³",
+      "machine_count": 1,
+      "baseline_year": null,
+      "r_squared": null,
+      "has_baseline": false
+    }
+  ],
+  "total_count": 10,
+  "filtered_by": "electricity",
+  "timestamp": "2025-11-05T14:23:45.123456"
+}
+```
+
+**Response Fields:**
+- `has_baseline`: Boolean indicating if SEU has trained baseline model
+- `r_squared`: Model accuracy if baseline exists (null if no baseline)
+- `machine_count`: Number of machines in this SEU (usually 1)
+
+---
+
+### EP-FACTORY-1: GET /factory/summary - Factory Overview ⭐ NEW
+**Purpose:** Single API call returns complete factory status snapshot
+
+**⚠️ ENDPOINT UPDATED (November 5, 2025):**
+- ❌ **Old (deprecated):** `GET /api/v1/ovos/summary` (still works until Jan 2026)
+- ✅ **New:** `GET /api/v1/factory/summary`
+
+**Endpoint:** `GET /api/v1/factory/summary`
+
+**Parameters:** None required
+
+**Use Cases:**
+- "Give me a system overview"
+- "What's the current factory status?"
+- "How much energy are we using today?"
+
+**Example:**
+```bash
+# NEW ENDPOINT (use this)
+curl "http://localhost:8001/api/v1/factory/summary"
+
+# OLD ENDPOINT (deprecated, still works)
+curl "http://localhost:8001/api/v1/ovos/summary"
+```
+
+**Response:**
+```json
+{
+  "timestamp": "2025-11-05T14:25:30.123456",
+  "status": "operational",
+  "energy": {
+    "total_kwh_today": 1520.5,
+    "current_power_kw": 185.3,
+    "avg_power_kw": 63.4
+  },
+  "costs": {
+    "total_usd_today": 228.08,
+    "estimated_month": 6842.40
+  },
+  "machines": {
+    "total": 8,
+    "active": 6,
+    "idle": 1,
+    "stopped": 1
+  },
+  "anomalies": {
+    "critical": 2,
+    "warnings": 5,
+    "normal": 3,
+    "total_today": 10
+  },
+  "top_consumer": {
+    "machine_id": "uuid",
+    "machine_name": "Compressor-1",
+    "machine_type": "compressor",
+    "energy_kwh": 450.2,
+    "percent_of_total": 29.6
+  },
+  "latest_anomaly": {
+    "anomaly_id": "uuid",
+    "machine_id": "uuid",
+    "machine_name": "HVAC-Main",
+    "detected_at": "2025-11-05T13:45:12Z",
+    "severity": "warning",
+    "type": "spike",
+    "is_resolved": false
+  }
+}
+```
+
+**Voice Response Example:**
+"System is operational. 6 machines active. Today's energy consumption is 1,520 kilowatt hours costing $228. Compressor-1 is the top consumer at 450 kilowatt hours. There are 2 critical alerts and 5 warnings requiring attention."
+
+---
+
+### EP-ANALYTICS-1: GET /analytics/top-consumers - Top Energy Consumers ⭐ NEW
+**Purpose:** Rank machines by energy consumption, cost, power, or anomalies
+
+**⚠️ ENDPOINT UPDATED (November 5, 2025):**
+- ❌ **Old (deprecated):** `GET /api/v1/ovos/top-consumers` (still works until Jan 2026)
+- ✅ **New:** `GET /api/v1/analytics/top-consumers`
+
+**Endpoint:** `GET /api/v1/analytics/top-consumers`
+
+**Parameters:**
+- `metric` (required): Ranking metric - `energy`, `cost`, `power`, `anomalies`
+- `start_time` (required): Start of time period (ISO 8601)
+- `end_time` (required): End of time period (ISO 8601)
+- `limit` (optional): Number of results (1-20, default: 5)
+
+**Use Cases:**
+- "Which machine uses the most energy?"
+- "What are the top 3 energy consumers today?"
+- "Which machine costs the most to run?"
+
+**Example:**
+```bash
+# NEW ENDPOINT (use this)
+curl -G "http://localhost:8001/api/v1/analytics/top-consumers" \
+  --data-urlencode "metric=energy" \
+  --data-urlencode "start_time=2025-11-05T00:00:00Z" \
+  --data-urlencode "end_time=2025-11-05T23:59:59Z" \
+  --data-urlencode "limit=3"
+
+# OLD ENDPOINT (deprecated, still works)
+curl -G "http://localhost:8001/api/v1/ovos/top-consumers" \
+  --data-urlencode "metric=energy" \
+  --data-urlencode "start_time=2025-11-05T00:00:00Z" \
+  --data-urlencode "end_time=2025-11-05T23:59:59Z" \
+  --data-urlencode "limit=3"
+```
+
+**Response:**
+```json
+{
+  "metric": "energy",
+  "metric_label": "Energy Consumption",
+  "time_period": {
+    "start": "2025-11-05T00:00:00Z",
+    "end": "2025-11-05T23:59:59Z",
+    "duration_hours": 24.0
+  },
+  "total_value": 1520.5,
+  "unit": "kWh",
+  "machines_analyzed": 8,
+  "ranking": [
+    {
+      "rank": 1,
+      "machine_id": "uuid-1",
+      "machine_name": "Compressor-1",
+      "machine_type": "compressor",
+      "value": 450.2,
+      "percentage": 29.6,
+      "energy_kwh": 450.2,
+      "cost_usd": 67.53,
+      "avg_power_kw": 18.8
+    },
+    {
+      "rank": 2,
+      "machine_id": "uuid-2",
+      "machine_name": "HVAC-Main",
+      "machine_type": "hvac",
+      "value": 380.5,
+      "percentage": 25.0,
+      "energy_kwh": 380.5,
+      "cost_usd": 57.08,
+      "avg_power_kw": 15.9
+    },
+    {
+      "rank": 3,
+      "machine_id": "uuid-3",
+      "machine_name": "Injection-Molding-1",
+      "machine_type": "injection_molding",
+      "value": 320.8,
+      "percentage": 21.1,
+      "energy_kwh": 320.8,
+      "cost_usd": 48.12,
+      "avg_power_kw": 13.4
+    }
+  ]
+}
+```
+
+**Voice Response Example:**
+"The top 3 energy consumers are: Compressor-1 at 450 kilowatt hours representing 29.6% of total, HVAC-Main at 381 kilowatt hours at 25%, and Injection-Molding-1 at 321 kilowatt hours at 21.1%."
 
 ---
 
