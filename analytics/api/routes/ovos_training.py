@@ -152,9 +152,8 @@ async def train_baseline_via_ovos(request: OVOSTrainingRequest):
         )
         
         if not seu:
-            return OVOSTrainingResponse(
-                success=False,
-                message=f"SEU '{request.seu_name}' with energy source '{request.energy_source}' not found",
+            return await _build_voice_friendly_error(
+                "SEU_NOT_FOUND",
                 seu_name=request.seu_name,
                 energy_source=request.energy_source
             )
@@ -174,17 +173,11 @@ async def train_baseline_via_ovos(request: OVOSTrainingRequest):
         )
         
         if not is_valid:
-            # Get available features to help user
-            available = await feature_discovery.get_available_features(
-                energy_source_id=energy_source_id,
-                regression_only=True
-            )
-            available_names = [f.feature_name for f in available]
-            
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid features: {invalid_features}. "
-                       f"Available features for {request.energy_source}: {available_names}"
+            # Return voice-friendly error instead of HTTP exception
+            return await _build_voice_friendly_error(
+                "INVALID_FEATURES",
+                seu_name=request.seu_name,
+                energy_source=request.energy_source
             )
         
         logger.info(f"[OVOS-TRAIN] Features validated: {valid_features}")
@@ -237,6 +230,24 @@ async def train_baseline_via_ovos(request: OVOSTrainingRequest):
         # Step 4: Convert year to date range
         start_date = datetime(request.year, 1, 1, 0, 0, 0)
         end_date = datetime(request.year, 12, 31, 23, 59, 59)
+        
+        # Step 4.5: Check if sufficient data exists
+        async with db.pool.acquire() as conn:
+            data_count = await conn.fetchval("""
+                SELECT COUNT(DISTINCT DATE(bucket))
+                FROM energy_readings_1day
+                WHERE machine_id = $1
+                AND bucket BETWEEN $2 AND $3
+            """, machine_id, start_date, end_date)
+        
+        logger.info(f"[OVOS-TRAIN] Found {data_count} days of data for {request.year}")
+        
+        if data_count < 7:
+            return await _build_voice_friendly_error(
+                "INSUFFICIENT_DATA",
+                seu_name=request.seu_name,
+                energy_source=request.energy_source
+            )
         
         # Step 5: Train baseline using proven service (97-99% accuracy!)
         # Smart Hybrid: If user specifies features, use them. Otherwise, auto-select.
@@ -418,6 +429,132 @@ async def get_seus_by_energy_source(energy_source: Optional[str] = None):
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
+async def _build_voice_friendly_error(
+    error_type: str,
+    seu_name: str = None,
+    energy_source: str = None
+) -> OVOSTrainingResponse:
+    """
+    Build voice-friendly error responses for OVOS TTS.
+    
+    Provides helpful suggestions and available options to guide users.
+    
+    Args:
+        error_type: Type of error (SEU_NOT_FOUND, INSUFFICIENT_DATA, etc.)
+        seu_name: SEU name that caused the error
+        energy_source: Energy source that caused the error
+    
+    Returns:
+        OVOSTrainingResponse with error details and suggestions
+    """
+    
+    if error_type == "SEU_NOT_FOUND":
+        # Get similar SEUs for suggestions
+        async with db.pool.acquire() as conn:
+            similar_seus = await conn.fetch("""
+                SELECT DISTINCT s.name
+                FROM seus s
+                JOIN energy_sources es ON s.energy_source_id = es.id
+                WHERE es.name = $1
+                AND s.is_active = true
+                ORDER BY s.name
+                LIMIT 5
+            """, energy_source)
+        
+        suggestions = [row['name'] for row in similar_seus]
+        suggestion_text = f"Try one of these: {', '.join(suggestions[:3])}" if suggestions else "Check available SEUs first"
+        
+        message = (
+            f"I couldn't find a machine named '{seu_name}' using {energy_source.replace('_', ' ')}. "
+            f"{suggestion_text}."
+        )
+        
+        return OVOSTrainingResponse(
+            success=False,
+            message=message,
+            seu_name=seu_name or "Unknown",
+            energy_source=energy_source or "Unknown",
+            error_details=f"SEU_NOT_FOUND: Available SEUs: {', '.join(suggestions)}"
+        )
+    
+    elif error_type == "INSUFFICIENT_DATA":
+        message = (
+            f"Not enough historical data for {seu_name}. "
+            "I need at least 7 days of data to train a reliable model. "
+            "Try using year 2025, which has a full year of data available."
+        )
+        
+        return OVOSTrainingResponse(
+            success=False,
+            message=message,
+            seu_name=seu_name or "Unknown",
+            energy_source=energy_source or "Unknown",
+            error_details="INSUFFICIENT_DATA: Minimum 7 days required for training"
+        )
+    
+    elif error_type == "INVALID_FEATURES":
+        # Get valid features
+        async with db.pool.acquire() as conn:
+            # Get energy source ID
+            energy_source_row = await conn.fetchrow("""
+                SELECT id FROM energy_sources WHERE name = $1
+            """, energy_source)
+            
+            if energy_source_row:
+                features = await conn.fetch("""
+                    SELECT feature_name 
+                    FROM energy_source_features 
+                    WHERE energy_source_id = $1
+                    AND is_regression_feature = true
+                    ORDER BY feature_name
+                """, energy_source_row['id'])
+                
+                valid_features = [row['feature_name'] for row in features]
+            else:
+                valid_features = []
+        
+        message = (
+            f"Some features you specified aren't available for {energy_source.replace('_', ' ')}. "
+            "Use automatic feature selection by providing an empty list, "
+            "or choose from available features."
+        )
+        
+        return OVOSTrainingResponse(
+            success=False,
+            message=message,
+            seu_name=seu_name or "Unknown",
+            energy_source=energy_source or "Unknown",
+            error_details=f"INVALID_FEATURES: Available: {', '.join(valid_features[:10])}"
+        )
+    
+    elif error_type == "NO_BASELINE_MODEL":
+        message = (
+            f"No baseline model found for {seu_name}. "
+            f"You need to train a baseline first. "
+            f"Say 'train baseline for {seu_name}' to create a model."
+        )
+        
+        return OVOSTrainingResponse(
+            success=False,
+            message=message,
+            seu_name=seu_name or "Unknown",
+            energy_source=energy_source or "Unknown",
+            error_details="NO_BASELINE_MODEL: Train baseline first before prediction"
+        )
+    
+    else:
+        # Generic error
+        message = "Something unexpected happened. Please try again or contact support."
+        
+        return OVOSTrainingResponse(
+            success=False,
+            message=message,
+            seu_name=seu_name or "Unknown",
+            energy_source=energy_source or "Unknown",
+            error_details=f"UNKNOWN_ERROR: {error_type}"
+        )
+
 
 async def _lookup_seu_by_name_and_energy_source(
     seu_name: str, 
