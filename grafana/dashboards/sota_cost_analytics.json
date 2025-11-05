@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 17,
+  "id": 27,
   "links": [],
   "panels": [
     {
@@ -918,6 +918,6 @@
   "timezone": "browser",
   "title": "SOTA Energy Cost Analytics",
   "uid": "sota_cost_analytics",
-  "version": 1,
+  "version": 4,
   "weekStart": ""
 }

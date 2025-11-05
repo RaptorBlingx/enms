@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -15,9 +18,8 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 9,
+  "id": 27,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
@@ -39,15 +41,15 @@
               },
               {
                 "color": "yellow",
-                "value": 200
+                "value": 30000
               },
               {
                 "color": "red",
-                "value": 400
+                "value": 50000
               }
             ]
           },
-          "unit": "kwatth"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
@@ -65,26 +67,31 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "sum"
           ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "TimescaleDB"
           },
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT \n  SUM(energy_kwh) as total_energy\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type = 'electricity'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  ROUND(SUM(total_energy_kwh) * 0.18, 2) as \"Monthly Cost\"\nFROM energy_readings_1day\nWHERE bucket >= DATE_TRUNC('month', NOW())\n  AND bucket < DATE_TRUNC('month', NOW()) + INTERVAL '1 month';",
           "refId": "A"
         }
       ],
-      "title": "Electricity Consumption",
+      "title": "Current Month Cost",
       "type": "stat"
     },
     {
@@ -102,20 +109,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "red",
                 "value": null
               },
               {
                 "color": "yellow",
-                "value": 5000
+                "value": 0
               },
               {
-                "color": "red",
-                "value": 10000
+                "color": "green",
+                "value": 5
               }
             ]
           },
-          "unit": "m³"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -138,21 +145,26 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "TimescaleDB"
           },
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT \n  SUM((metadata->>'consumption_m3')::numeric) as total_gas\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type = 'natural_gas'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()",
+          "rawQuery": true,
+          "rawSql": "-- Compare last 30 days vs previous 30 days\nWITH recent_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '30 days'\n    AND bucket < NOW()\n),\nprevious_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '60 days'\n    AND bucket < NOW() - INTERVAL '30 days'\n)\nSELECT \n  COALESCE(ROUND(((r.kwh - p.kwh) / NULLIF(p.kwh, 0) * 100)::numeric, 2), 0) as \"Cost Variance\"\nFROM recent_period r, previous_period p;",
           "refId": "A"
         }
       ],
-      "title": "Natural Gas Consumption",
+      "title": "Monthly Cost Variance",
       "type": "stat"
     },
     {
@@ -170,20 +182,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "purple",
+                "color": "green",
                 "value": null
               },
               {
                 "color": "yellow",
-                "value": 20000
+                "value": 0.15
               },
               {
                 "color": "red",
-                "value": 40000
+                "value": 0.25
               }
             ]
           },
-          "unit": "kg"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
@@ -206,21 +218,26 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "TimescaleDB"
           },
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT \n  SUM((metadata->>'consumption_kg')::numeric) as total_steam\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type = 'steam'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  ROUND((AVG(rate_per_kwh))::numeric, 4) as \"Average Rate\"\nFROM energy_tariffs\nWHERE is_active = true;",
           "refId": "A"
         }
       ],
-      "title": "Steam Production",
+      "title": "Average Energy Rate",
       "type": "stat"
     },
     {
@@ -240,18 +257,10 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "orange",
-                "value": 80
-              },
-              {
-                "color": "red",
-                "value": 90
               }
             ]
           },
-          "unit": "percent"
+          "unit": "currencyEUR"
         },
         "overrides": []
       },
@@ -269,26 +278,31 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.2.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "TimescaleDB"
           },
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT \n  time_bucket('15 minutes', time) as time,\n  (SUM(CASE WHEN energy_type = 'steam' THEN energy_kwh ELSE 0 END) / \n   NULLIF(SUM(CASE WHEN energy_type = 'natural_gas' THEN energy_kwh ELSE 0 END), 0) * 100) as efficiency_percent\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type IN ('natural_gas', 'steam')\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nHAVING SUM(CASE WHEN energy_type = 'natural_gas' THEN energy_kwh ELSE 0 END) > 0\nORDER BY 1",
+          "rawQuery": true,
+          "rawSql": "-- Estimate potential savings by shifting 20% of peak to off-peak\nWITH peak_usage AS (\n  SELECT SUM(er.energy_kwh) as kwh\n  FROM energy_readings er\n  WHERE EXTRACT(HOUR FROM er.time) BETWEEN 9 AND 20\n    AND er.time >= NOW() - INTERVAL '30 days'\n)\nSELECT \n  ROUND((p.kwh * 0.20 * (0.25 - 0.10))::numeric, 2) as \"Potential Savings\"\nFROM peak_usage p;",
           "refId": "A"
         }
       ],
-      "title": "Boiler Efficiency",
+      "title": "Potential Monthly Savings",
       "type": "stat"
     },
     {
@@ -309,415 +323,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kw"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Electricity"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Natural Gas (equiv)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Steam (equiv)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "purple",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 4
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  SUM(CASE WHEN energy_type = 'electricity' THEN power_kw ELSE 0 END) as electricity_kw,\n  SUM(CASE WHEN energy_type = 'natural_gas' THEN power_kw ELSE 0 END) as gas_kw_equivalent,\n  SUM(CASE WHEN energy_type = 'steam' THEN power_kw ELSE 0 END) as steam_kw_equivalent\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  SUM(CASE WHEN energy_type = 'electricity' THEN power_kw ELSE 0 END) as electricity_kw,\n  SUM(CASE WHEN energy_type = 'natural_gas' THEN power_kw ELSE 0 END) as gas_kw_equivalent,\n  SUM(CASE WHEN energy_type = 'steam' THEN power_kw ELSE 0 END) as steam_kw_equivalent\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  SUM(CASE WHEN energy_type = 'electricity' THEN power_kw ELSE 0 END) as electricity_kw,\n  SUM(CASE WHEN energy_type = 'natural_gas' THEN power_kw ELSE 0 END) as gas_kw_equivalent,\n  SUM(CASE WHEN energy_type = 'steam' THEN power_kw ELSE 0 END) as steam_kw_equivalent\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
-          "refId": "C"
-        }
-      ],
-      "title": "Multi-Energy Power Trends (kW Equivalent)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 6,
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "values": [
-            "value"
-          ]
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "table",
-          "rawSql": "SELECT \n  energy_type as metric,\n  SUM(energy_kwh) as total_energy_kwh\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY energy_type",
-          "refId": "A"
-        }
-      ],
-      "title": "Energy Distribution by Type",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "m³/h"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 12
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  AVG((metadata->>'flow_rate_m3h')::numeric) as avg_flow_rate\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type = 'natural_gas'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
-          "refId": "A"
-        }
-      ],
-      "title": "Natural Gas Flow Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kg/h"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 20
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  AVG((metadata->>'flow_rate_kg_h')::numeric) as avg_flow_rate\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type = 'steam'\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
-          "refId": "A"
-        }
-      ],
-      "title": "Steam Production Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 20,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -751,20 +357,312 @@
               }
             ]
           },
-          "unit": "pressurembar"
+          "unit": "currencyEUR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  DATE_TRUNC('month', bucket) as time,\n  'Monthly Cost' as metric,\n  ROUND((SUM(total_energy_kwh) * 0.18)::numeric, 2) as value\nFROM energy_readings_1day\nWHERE bucket >= $__timeFrom()\n  AND bucket <= $__timeTo()\nGROUP BY DATE_TRUNC('month', bucket)\nORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Cost Trend (12 Months)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "currencyEUR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "displayLabels": [
+          "percent",
+          "value"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH hourly_costs AS (\n  SELECT \n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 'Peak (9AM-9PM)'\n      ELSE 'Off-Peak (9PM-9AM)'\n    END as period,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 0.25\n      ELSE 0.10\n    END as rate,\n    energy_kwh\n  FROM energy_readings\n  WHERE time >= NOW() - INTERVAL '30 days'\n)\nSELECT \n  period as \"Period\",\n  ROUND((SUM(energy_kwh) * MAX(rate))::numeric, 2) as \"Cost\"\nFROM hourly_costs\nGROUP BY period\nORDER BY \"Cost\" DESC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Time-of-Use Period",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyEUR"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "id": 7,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.9,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  ROUND((SUM(er.energy_kwh) * 0.18)::numeric, 2) as \"Cost (EUR)\"\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.time >= NOW() - INTERVAL '30 days'\nGROUP BY m.name\nORDER BY SUM(er.energy_kwh) DESC\nLIMIT 8;",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Cost Contributors (Last 30 Days)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Gas Pressure"
+              "options": "Opportunity"
             },
             "properties": [
               {
+                "id": "custom.width",
+                "value": 300
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Category"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Potential Savings"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 140
+              },
+              {
+                "id": "unit",
+                "value": "currencyEUR"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
                 "id": "color",
                 "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 500
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1000
+                    }
+                  ]
                 }
               }
             ]
@@ -772,14 +670,52 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Steam Pressure"
+              "options": "Priority"
             },
             "properties": [
               {
-                "id": "color",
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "High": {
+                        "color": "red",
+                        "text": "🔴 High"
+                      }
+                    },
+                    "type": "value",
+                    "value": "High"
+                  },
+                  {
+                    "options": {
+                      "Medium": {
+                        "color": "orange",
+                        "text": "🟠 Medium"
+                      }
+                    },
+                    "type": "value",
+                    "value": "Medium"
+                  },
+                  {
+                    "options": {
+                      "Low": {
+                        "color": "yellow",
+                        "text": "🟡 Low"
+                      }
+                    },
+                    "type": "value",
+                    "value": "Low"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
                 "value": {
-                  "fixedColor": "purple",
-                  "mode": "fixed"
+                  "type": "color-text"
                 }
               }
             ]
@@ -790,12 +726,142 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 13
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Potential Savings"
+          }
+        ]
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "-- Static cost savings opportunities based on analysis\nSELECT \n  'Shift 20% peak usage to off-peak hours' as \"Opportunity\",\n  'Load Shifting' as \"Category\",\n  'High' as \"Priority\",\n  ROUND(((\n    SELECT SUM(energy_kwh) \n    FROM energy_readings \n    WHERE EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 \n      AND time >= NOW() - INTERVAL '30 days'\n  ) * 0.20 * (0.25 - 0.10))::numeric, 2) as \"Potential Savings\"\n\nUNION ALL\n\nSELECT \n  'Optimize Compressor-1 efficiency during peak hours',\n  'Equipment Upgrade',\n  'High',\n  ROUND(((\n    SELECT SUM(er.energy_kwh) \n    FROM energy_readings er\n    JOIN machines m ON er.machine_id = m.id\n    WHERE m.name = 'Compressor-1'\n      AND EXTRACT(HOUR FROM er.time) BETWEEN 9 AND 20\n      AND er.time >= NOW() - INTERVAL '30 days'\n  ) * 0.15 * 0.25)::numeric, 2)\n\nUNION ALL\n\nSELECT \n  'Implement power factor correction',\n  'Infrastructure',\n  'Medium',\n  ROUND(((\n    SELECT SUM(energy_kwh)\n    FROM energy_readings\n    WHERE time >= NOW() - INTERVAL '30 days'\n  ) * 0.05 * 0.18)::numeric, 2)\n\nUNION ALL\n\nSELECT \n  'Schedule maintenance during off-peak hours',\n  'Operations',\n  'Low',\n  ROUND(((\n    SELECT SUM(energy_kwh)\n    FROM energy_readings\n    WHERE EXTRACT(HOUR FROM time) BETWEEN 9 AND 20\n      AND time >= NOW() - INTERVAL '30 days'\n  ) * 0.02 * (0.25 - 0.10))::numeric, 2)\n\nORDER BY \"Potential Savings\" DESC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost Savings Opportunities",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyEUR"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Peak Cost"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Off-Peak Cost"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
       },
       "id": 9,
       "options": {
         "legend": {
           "calcs": [
+            "sum",
             "mean"
           ],
           "displayMode": "table",
@@ -804,53 +870,54 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "11.2.0",
       "targets": [
         {
           "datasource": {
             "type": "postgres",
             "uid": "TimescaleDB"
           },
+          "editorMode": "code",
           "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  AVG(CASE WHEN energy_type = 'natural_gas' THEN (metadata->>'pressure_bar')::numeric END) as gas_pressure,\n  AVG(CASE WHEN energy_type = 'steam' THEN (metadata->>'pressure_bar')::numeric END) as steam_pressure\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type IN ('natural_gas', 'steam')\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
+          "rawQuery": true,
+          "rawSql": "WITH hourly_data AS (\n  SELECT \n    DATE_TRUNC('hour', time) as hour,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 'Peak Cost'\n      ELSE 'Off-Peak Cost'\n    END as period,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 0.25\n      ELSE 0.10\n    END as rate,\n    SUM(energy_kwh) as kwh\n  FROM energy_readings\n  WHERE time >= $__timeFrom()\n    AND time <= $__timeTo()\n  GROUP BY hour, period, rate\n)\nSELECT \n  hour as time,\n  period as metric,\n  ROUND((kwh * rate)::numeric, 2) as value\nFROM hourly_data\nORDER BY time, period;",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "format": "time_series",
-          "rawSql": "SELECT \n  time_bucket('5 minutes', time) as time,\n  AVG(CASE WHEN energy_type = 'natural_gas' THEN (metadata->>'pressure_bar')::numeric END) as gas_pressure,\n  AVG(CASE WHEN energy_type = 'steam' THEN (metadata->>'pressure_bar')::numeric END) as steam_pressure\nFROM energy_readings\nWHERE machine_id = 'e9fcad45-1f7b-4425-8710-c368a681f15e'\n  AND energy_type IN ('natural_gas', 'steam')\n  AND time >= $__timeFrom()\n  AND time <= $__timeTo()\nGROUP BY 1\nORDER BY 1",
-          "refId": "B"
         }
       ],
-      "title": "Pressure Monitoring",
+      "title": "Peak vs Off-Peak Cost Breakdown",
       "type": "timeseries"
     }
   ],
-  "refresh": "",
-  "schemaVersion": 38,
+  "refresh": "5m",
+  "schemaVersion": 39,
   "tags": [
-    "energy",
-    "multi-energy",
-    "boiler",
-    "demo"
+    "sota",
+    "cost",
+    "tariff",
+    "optimization"
   ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-12M",
     "to": "now"
   },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Boiler Multi-Energy Analysis",
-  "uid": "boiler-multi-energy",
-  "version": 29,
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "1d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "SOTA Energy Cost Analytics",
+  "uid": "sota_cost_analytics",
+  "version": 4,
   "weekStart": ""
 }
