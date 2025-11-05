@@ -94,7 +94,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Average R² Score across all models (last 7 days)",
+      "description": "Average R² Score across all models (last 30 days)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -164,7 +164,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(AVG(r_squared)::numeric, 4) as \"Avg R² Score\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '7 days'\n  AND r_squared IS NOT NULL;",
+          "rawSql": "SELECT ROUND(AVG(r_squared)::numeric, 4) as \"Avg R² Score\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '30 days'\n  AND r_squared IS NOT NULL;",
           "refId": "A"
         }
       ],
@@ -176,7 +176,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Average RMSE across all models (last 7 days)",
+      "description": "Average RMSE across all models (last 30 days)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -244,7 +244,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(AVG(rmse)::numeric, 2) as \"Avg RMSE\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '7 days'\n  AND rmse IS NOT NULL;",
+          "rawSql": "SELECT ROUND(AVG(rmse)::numeric, 2) as \"Avg RMSE\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '30 days'\n  AND rmse IS NOT NULL;",
           "refId": "A"
         }
       ],
@@ -256,7 +256,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Total evaluations performed in the last 7 days",
+      "description": "Total evaluations performed in the last 30 days",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -311,11 +311,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Total Evaluations\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '7 days';",
+          "rawSql": "SELECT COUNT(*) as \"Total Evaluations\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '30 days';",
           "refId": "A"
         }
       ],
-      "title": "Total Evaluations (7d)",
+      "title": "Total Evaluations (30d)",
       "type": "stat"
     },
     {
@@ -697,7 +697,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  mpm.model_type as \"Model Type\",\n  mpm.model_version as \"Version\",\n  TO_CHAR(mpm.evaluation_date, 'Mon DD HH24:MI') as \"Last Evaluated\",\n  ROUND(mpm.r_squared::numeric, 4) as \"R² Score\",\n  ROUND(mpm.rmse::numeric, 2) as \"RMSE\",\n  ROUND(mpm.mae::numeric, 2) as \"MAE\",\n  mpm.drift_detected as \"Drift\",\n  mpm.sample_count as \"Samples\"\nFROM v_latest_model_performance vlmp\nJOIN model_performance_metrics mpm ON vlmp.latest_metric_id = mpm.id\nJOIN machines m ON mpm.machine_id = m.id\nORDER BY mpm.r_squared DESC NULLS LAST;",
+          "rawSql": "SELECT \n  vlmp.machine_name as \"Machine\",\n  vlmp.model_type as \"Model Type\",\n  vlmp.model_version as \"Version\",\n  TO_CHAR(vlmp.evaluation_date, 'Mon DD HH24:MI') as \"Last Evaluated\",\n  ROUND(vlmp.r_squared::numeric, 4) as \"R² Score\",\n  ROUND(vlmp.rmse::numeric, 2) as \"RMSE\",\n  ROUND(vlmp.mae::numeric, 2) as \"MAE\",\n  vlmp.drift_detected as \"Drift\",\n  vlmp.sample_count as \"Samples\"\nFROM v_latest_model_performance vlmp\nORDER BY vlmp.r_squared DESC NULLS LAST;",
           "refId": "A"
         }
       ],
@@ -777,44 +777,6 @@
                 ]
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Improvement"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 0
-                    },
-                    {
-                      "color": "green",
-                      "value": 2
-                    }
-                  ]
-                }
-              }
-            ]
           }
         ]
       },
@@ -854,7 +816,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  mth.model_type as \"Model Type\",\n  mth.model_version as \"Version\",\n  mth.training_status as \"Status\",\n  TO_CHAR(mth.training_start, 'Mon DD HH24:MI') as \"Started\",\n  EXTRACT(EPOCH FROM (mth.training_end - mth.training_start))/60 as \"Duration (min)\",\n  mth.trigger_type as \"Trigger\",\n  ROUND(mth.performance_improvement, 2) as \"Improvement\",\n  mth.sample_count as \"Samples\"\nFROM model_training_history mth\nJOIN machines m ON mth.machine_id = m.id\nWHERE mth.training_start >= NOW() - INTERVAL '30 days'\nORDER BY mth.training_start DESC\nLIMIT 10;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  mth.model_type as \"Model Type\",\n  mth.model_version as \"Version\",\n  mth.training_status as \"Status\",\n  TO_CHAR(mth.training_start, 'Mon DD HH24:MI') as \"Started\",\n  ROUND(EXTRACT(EPOCH FROM (mth.training_end - mth.training_start))/60, 2) as \"Duration (min)\",\n  mth.trigger_type as \"Trigger\",\n  mth.training_samples as \"Samples\"\nFROM model_training_history mth\nJOIN machines m ON mth.machine_id = m.id\nWHERE mth.training_start >= NOW() - INTERVAL '30 days'\nORDER BY mth.training_start DESC\nLIMIT 10;",
           "refId": "A"
         }
       ],
