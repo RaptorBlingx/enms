@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 15,
+  "id": null,
   "links": [],
   "panels": [
     {
@@ -66,11 +66,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -156,11 +156,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -246,11 +246,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -303,9 +303,9 @@
           },
           "custom": {
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             }
           },
           "mappings": []
@@ -331,11 +331,11 @@
         },
         "pieType": "pie",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "tooltip": {
           "mode": "single",
@@ -397,9 +397,9 @@
             "fillOpacity": 20,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "insertNulls": false,
             "lineInterpolation": "smooth",
@@ -789,9 +789,9 @@
           },
           "custom": {
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             }
           },
           "mappings": [],
@@ -847,7 +847,7 @@
           "color": "rgba(255,0,255,0.7)"
         },
         "filterValues": {
-          "le": 1E-9
+          "le": 1e-9
         },
         "legend": {
           "show": true
@@ -950,34 +950,34 @@
                 "id": "mappings",
                 "value": [
                   {
+                    "type": "value",
+                    "value": "critical",
                     "options": {
                       "critical": {
-                        "color": "red",
-                        "text": "🔴 Critical"
+                        "text": "🔴 Critical",
+                        "color": "red"
                       }
-                    },
-                    "type": "value",
-                    "value": "critical"
+                    }
                   },
                   {
+                    "type": "value",
+                    "value": "warning",
                     "options": {
                       "warning": {
-                        "color": "orange",
-                        "text": "🟠 Warning"
+                        "text": "🟠 Warning",
+                        "color": "orange"
                       }
-                    },
-                    "type": "value",
-                    "value": "warning"
+                    }
                   },
                   {
+                    "type": "value",
+                    "value": "normal",
                     "options": {
                       "normal": {
-                        "color": "blue",
-                        "text": "🔵 Normal"
+                        "text": "🔵 Normal",
+                        "color": "blue"
                       }
-                    },
-                    "type": "value",
-                    "value": "normal"
+                    }
                   }
                 ]
               },
@@ -1199,6 +1199,6 @@
   "timezone": "browser",
   "title": "SOTA Anomaly Detection",
   "uid": "sota_anomaly_detection",
-  "version": 12,
+  "version": 1,
   "weekStart": ""
 }

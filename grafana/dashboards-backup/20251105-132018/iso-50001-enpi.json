@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 8,
+  "id": 23,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -1001,6 +1001,6 @@
   "timezone": "",
   "title": "ISO 50001 EnPI Report",
   "uid": "iso-50001-enpi",
-  "version": 62,
+  "version": 1,
   "weekStart": ""
 }

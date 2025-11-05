@@ -15,7 +15,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 9,
+  "id": 25,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -851,6 +851,6 @@
   "timezone": "",
   "title": "Boiler Multi-Energy Analysis",
   "uid": "boiler-multi-energy",
-  "version": 28,
+  "version": 1,
   "weekStart": ""
 }

@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 13,
+  "id": null,
   "links": [],
   "panels": [
     {
@@ -66,11 +66,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "sum"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -139,11 +139,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -212,11 +212,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -277,11 +277,11 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "showPercentChange": false,
         "text": {},
@@ -326,9 +326,9 @@
             "fillOpacity": 20,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "insertNulls": false,
             "lineInterpolation": "smooth",
@@ -412,9 +412,9 @@
           },
           "custom": {
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             }
           },
           "mappings": [],
@@ -445,11 +445,11 @@
         },
         "pieType": "pie",
         "reduceOptions": {
+          "values": false,
           "calcs": [
             "sum"
           ],
-          "fields": "",
-          "values": false
+          "fields": ""
         },
         "tooltip": {
           "mode": "single",
@@ -492,9 +492,9 @@
             "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineWidth": 1,
             "scaleDistribution": {
@@ -681,34 +681,34 @@
                 "id": "mappings",
                 "value": [
                   {
+                    "type": "value",
+                    "value": "High",
                     "options": {
                       "High": {
-                        "color": "red",
-                        "text": "🔴 High"
+                        "text": "🔴 High",
+                        "color": "red"
                       }
-                    },
-                    "type": "value",
-                    "value": "High"
+                    }
                   },
                   {
+                    "type": "value",
+                    "value": "Medium",
                     "options": {
                       "Medium": {
-                        "color": "orange",
-                        "text": "🟠 Medium"
+                        "text": "🟠 Medium",
+                        "color": "orange"
                       }
-                    },
-                    "type": "value",
-                    "value": "Medium"
+                    }
                   },
                   {
+                    "type": "value",
+                    "value": "Low",
                     "options": {
                       "Low": {
-                        "color": "yellow",
-                        "text": "🟡 Low"
+                        "text": "🟡 Low",
+                        "color": "yellow"
                       }
-                    },
-                    "type": "value",
-                    "value": "Low"
+                    }
                   }
                 ]
               },
@@ -785,9 +785,9 @@
             "fillOpacity": 30,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "insertNulls": false,
             "lineInterpolation": "smooth",
@@ -918,6 +918,6 @@
   "timezone": "browser",
   "title": "SOTA Energy Cost Analytics",
   "uid": "sota_cost_analytics",
-  "version": 17,
+  "version": 1,
   "weekStart": ""
 }

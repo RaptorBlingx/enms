@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 10,
+  "id": 18,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -939,6 +939,6 @@
   "timezone": "browser",
   "title": "SOTA Factory Overview",
   "uid": "sota-factory-overview",
-  "version": 44,
+  "version": 1,
   "weekStart": ""
 }

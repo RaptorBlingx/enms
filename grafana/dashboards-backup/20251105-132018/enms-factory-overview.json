@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 6,
+  "id": 24,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -1330,6 +1330,6 @@
   "timezone": "browser",
   "title": "Factory Overview",
   "uid": "enms-factory-overview",
-  "version": 1732,
+  "version": 1,
   "weekStart": ""
 }

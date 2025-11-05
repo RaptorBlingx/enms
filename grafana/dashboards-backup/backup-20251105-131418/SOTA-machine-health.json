@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 12,
+  "id": null,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -149,11 +149,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -258,7 +258,6 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "✓ No active anomalies detected. Machine operating within normal parameters.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -276,7 +275,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2713 No active anomalies detected. Machine operating within normal parameters."
         },
         "overrides": []
       },
@@ -299,11 +299,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -327,7 +327,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Model performance metrics (R², RMSE, MAE)",
+      "description": "Model performance metrics (R\u00b2, RMSE, MAE)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -341,7 +341,6 @@
             "inspect": false
           },
           "mappings": [],
-          "noValue": "ℹ️ No model metrics available for this machine. Train a baseline model first or select Compressor-1 which has trained models.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -350,20 +349,21 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "\u2139\ufe0f No model metrics available for this machine. Train a baseline model first or select Compressor-1 which has trained models."
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "R² Score"
+              "options": "R\u00b2 Score"
             },
             "properties": [
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
+                  "type": "gauge",
+                  "mode": "gradient"
                 }
               },
               {
@@ -427,7 +427,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  model_type as \"Model\",\n  ROUND(r_squared::numeric, 4) as \"R² Score\",\n  ROUND(rmse::numeric, 2) as \"RMSE\",\n  ROUND(mae::numeric, 2) as \"MAE\"\nFROM model_performance_metrics\nWHERE machine_id = '$machine_id'::uuid\nORDER BY evaluation_date DESC\nLIMIT 1;",
+          "rawSql": "SELECT \n  model_type as \"Model\",\n  ROUND(r_squared::numeric, 4) as \"R\u00b2 Score\",\n  ROUND(rmse::numeric, 2) as \"RMSE\",\n  ROUND(mae::numeric, 2) as \"MAE\"\nFROM model_performance_metrics\nWHERE machine_id = '$machine_id'::uuid\nORDER BY evaluation_date DESC\nLIMIT 1;",
           "refId": "A"
         }
       ],
@@ -446,7 +446,6 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "ℹ️ Insufficient data in time range. Need at least 24 hours of readings. Expand time range to see variance.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -464,7 +463,8 @@
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percent",
+          "noValue": "\u2139\ufe0f Insufficient data in time range. Need at least 24 hours of readings. Expand time range to see variance."
         },
         "overrides": []
       },
@@ -487,11 +487,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -554,11 +554,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 32
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -598,9 +598,9 @@
             "fillOpacity": 20,
             "gradientMode": "opacity",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -710,9 +710,9 @@
             "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -731,7 +731,6 @@
             }
           },
           "mappings": [],
-          "noValue": "ℹ️ No power readings in selected time range. Expand time range to see consumption patterns.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -741,7 +740,8 @@
               }
             ]
           },
-          "unit": "kwatt"
+          "unit": "kwatt",
+          "noValue": "\u2139\ufe0f No power readings in selected time range. Expand time range to see consumption patterns."
         },
         "overrides": [
           {
@@ -846,9 +846,9 @@
             "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineInterpolation": "linear",
             "lineWidth": 1,
@@ -867,7 +867,6 @@
             }
           },
           "mappings": [],
-          "noValue": "✓ No anomalies detected in selected time range. Try expanding to last 7 days or last 30 days.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -877,7 +876,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2713 No anomalies detected in selected time range. Try expanding to last 7 days or last 30 days."
         },
         "overrides": []
       },
@@ -936,9 +936,9 @@
             "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineWidth": 1,
             "scaleDistribution": {
@@ -949,7 +949,6 @@
             }
           },
           "mappings": [],
-          "noValue": "ℹ️ No production data in time range. Expand to last 7 days to see correlation patterns.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -959,7 +958,8 @@
               }
             ]
           },
-          "unit": "kwatth"
+          "unit": "kwatth",
+          "noValue": "\u2139\ufe0f No production data in time range. Expand to last 7 days to see correlation patterns."
         },
         "overrides": []
       },
@@ -1018,7 +1018,6 @@
             "inspect": false
           },
           "mappings": [],
-          "noValue": "✓ No anomalies found in selected time range. This is good! Expand time range to see historical anomalies.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1027,7 +1026,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "\u2713 No anomalies found in selected time range. This is good! Expand time range to see historical anomalies."
         },
         "overrides": [
           {
@@ -1190,6 +1190,6 @@
   "timezone": "browser",
   "title": "SOTA Machine Health",
   "uid": "sota-machine-health",
-  "version": 29,
+  "version": 1,
   "weekStart": ""
 }

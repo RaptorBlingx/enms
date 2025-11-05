@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 10,
+  "id": null,
   "links": [],
   "liveNow": true,
   "panels": [
@@ -75,11 +75,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -150,11 +150,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -225,11 +225,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -260,7 +260,6 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "✓ No active anomalies detected. Machine operating within normal parameters.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -278,7 +277,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2713 No active anomalies detected. Machine operating within normal parameters."
         },
         "overrides": []
       },
@@ -301,11 +301,11 @@
           "fields": "",
           "values": false
         },
+        "textMode": "value_and_name",
         "text": {
           "titleSize": 14,
           "valueSize": 48
-        },
-        "textMode": "value_and_name"
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -419,9 +419,9 @@
             "fillOpacity": 20,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineInterpolation": "smooth",
             "lineWidth": 2,
@@ -512,9 +512,9 @@
             "fillOpacity": 80,
             "gradientMode": "none",
             "hideFrom": {
-              "legend": false,
               "tooltip": false,
-              "viz": false
+              "viz": false,
+              "legend": false
             },
             "lineWidth": 1,
             "scaleDistribution": {
@@ -619,8 +619,8 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
+                  "type": "gauge",
+                  "mode": "gradient"
                 }
               },
               {
@@ -788,7 +788,6 @@
             "inspect": false
           },
           "mappings": [],
-          "noValue": "✓ No active anomalies! System operating normally.",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -797,7 +796,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "noValue": "\u2713 No active anomalies! System operating normally."
         },
         "overrides": [
           {
@@ -939,6 +939,6 @@
   "timezone": "browser",
   "title": "SOTA Factory Overview",
   "uid": "sota-factory-overview",
-  "version": 40,
+  "version": 1,
   "weekStart": ""
 }
