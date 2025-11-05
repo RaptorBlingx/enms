@@ -379,12 +379,16 @@ from api.routes.model_performance import router as model_performance_router
 from api.routes.stats import router as stats_router
 from api.routes.production import router as production_router
 from api.routes.compare import router as compare_router
-from api.routes.ovos import router as ovos_router  # OVOS Integration
-from api.routes.ovos_training import router as ovos_training_router  # Phase 3: OVOS Training
+from api.routes.ovos import router as ovos_router  # DEPRECATED - Phase 1: Use /factory, /analytics instead
+from api.routes.ovos_training import router as ovos_training_router  # DEPRECATED - Phase 1: Use /baseline/train-seu
 from api.websocket_routes import router as websocket_router  # Phase 4 Session 5
 from api.routes.seu import router as seu_router  # ISO 50001 EnPI
 from api.routes.energy_sources import router as energy_sources_router  # Energy Sources & Features API
 from api.routes.multi_energy import router as multi_energy_router  # Multi-Energy Machine Support (Oct 27, 2025)
+# Phase 1: New clean API routes (Nov 5, 2025)
+from api.routes.seus import router as seus_router  # SEU Management
+from api.routes.factory import router as factory_router  # Factory Analytics
+from api.routes.analytics import router as analytics_router  # General Analytics
 
 # Register API routes with prefix
 app.include_router(baseline_router, prefix=settings.API_PREFIX)
@@ -400,8 +404,13 @@ app.include_router(model_performance_router, prefix=settings.API_PREFIX, tags=["
 app.include_router(stats_router, prefix=settings.API_PREFIX)
 app.include_router(production_router, prefix=settings.API_PREFIX)
 app.include_router(compare_router, prefix=settings.API_PREFIX)
-app.include_router(ovos_router, prefix=settings.API_PREFIX)  # OVOS Integration
-app.include_router(ovos_training_router, prefix=f"{settings.API_PREFIX}/ovos", tags=["OVOS Training"])  # Phase 3: OVOS Training
+# Phase 1 (Nov 5, 2025): New clean API routes
+app.include_router(seus_router, prefix=settings.API_PREFIX)  # /seus endpoints
+app.include_router(factory_router, prefix=settings.API_PREFIX)  # /factory/* endpoints
+app.include_router(analytics_router, prefix=settings.API_PREFIX)  # /analytics/* endpoints
+# DEPRECATED: Old /ovos/* routes (still work but marked for removal)
+app.include_router(ovos_router, prefix=settings.API_PREFIX)  # DEPRECATED - Use /factory, /analytics
+app.include_router(ovos_training_router, prefix=f"{settings.API_PREFIX}/ovos", tags=["OVOS Training (DEPRECATED)"])  # DEPRECATED - Use /baseline/train-seu
 app.include_router(websocket_router, prefix=settings.API_PREFIX)  # Phase 4 Session 5: WebSocket Routes
 app.include_router(seu_router, prefix=settings.API_PREFIX)  # ISO 50001 EnPI
 app.include_router(energy_sources_router, prefix=settings.API_PREFIX)  # Energy Sources & Features API

@@ -13,6 +13,7 @@ Date: November 5, 2025
 
 from fastapi import APIRouter, HTTPException, status
 from typing import Optional
+from datetime import datetime
 import logging
 
 from database import db
@@ -95,7 +96,7 @@ async def list_seus(energy_source: Optional[str] = None):
                 "seus": seus,
                 "total_count": len(seus),
                 "filtered_by": energy_source,
-                "timestamp": db.get_current_timestamp()
+                "timestamp": datetime.now().isoformat()
             }
     
     except Exception as e:
@@ -194,7 +195,7 @@ async def get_seu_details(seu_id: str):
             return {
                 "success": True,
                 "seu": seu_details,
-                "timestamp": db.get_current_timestamp()
+                "timestamp": datetime.now().isoformat()
             }
     
     except HTTPException:

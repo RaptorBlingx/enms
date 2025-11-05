@@ -8,31 +8,26 @@
 
 ---
 
-## ⚠️ **IMPORTANT: API CLEANUP IN PROGRESS (Phase 1 - November 5, 2025)**
+## ⚠️ **IMPORTANT: API ENDPOINTS DEPRECATED (Phase 1 - November 5, 2025)**
 
-**EnMS v3 Transformation** - Removing `/ovos/*` naming confusion. APIs are being reorganized for clarity.
+**EnMS v3 Transformation** - All `/ovos/*` endpoints are **DEPRECATED NOW**. Use new clean RESTful endpoints immediately.
 
-### What's Changing:
-- ❌ **DEPRECATED**: All `/ovos/*` endpoints (confusing naming)
-- ✅ **NEW**: Clean RESTful endpoints (`/seus`, `/factory/summary`, `/analytics/top-consumers`)
-- 🔄 **Backward Compatible**: Old endpoints still work until January 1, 2026
+### What Changed:
+- ❌ **DEPRECATED NOW**: All `/ovos/*` endpoints (will be removed soon)
+- ✅ **USE THESE**: Clean RESTful endpoints (`/seus`, `/factory/summary`, `/analytics/top-consumers`)
 
-### Migration Status:
-| Old Endpoint | New Endpoint | Status |
+### Migration Guide:
+| ~~Old Endpoint (DEPRECATED)~~ | **New Endpoint (USE THIS)** | Status |
 |--------------|--------------|--------|
-| `/api/v1/ovos/train-baseline` | `/api/v1/baseline/train-seu` | ✅ Available (old works) |
-| `/api/v1/ovos/seus` | `/api/v1/seus` | ✅ Available (old works) |
-| `/api/v1/ovos/energy-sources` | `/api/v1/energy-sources` | ✅ Available |
-| `/api/v1/ovos/summary` | `/api/v1/factory/summary` | ✅ Available (old works) |
-| `/api/v1/ovos/top-consumers` | `/api/v1/analytics/top-consumers` | ✅ Available (old works) |
-| `/api/v1/ovos/machines/{name}/status` | `/api/v1/machines/status/{name}` | 🚧 In Progress |
-| `/api/v1/ovos/forecast/tomorrow` | `/api/v1/forecast/short-term` | 🚧 In Progress |
+| ~~`/api/v1/ovos/train-baseline`~~ | **`/api/v1/baseline/train-seu`** | ✅ Live now |
+| ~~`/api/v1/ovos/seus`~~ | **`/api/v1/seus`** | ✅ Live now |
+| ~~`/api/v1/ovos/energy-sources`~~ | **`/api/v1/energy-sources`** | ✅ Already exists |
+| ~~`/api/v1/ovos/summary`~~ | **`/api/v1/factory/summary`** | ✅ Live now |
+| ~~`/api/v1/ovos/top-consumers`~~ | **`/api/v1/analytics/top-consumers`** | ✅ Live now |
+| ~~`/api/v1/ovos/machines/{name}/status`~~ | **`/api/v1/machines/status/{name}`** | 🚧 Coming soon |
+| ~~`/api/v1/ovos/forecast/tomorrow`~~ | **`/api/v1/forecast/short-term`** | 🚧 Coming soon |
 
-**Timeline:**
-- **November 5 - December 31, 2025**: Both old and new endpoints work
-- **January 1, 2026**: Old `/ovos/*` endpoints removed
-
-**Action Required:** Update your OVOS integration to use new endpoints. See migration examples below.
+**⚠️ Action Required:** Update your OVOS integration NOW. Old endpoints deprecated and will be removed.
 
 ---
 
@@ -1664,9 +1659,9 @@ curl -G "http://localhost:8001/api/v1/forecast/demand" \
 ### EP16: POST /baseline/train-seu - Train Baseline via Voice Command ⭐ PRODUCTION READY
 **Purpose:** Train energy baselines using natural language - Mr. Umut's key requirement
 
-**⚠️ ENDPOINT UPDATED (November 5, 2025):**
-- ❌ **Old (deprecated):** `POST /api/v1/ovos/train-baseline` (still works until Jan 2026)
-- ✅ **New:** `POST /api/v1/baseline/train-seu`
+**⚠️ ENDPOINT CHANGED (November 5, 2025):**
+- ~~❌ **DEPRECATED:** `POST /api/v1/ovos/train-baseline`~~ (removed from docs, don't use)
+- ✅ **USE THIS:** `POST /api/v1/baseline/train-seu`
 
 **Endpoint:** `POST /api/v1/baseline/train-seu`
 
@@ -1680,18 +1675,8 @@ curl -G "http://localhost:8001/api/v1/forecast/demand" \
 #### Request Format
 
 ```bash
-# NEW ENDPOINT (use this)
+# ✅ USE THIS - NEW ENDPOINT
 curl -X POST http://localhost:8001/api/v1/baseline/train-seu \
-  -H "Content-Type: application/json" \
-  -d '{
-    "seu_name": "Compressor-1",
-    "energy_source": "electricity",
-    "features": ["production_count", "outdoor_temp_c"],
-    "year": 2025
-  }'
-
-# OLD ENDPOINT (deprecated, still works)
-curl -X POST http://localhost:8001/api/v1/ovos/train-baseline \
   -H "Content-Type: application/json" \
   -d '{
     "seu_name": "Compressor-1",
@@ -2020,9 +2005,9 @@ Energy equals 218.857 plus 0.156473 times production count minus 0.014546 times 
 ### EP-SEU-1: GET /seus - List All SEUs ⭐ NEW
 **Purpose:** Discover available Significant Energy Uses (ISO 50001 boundaries)
 
-**⚠️ ENDPOINT CREATED (November 5, 2025):**
-- ✅ **New:** `GET /api/v1/seus`
-- ❌ **Old (deprecated):** `GET /api/v1/ovos/seus` (still works until Jan 2026)
+**⚠️ ENDPOINT CHANGED (November 5, 2025):**
+- ✅ **USE THIS:** `GET /api/v1/seus`
+- ~~❌ **DEPRECATED:** `GET /api/v1/ovos/seus`~~ (removed)
 
 **Endpoint:** `GET /api/v1/seus`
 
@@ -2095,9 +2080,9 @@ curl "http://localhost:8001/api/v1/seus?energy_source=electricity"
 ### EP-FACTORY-1: GET /factory/summary - Factory Overview ⭐ NEW
 **Purpose:** Single API call returns complete factory status snapshot
 
-**⚠️ ENDPOINT UPDATED (November 5, 2025):**
-- ❌ **Old (deprecated):** `GET /api/v1/ovos/summary` (still works until Jan 2026)
-- ✅ **New:** `GET /api/v1/factory/summary`
+**⚠️ ENDPOINT CHANGED (November 5, 2025):**
+- ✅ **USE THIS:** `GET /api/v1/factory/summary`
+- ~~❌ **DEPRECATED:** `GET /api/v1/ovos/summary`~~ (removed)
 
 **Endpoint:** `GET /api/v1/factory/summary`
 
@@ -2110,11 +2095,8 @@ curl "http://localhost:8001/api/v1/seus?energy_source=electricity"
 
 **Example:**
 ```bash
-# NEW ENDPOINT (use this)
+# ✅ USE THIS - NEW ENDPOINT
 curl "http://localhost:8001/api/v1/factory/summary"
-
-# OLD ENDPOINT (deprecated, still works)
-curl "http://localhost:8001/api/v1/ovos/summary"
 ```
 
 **Response:**
@@ -2170,9 +2152,9 @@ curl "http://localhost:8001/api/v1/ovos/summary"
 ### EP-ANALYTICS-1: GET /analytics/top-consumers - Top Energy Consumers ⭐ NEW
 **Purpose:** Rank machines by energy consumption, cost, power, or anomalies
 
-**⚠️ ENDPOINT UPDATED (November 5, 2025):**
-- ❌ **Old (deprecated):** `GET /api/v1/ovos/top-consumers` (still works until Jan 2026)
-- ✅ **New:** `GET /api/v1/analytics/top-consumers`
+**⚠️ ENDPOINT CHANGED (November 5, 2025):**
+- ✅ **USE THIS:** `GET /api/v1/analytics/top-consumers`
+- ~~❌ **DEPRECATED:** `GET /api/v1/ovos/top-consumers`~~ (removed)
 
 **Endpoint:** `GET /api/v1/analytics/top-consumers`
 
@@ -2189,15 +2171,8 @@ curl "http://localhost:8001/api/v1/ovos/summary"
 
 **Example:**
 ```bash
-# NEW ENDPOINT (use this)
+# ✅ USE THIS - NEW ENDPOINT
 curl -G "http://localhost:8001/api/v1/analytics/top-consumers" \
-  --data-urlencode "metric=energy" \
-  --data-urlencode "start_time=2025-11-05T00:00:00Z" \
-  --data-urlencode "end_time=2025-11-05T23:59:59Z" \
-  --data-urlencode "limit=3"
-
-# OLD ENDPOINT (deprecated, still works)
-curl -G "http://localhost:8001/api/v1/ovos/top-consumers" \
   --data-urlencode "metric=energy" \
   --data-urlencode "start_time=2025-11-05T00:00:00Z" \
   --data-urlencode "end_time=2025-11-05T23:59:59Z" \
