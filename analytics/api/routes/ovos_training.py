@@ -262,7 +262,8 @@ async def train_baseline_via_ovos(request: OVOSTrainingRequest):
             machine_id=machine_id,
             start_date=start_date,
             end_date=end_date,
-            drivers=drivers  # Use mapped features or auto-select if None
+            drivers=drivers,  # Use mapped features or auto-select if None
+            energy_source_id=seu['energy_source_id']  # NEW: Pass energy source for multi-energy support
         )
         
         logger.info(

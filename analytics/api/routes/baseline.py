@@ -314,6 +314,7 @@ async def predict_energy(request: PredictEnergyRequest):
         machine_id = request.machine_id
         seu_name_for_message = None
         energy_unit = "kWh"  # default
+        seu = None  # Initialize to None (used later for energy_source_id)
         
         if machine_id is None:
             # SEU name-based lookup
@@ -353,9 +354,13 @@ async def predict_energy(request: PredictEnergyRequest):
             logger.info(f"[PREDICT] UUID-based lookup: {machine_id}")
         
         # Step 2: Make prediction using baseline service
+        # Pass energy_source_id if SEU-based lookup was used
+        energy_source_id_for_predict = seu.get('energy_source_id') if seu else None
+        
         result = await baseline_service.predict_energy(
             machine_id=machine_id,
-            features=request.features
+            features=request.features,
+            energy_source_id=energy_source_id_for_predict  # NEW: Support multi-energy
         )
         
         # Step 3: Add voice-friendly message if requested
@@ -473,9 +478,13 @@ async def list_baseline_models(
             
             resolved_machine_id = machine_ids[0]
             seu_display_name = seu.get('seu_name') or seu_name
+            energy_source_id_for_list = seu.get('energy_source_id')  # Get energy_source_id
         
-        # Get models
-        models = await baseline_service.list_baseline_models(resolved_machine_id)
+        # Get models (filtered by energy source if SEU-based)
+        models = await baseline_service.list_baseline_models(
+            resolved_machine_id,
+            energy_source_id=energy_source_id_for_list if seu_display_name else None
+        )
         
         # Add explanations if requested
         if include_explanation:

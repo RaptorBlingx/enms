@@ -34,7 +34,8 @@ class BaselineService:
         machine_id: UUID,
         start_date: datetime,
         end_date: datetime,
-        drivers: Optional[List[str]] = None
+        drivers: Optional[List[str]] = None,
+        energy_source_id: Optional[UUID] = None  # NEW: For multi-energy support
     ) -> Dict[str, Any]:
         """
         Train energy baseline model for a machine.
@@ -85,11 +86,11 @@ class BaselineService:
             logger.error(f"[TRAIN-SVC] {error_msg}")
             raise ValueError(error_msg)
         
-        # Get next model version
+        # Get next model version (considering energy source for multi-energy machines)
         logger.info(f"[TRAIN-SVC] Step 3: Getting next model version")
-        existing_model = await get_active_baseline_model(machine_id)
+        existing_model = await get_active_baseline_model(machine_id, energy_source_id)
         next_version = existing_model['model_version'] + 1 if existing_model else 1
-        logger.info(f"[TRAIN-SVC] Next version will be: {next_version}")
+        logger.info(f"[TRAIN-SVC] Next version will be: {next_version} (energy_source_id: {energy_source_id})")
         
         # Create and train model
         logger.info(f"[TRAIN-SVC] Step 4: Creating model instance")
@@ -122,11 +123,29 @@ class BaselineService:
         # Save model to disk
         model_path = model.save()
         
-        # Deactivate old models
-        await deactivate_baseline_models(machine_id)
+        # Deactivate old models (for this energy source if specified)
+        await deactivate_baseline_models(machine_id, energy_source_id)
         
         # Save model metadata to database
         model_data = model.to_dict()
+        
+        # Add energy_source_id if provided (for multi-energy machines)
+        if energy_source_id:
+            model_data['energy_source_id'] = energy_source_id
+            logger.info(f"[TRAIN-SVC] Using provided energy_source_id: {energy_source_id}")
+        else:
+            # Backward compatibility: default to electricity if not specified
+            logger.info(f"[TRAIN-SVC] No energy_source_id provided, defaulting to electricity")
+            async with db.pool.acquire() as conn:
+                electricity_id = await conn.fetchval(
+                    "SELECT id FROM energy_sources WHERE name = 'electricity' LIMIT 1"
+                )
+            model_data['energy_source_id'] = electricity_id
+            logger.info(f"[TRAIN-SVC] Set energy_source_id to electricity: {electricity_id}")
+        
+        logger.info(f"[TRAIN-SVC] Model data keys: {list(model_data.keys())}")
+        logger.info(f"[TRAIN-SVC] energy_source_id value: {model_data.get('energy_source_id')}")
+        
         model_id = await save_baseline_model(model_data)
         
         logger.info(
@@ -263,7 +282,8 @@ class BaselineService:
     @staticmethod
     async def predict_energy(
         machine_id: UUID,
-        features: Dict[str, float]
+        features: Dict[str, float],
+        energy_source_id: Optional[UUID] = None  # NEW: For multi-energy support
     ) -> Dict[str, Any]:
         """
         Predict energy consumption for given operating conditions.
@@ -271,15 +291,17 @@ class BaselineService:
         Args:
             machine_id: Machine UUID
             features: Dictionary of feature values (drivers)
+            energy_source_id: Optional energy source UUID (for multi-energy machines)
             
         Returns:
             Prediction result
         """
-        # Get active baseline model
-        model_record = await get_active_baseline_model(machine_id)
+        # Get active baseline model (with energy source if specified)
+        model_record = await get_active_baseline_model(machine_id, energy_source_id)
         if not model_record:
+            energy_msg = f" for energy source {energy_source_id}" if energy_source_id else ""
             raise ValueError(
-                f"No active baseline model found for machine {machine_id}"
+                f"No active baseline model found for machine {machine_id}{energy_msg}"
             )
         
         # Load model
@@ -298,29 +320,46 @@ class BaselineService:
         }
     
     @staticmethod
-    async def list_baseline_models(machine_id: UUID) -> List[Dict[str, Any]]:
+    async def list_baseline_models(
+        machine_id: UUID,
+        energy_source_id: Optional[UUID] = None
+    ) -> List[Dict[str, Any]]:
         """
-        List all baseline models for a machine.
+        List baseline models for a machine, optionally filtered by energy source.
         
         Args:
             machine_id: Machine UUID
+            energy_source_id: Optional energy source UUID (for multi-energy machines)
             
         Returns:
             List of model records
         """
-        query = """
-            SELECT 
-                id, machine_id, model_name, model_version,
-                training_samples, r_squared, rmse, mae,
-                is_active, created_at
-            FROM energy_baselines
-            WHERE machine_id = $1
-            ORDER BY model_version DESC
-        """
-        
-        async with db.pool.acquire() as conn:
-            rows = await conn.fetch(query, machine_id)
-            return [dict(row) for row in rows]
+        if energy_source_id:
+            query = """
+                SELECT 
+                    id, machine_id, energy_source_id, model_name, model_version,
+                    training_samples, r_squared, rmse, mae,
+                    is_active, created_at
+                FROM energy_baselines
+                WHERE machine_id = $1 AND energy_source_id = $2
+                ORDER BY model_version DESC
+            """
+            async with db.pool.acquire() as conn:
+                rows = await conn.fetch(query, machine_id, energy_source_id)
+                return [dict(row) for row in rows]
+        else:
+            query = """
+                SELECT 
+                    id, machine_id, energy_source_id, model_name, model_version,
+                    training_samples, r_squared, rmse, mae,
+                    is_active, created_at
+                FROM energy_baselines
+                WHERE machine_id = $1
+                ORDER BY model_version DESC
+            """
+            async with db.pool.acquire() as conn:
+                rows = await conn.fetch(query, machine_id)
+                return [dict(row) for row in rows]
     
     @staticmethod
     async def get_model_details(model_id: UUID) -> Optional[Dict[str, Any]]:

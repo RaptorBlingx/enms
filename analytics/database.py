@@ -358,19 +358,19 @@ async def save_baseline_model(model_data: Dict[str, Any]) -> UUID:
     Save baseline model to database.
     
     Args:
-        model_data: Model metadata and parameters
+        model_data: Model metadata and parameters (must include energy_source_id)
         
     Returns:
         Model ID (UUID)
     """
     query = """
         INSERT INTO energy_baselines (
-            machine_id, model_name, model_type, model_version,
+            machine_id, energy_source_id, model_name, model_type, model_version,
             training_start_date, training_end_date, training_samples,
             coefficients, intercept, feature_names,
             r_squared, rmse, mae, is_active, trained_by
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
         )
         RETURNING id
     """
@@ -379,6 +379,7 @@ async def save_baseline_model(model_data: Dict[str, Any]) -> UUID:
         model_id = await conn.fetchval(
             query,
             model_data['machine_id'],
+            model_data['energy_source_id'],  # NEW: Required for multi-energy support
             model_data['model_name'],
             model_data.get('model_type', 'linear_regression'),
             model_data['model_version'],
@@ -441,48 +442,80 @@ async def save_anomaly(anomaly_data: Dict[str, Any]) -> UUID:
     return anomaly_id
 
 
-async def get_active_baseline_model(machine_id: UUID) -> Optional[Dict[str, Any]]:
+async def get_active_baseline_model(
+    machine_id: UUID, 
+    energy_source_id: Optional[UUID] = None
+) -> Optional[Dict[str, Any]]:
     """
-    Get active baseline model for a machine.
+    Get active baseline model for a machine and optionally specific energy source.
     
     Args:
         machine_id: Machine UUID
+        energy_source_id: Optional energy source UUID (for multi-energy machines)
         
     Returns:
         Model record or None
     """
-    query = """
-        SELECT 
-            id, machine_id, model_name, model_type, model_version,
-            training_start_date, training_end_date, training_samples,
-            coefficients, intercept, feature_names,
-            r_squared, rmse, mae, created_at
-        FROM energy_baselines
-        WHERE machine_id = $1 AND is_active = TRUE
-        ORDER BY model_version DESC
-        LIMIT 1
-    """
-    
-    async with db.pool.acquire() as conn:
-        row = await conn.fetchrow(query, machine_id)
-        return dict(row) if row else None
+    if energy_source_id:
+        # Get model for specific energy source (multi-energy support)
+        query = """
+            SELECT 
+                id, machine_id, energy_source_id, model_name, model_type, model_version,
+                training_start_date, training_end_date, training_samples,
+                coefficients, intercept, feature_names,
+                r_squared, rmse, mae, created_at
+            FROM energy_baselines
+            WHERE machine_id = $1 AND energy_source_id = $2 AND is_active = TRUE
+            ORDER BY model_version DESC
+            LIMIT 1
+        """
+        async with db.pool.acquire() as conn:
+            row = await conn.fetchrow(query, machine_id, energy_source_id)
+            return dict(row) if row else None
+    else:
+        # Backward compatibility: get first active model (any energy source)
+        query = """
+            SELECT 
+                id, machine_id, energy_source_id, model_name, model_type, model_version,
+                training_start_date, training_end_date, training_samples,
+                coefficients, intercept, feature_names,
+                r_squared, rmse, mae, created_at
+            FROM energy_baselines
+            WHERE machine_id = $1 AND is_active = TRUE
+            ORDER BY model_version DESC
+            LIMIT 1
+        """
+        async with db.pool.acquire() as conn:
+            row = await conn.fetchrow(query, machine_id)
+            return dict(row) if row else None
 
 
-async def deactivate_baseline_models(machine_id: UUID):
+async def deactivate_baseline_models(machine_id: UUID, energy_source_id: Optional[UUID] = None):
     """
-    Deactivate all baseline models for a machine.
+    Deactivate baseline models for a machine (optionally for specific energy source).
     Used before saving a new model.
     
     Args:
         machine_id: Machine UUID
+        energy_source_id: Optional energy source UUID (for multi-energy machines)
     """
-    query = """
-        UPDATE energy_baselines
-        SET is_active = FALSE
-        WHERE machine_id = $1 AND is_active = TRUE
-    """
-    
-    async with db.pool.acquire() as conn:
-        await conn.execute(query, machine_id)
-    
-    logger.info(f"Deactivated old baseline models for machine: {machine_id}")
+    if energy_source_id:
+        # Deactivate only models for this energy source
+        query = """
+            UPDATE energy_baselines
+            SET is_active = FALSE
+            WHERE machine_id = $1 AND energy_source_id = $2 AND is_active = TRUE
+        """
+        async with db.pool.acquire() as conn:
+            await conn.execute(query, machine_id, energy_source_id)
+        logger.info(f"Deactivated baseline models for machine: {machine_id}, energy source: {energy_source_id}")
+    else:
+        # Deactivate all models (backward compatibility)
+        query = """
+            UPDATE energy_baselines
+            SET is_active = FALSE
+            WHERE machine_id = $1 AND is_active = TRUE
+        """
+        async with db.pool.acquire() as conn:
+            await conn.execute(query, machine_id)
+        logger.info(f"Deactivated all baseline models for machine: {machine_id}")
