@@ -416,3 +416,220 @@ async def get_next_peak_time(
         ),
         'forecasted_at': forecast.forecasted_at
     }
+
+
+@router.get("/short-term", tags=["Forecasting"])
+async def get_short_term_forecast(
+    machine_id: Optional[UUID] = Query(None, description="Specific machine UUID (optional - if omitted, returns all machines)")
+):
+    """
+    Get simplified energy forecast for tomorrow (24 hours).
+    
+    **OVOS-OPTIMIZED** - Quick forecast summary for voice queries.
+    
+    **Features:**
+    - Tomorrow's predicted energy consumption (kWh)
+    - Estimated cost at standard rate ($0.15/kWh)
+    - Peak demand prediction (kW)
+    - Peak time prediction
+    - Confidence score
+    - Per-machine breakdown (optional)
+    
+    **Parameters:**
+    - `machine_id`: Optional - specific machine UUID. If omitted, returns factory-wide forecast.
+    
+    **Examples:**
+    ```bash
+    # Forecast for all machines (factory-wide)
+    curl "http://localhost:8001/api/v1/forecast/short-term"
+    
+    # Forecast for specific machine
+    curl "http://localhost:8001/api/v1/forecast/short-term?machine_id=c0000000-0000-0000-0000-000000000001"
+    ```
+    
+    **OVOS Use Cases:**
+    - "How much energy will we use tomorrow?"
+    - "What's the forecast for Compressor-1 tomorrow?"
+    - "When will peak demand occur tomorrow?"
+    
+    **Voice Response Template:**
+    "Tomorrow's forecast: The factory will consume approximately 2,500 kilowatt 
+    hours costing $375. Peak demand of 310 kilowatts is expected at 2 PM. 
+    Confidence is 85%."
+    """
+    from database import db, get_machines
+    from datetime import timedelta
+    
+    try:
+        # Get tomorrow's date range
+        today = datetime.utcnow().date()
+        tomorrow = today + timedelta(days=1)
+        tomorrow_start = datetime.combine(tomorrow, datetime.min.time())
+        tomorrow_end = datetime.combine(tomorrow, datetime.max.time())
+        
+        ENERGY_RATE = 0.15  # $/kWh
+        
+        if machine_id:
+            # Single machine forecast
+            async with db.pool.acquire() as conn:
+                # Get last 7 days of data for simple moving average forecast
+                historical = await conn.fetch("""
+                    SELECT 
+                        DATE(time) as date,
+                        SUM(energy_kwh) as daily_energy,
+                        AVG(power_kw) as avg_power,
+                        MAX(power_kw) as peak_power
+                    FROM energy_readings
+                    WHERE machine_id = $1
+                        AND time >= NOW() - INTERVAL '7 days'
+                        AND time < NOW()
+                    GROUP BY DATE(time)
+                    ORDER BY date DESC
+                    LIMIT 7
+                """, machine_id)
+                
+                if not historical or len(historical) == 0:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Insufficient historical data for machine {machine_id}"
+                    )
+                
+                # Get machine info
+                machines = await get_machines()
+                machine = next((m for m in machines if m['id'] == machine_id), None)
+                if not machine:
+                    raise HTTPException(status_code=404, detail=f"Machine not found: {machine_id}")
+            
+            # Simple moving average forecast
+            daily_energies = [float(h['daily_energy']) for h in historical]
+            avg_powers = [float(h['avg_power']) for h in historical]
+            peak_powers = [float(h['peak_power']) for h in historical]
+            
+            forecast_energy = sum(daily_energies) / len(daily_energies)
+            forecast_avg_power = sum(avg_powers) / len(avg_powers)
+            forecast_peak_power = sum(peak_powers) / len(peak_powers)
+            forecast_cost = forecast_energy * ENERGY_RATE
+            
+            # Calculate confidence based on variance
+            variance = sum((x - forecast_energy) ** 2 for x in daily_energies) / len(daily_energies)
+            std_dev = variance ** 0.5
+            coefficient_of_variation = (std_dev / forecast_energy) if forecast_energy > 0 else 1.0
+            confidence = max(0.5, min(0.95, 1.0 - coefficient_of_variation))
+            
+            # Predict peak time (simplified - use historical pattern)
+            # For simplicity, assume peak at 2 PM (14:00)
+            peak_time = "14:00:00"
+            
+            response = {
+                "forecast_type": "single_machine",
+                "forecast_date": tomorrow.isoformat(),
+                "machine_id": str(machine_id),
+                "machine_name": machine.get('name'),
+                "machine_type": machine.get('type'),
+                "predicted_energy_kwh": round(forecast_energy, 2),
+                "predicted_cost_usd": round(forecast_cost, 2),
+                "predicted_avg_power_kw": round(forecast_avg_power, 2),
+                "predicted_peak_power_kw": round(forecast_peak_power, 2),
+                "predicted_peak_time": peak_time,
+                "confidence": round(confidence, 2),
+                "historical_days_used": len(historical),
+                "method": "7-day moving average",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        
+        else:
+            # Factory-wide forecast (all machines)
+            machines = await get_machines()
+            active_machines = [m for m in machines if m.get('is_active')]
+            
+            machine_forecasts = []
+            total_energy = 0.0
+            total_cost = 0.0
+            max_peak_power = 0.0
+            peak_machine = None
+            total_confidence = 0.0
+            
+            async with db.pool.acquire() as conn:
+                for machine in active_machines:
+                    mid = machine['id']
+                    
+                    # Get historical data
+                    historical = await conn.fetch("""
+                        SELECT 
+                            DATE(time) as date,
+                            SUM(energy_kwh) as daily_energy,
+                            MAX(power_kw) as peak_power
+                        FROM energy_readings
+                        WHERE machine_id = $1
+                            AND time >= NOW() - INTERVAL '7 days'
+                            AND time < NOW()
+                        GROUP BY DATE(time)
+                        ORDER BY date DESC
+                        LIMIT 7
+                    """, mid)
+                    
+                    if not historical or len(historical) == 0:
+                        continue
+                    
+                    # Forecast for this machine
+                    daily_energies = [float(h['daily_energy']) for h in historical]
+                    peak_powers = [float(h['peak_power']) for h in historical]
+                    
+                    forecast_energy = sum(daily_energies) / len(daily_energies)
+                    forecast_peak = sum(peak_powers) / len(peak_powers)
+                    forecast_cost = forecast_energy * ENERGY_RATE
+                    
+                    # Confidence
+                    variance = sum((x - forecast_energy) ** 2 for x in daily_energies) / len(daily_energies)
+                    std_dev = variance ** 0.5
+                    coefficient_of_variation = (std_dev / forecast_energy) if forecast_energy > 0 else 1.0
+                    confidence = max(0.5, min(0.95, 1.0 - coefficient_of_variation))
+                    
+                    machine_forecasts.append({
+                        "machine_id": str(mid),
+                        "machine_name": machine.get('name'),
+                        "machine_type": machine.get('type'),
+                        "predicted_energy_kwh": round(forecast_energy, 2),
+                        "predicted_cost_usd": round(forecast_cost, 2),
+                        "predicted_peak_power_kw": round(forecast_peak, 2),
+                        "confidence": round(confidence, 2)
+                    })
+                    
+                    total_energy += forecast_energy
+                    total_cost += forecast_cost
+                    total_confidence += confidence
+                    
+                    if forecast_peak > max_peak_power:
+                        max_peak_power = forecast_peak
+                        peak_machine = machine.get('name')
+            
+            if len(machine_forecasts) == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Insufficient historical data for forecasting"
+                )
+            
+            avg_confidence = total_confidence / len(machine_forecasts)
+            
+            response = {
+                "forecast_type": "factory_wide",
+                "forecast_date": tomorrow.isoformat(),
+                "total_predicted_energy_kwh": round(total_energy, 2),
+                "total_predicted_cost_usd": round(total_cost, 2),
+                "predicted_peak_demand_kw": round(max_peak_power, 2),
+                "predicted_peak_time": "14:00:00",
+                "peak_machine": peak_machine,
+                "average_confidence": round(avg_confidence, 2),
+                "machines_forecasted": len(machine_forecasts),
+                "by_machine": machine_forecasts,
+                "method": "7-day moving average (per machine)",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        
+        return response
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[FORECAST-API] Short-term forecast failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Forecast generation failed: {str(e)}")

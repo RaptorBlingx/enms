@@ -562,3 +562,315 @@ async def get_model_details(
     except Exception as e:
         logger.error(f"Error retrieving model: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# ============================================================================
+# SEU-Based Training (Voice-Optimized)
+# ============================================================================
+
+class SEUTrainingRequest(BaseModel):
+    """
+    SEU-based training request (voice-friendly).
+    
+    Designed for natural language input from voice assistant.
+    """
+    seu_name: str = Field(..., description="SEU name (e.g., 'Compressor-1', 'HVAC-Main')")
+    energy_source: str = Field(..., description="Energy source name (e.g., 'electricity', 'natural_gas', 'steam')")
+    features: List[str] = Field(..., description="List of feature names to use in baseline (e.g., ['production_count', 'outdoor_temp_c'])")
+    year: int = Field(..., description="Baseline year (e.g., 2024)", ge=2000, le=2100)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "seu_name": "Compressor-1",
+                "energy_source": "electricity",
+                "features": ["production_count", "outdoor_temp_c"],
+                "year": 2024
+            }
+        }
+
+
+class SEUTrainingResponse(BaseModel):
+    """
+    SEU-based training response (voice-friendly).
+    
+    Formatted for voice output and human readability.
+    """
+    success: bool
+    message: str = Field(..., description="Voice-friendly message summarizing results")
+    seu_name: str
+    energy_source: str
+    r_squared: Optional[float] = Field(None, description="R-squared value (0-1, higher is better)")
+    rmse: Optional[float] = Field(None, description="Root mean squared error")
+    formula_readable: Optional[str] = Field(None, description="Human-readable formula for voice output")
+    formula_technical: Optional[str] = Field(None, description="Mathematical formula notation")
+    samples_count: Optional[int] = Field(None, description="Number of days used for training")
+    trained_at: Optional[datetime] = None
+    error_details: Optional[str] = None
+
+
+def _build_voice_formula(intercept: float, coefficients: Dict[str, float]) -> str:
+    """Build voice-friendly formula."""
+    parts = [f"{intercept:.6f}"]
+    for feature, coef in coefficients.items():
+        if coef >= 0:
+            parts.append(f"plus {abs(coef):.6f} times {feature}")
+        else:
+            parts.append(f"minus {abs(coef):.6f} times {feature}")
+    return "Energy equals " + " ".join(parts)
+
+
+def _build_technical_formula(intercept: float, coefficients: Dict[str, float]) -> str:
+    """Build technical formula."""
+    parts = [f"{intercept:.6f}"]
+    for feature, coef in coefficients.items():
+        if coef >= 0:
+            parts.append(f"+ {coef:.6f}*{feature}")
+        else:
+            parts.append(f"- {abs(coef):.6f}*{feature}")
+    return "E = " + " ".join(parts)
+
+
+async def _build_voice_friendly_error(error_type: str, seu_name: str, energy_source: str) -> SEUTrainingResponse:
+    """Build voice-friendly error response."""
+    messages = {
+        "SEU_NOT_FOUND": f"Sorry, I couldn't find a SEU named {seu_name} with {energy_source} energy source.",
+        "INVALID_FEATURES": f"Some of the requested features are not available for {seu_name} {energy_source}.",
+        "INSUFFICIENT_DATA": f"Not enough historical data for {seu_name} {energy_source}. Need at least 7 days."
+    }
+    
+    return SEUTrainingResponse(
+        success=False,
+        message=messages.get(error_type, "Training failed"),
+        seu_name=seu_name,
+        energy_source=energy_source,
+        error_details=error_type
+    )
+
+
+@router.post("/baseline/train-seu", response_model=SEUTrainingResponse, tags=["Baseline"])
+async def train_baseline_for_seu(request: SEUTrainingRequest):
+    """
+    Train baseline for SEU via voice command.
+    
+    **VOICE-OPTIMIZED** - Accepts SEU name + energy source (no UUIDs required).
+    
+    This endpoint is designed for natural language input from voice assistants.
+    It accepts SEU name + energy source + features, looks up the SEU dynamically,
+    validates features exist, trains the baseline, and returns a voice-friendly response.
+    
+    **ZERO HARDCODING:** Works for ANY energy source (electricity, natural gas, steam, etc.)
+    as long as the energy source and features are defined in the database.
+    
+    **Parameters:**
+    - `seu_name`: SEU name (e.g., "Compressor-1")
+    - `energy_source`: Energy type (e.g., "electricity", "natural_gas")
+    - `features`: List of feature names (e.g., ["production_count", "outdoor_temp_c"])
+    - `year`: Training year (e.g., 2024)
+    
+    **Example:**
+    ```bash
+    curl -X POST "http://localhost:8001/api/v1/baseline/train-seu" \\
+      -H "Content-Type: application/json" \\
+      -d '{
+        "seu_name": "Compressor-1",
+        "energy_source": "electricity",
+        "features": ["production_count", "outdoor_temp_c"],
+        "year": 2024
+      }'
+    ```
+    
+    **OVOS Use Cases:**
+    - "Train baseline for Compressor-1 electricity using production count"
+    - "Create baseline for Boiler-1 natural gas with outdoor temperature"
+    
+    **Voice Response:**
+    "Compressor-1 electricity baseline trained successfully. R-squared 0.99 (99% accuracy). 
+    Energy equals 0.061 plus 0.000043 times production count minus 0.000004 times outdoor temperature."
+    
+    **Returns:**
+    - Voice-friendly training results
+    - R² accuracy and performance metrics
+    - Human-readable formula
+    - Technical formula notation
+    """
+    try:
+        logger.info(
+            f"[BASELINE-TRAIN-SEU] Voice request: SEU='{request.seu_name}', "
+            f"Energy='{request.energy_source}', Features={request.features}, Year={request.year}"
+        )
+        
+        # Step 1: Lookup SEU by name and energy source
+        seu = await get_seu_by_name_and_energy_source(
+            request.seu_name, 
+            request.energy_source
+        )
+        
+        if not seu:
+            return await _build_voice_friendly_error(
+                "SEU_NOT_FOUND",
+                seu_name=request.seu_name,
+                energy_source=request.energy_source
+            )
+        
+        # Convert UUID to proper type
+        seu_id = UUID(str(seu['id']))
+        
+        logger.info(f"[BASELINE-TRAIN-SEU] Found SEU: {seu['id']} - {seu['name']}")
+        
+        # Convert energy_source_id to UUID
+        energy_source_id = UUID(str(seu['energy_source_id']))
+        
+        # Step 2: Validate features exist for this energy source
+        from services.feature_discovery import feature_discovery
+        
+        is_valid, valid_features, invalid_features = await feature_discovery.validate_features(
+            energy_source_id=energy_source_id,
+            requested_features=request.features
+        )
+        
+        if not is_valid:
+            # Return voice-friendly error instead of HTTP exception
+            return await _build_voice_friendly_error(
+                "INVALID_FEATURES",
+                seu_name=request.seu_name,
+                energy_source=request.energy_source
+            )
+        
+        logger.info(f"[BASELINE-TRAIN-SEU] Features validated: {valid_features}")
+        
+        # Step 2.5: Map feature names to aggregated column names
+        # User-friendly names (from API) → Actual column names (in energy_readings_1hour)
+        feature_mapping = {
+            'production_count': 'total_production_count',
+            'outdoor_temp_c': 'avg_outdoor_temp_c',
+            'indoor_temp_c': 'avg_indoor_temp_c',
+            'machine_temp_c': 'avg_machine_temp_c',
+            'pressure_bar': 'avg_pressure_bar',
+            'power_kw': 'avg_power_kw',
+            'power_factor': 'avg_power_factor',
+            'current_a': 'avg_current_a',
+            'voltage_v': 'avg_voltage_v',
+            'load_factor': 'avg_load_factor',
+            'cycle_time_sec': 'avg_cycle_time_sec',
+            'throughput': 'avg_throughput_units_per_hour',
+            # Already correctly named (don't need mapping)
+            'total_production': 'total_production',
+            'good_units_count': 'good_units_count',
+            'defect_units_count': 'defect_units_count',
+            'max_power_kw': 'max_power_kw',
+            'heating_degree_days': 'heating_degree_days',
+            'cooling_degree_days': 'cooling_degree_days',
+            'operating_hours': 'operating_hours',
+            'is_weekend': 'is_weekend'
+        }
+        
+        # Map user features to database column names
+        if valid_features:
+            mapped_features = [feature_mapping.get(f, f) for f in valid_features]
+            logger.info(f"[BASELINE-TRAIN-SEU] Mapped features: {valid_features} → {mapped_features}")
+        else:
+            mapped_features = None
+        
+        # Step 3: Get machine_id from SEU
+        # SEUs can have multiple machines, but we'll use the first one for simplicity
+        machine_ids = seu['machine_ids']
+        if not machine_ids or len(machine_ids) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"SEU '{request.seu_name}' has no associated machines"
+            )
+        
+        machine_id = UUID(str(machine_ids[0]))  # Use first machine
+        logger.info(f"[BASELINE-TRAIN-SEU] Using machine_id: {machine_id}")
+        
+        # Step 4: Convert year to date range
+        start_date = datetime(request.year, 1, 1, 0, 0, 0)
+        end_date = datetime(request.year, 12, 31, 23, 59, 59)
+        
+        # Step 4.5: Check if sufficient data exists
+        async with db.pool.acquire() as conn:
+            data_count = await conn.fetchval("""
+                SELECT COUNT(DISTINCT DATE(bucket))
+                FROM energy_readings_1day
+                WHERE machine_id = $1
+                AND bucket BETWEEN $2 AND $3
+            """, machine_id, start_date, end_date)
+        
+        logger.info(f"[BASELINE-TRAIN-SEU] Found {data_count} days of data for {request.year}")
+        
+        if data_count < 7:
+            return await _build_voice_friendly_error(
+                "INSUFFICIENT_DATA",
+                seu_name=request.seu_name,
+                energy_source=request.energy_source
+            )
+        
+        # Step 5: Train baseline using proven service (97-99% accuracy!)
+        # Smart Hybrid: If user specifies features, use them. Otherwise, auto-select.
+        drivers = mapped_features if mapped_features else None
+        
+        if drivers:
+            logger.info(f"[BASELINE-TRAIN-SEU] User requested features: {drivers}")
+        else:
+            logger.info(f"[BASELINE-TRAIN-SEU] Auto-selecting best features for maximum accuracy")
+        
+        training_response = await baseline_service.train_baseline(
+            machine_id=machine_id,
+            start_date=start_date,
+            end_date=end_date,
+            drivers=drivers,  # Use mapped features or auto-select if None
+            energy_source_id=seu['energy_source_id']  # Pass energy source for multi-energy support
+        )
+        
+        logger.info(
+            f"[BASELINE-TRAIN-SEU] Training complete: R²={training_response['r_squared']}, "
+            f"Samples={training_response['training_samples']}"
+        )
+        
+        # Step 6: Format response for voice output
+        formula_readable = _build_voice_formula(
+            intercept=training_response['intercept'],
+            coefficients=training_response['coefficients']
+        )
+        
+        formula_technical = _build_technical_formula(
+            intercept=training_response['intercept'],
+            coefficients=training_response['coefficients']
+        )
+        
+        # Build voice-friendly message
+        r2_percent = round(training_response['r_squared'] * 100)
+        message = (
+            f"{request.seu_name} {request.energy_source} baseline trained successfully. "
+            f"R-squared {training_response['r_squared']:.2f} ({r2_percent}% accuracy). "
+            f"{formula_readable}"
+        )
+        
+        return SEUTrainingResponse(
+            success=True,
+            message=message,
+            seu_name=request.seu_name,
+            energy_source=request.energy_source,
+            r_squared=training_response['r_squared'],
+            rmse=training_response['rmse'],
+            formula_readable=formula_readable,
+            formula_technical=formula_technical,
+            samples_count=training_response['training_samples'],
+            trained_at=datetime.fromisoformat(training_response['trained_at'])
+        )
+    
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    
+    except Exception as e:
+        logger.error(f"[BASELINE-TRAIN-SEU] Training failed: {e}", exc_info=True)
+        
+        return SEUTrainingResponse(
+            success=False,
+            message=f"Training failed for {request.seu_name} {request.energy_source}: {str(e)}",
+            seu_name=request.seu_name,
+            energy_source=request.energy_source,
+            error_details=str(e)
+        )

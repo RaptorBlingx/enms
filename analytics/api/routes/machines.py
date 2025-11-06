@@ -13,6 +13,9 @@ from database import get_machines, get_machine_by_id, db
 
 router = APIRouter()
 
+# Constants
+ENERGY_RATE = 0.15  # $/kWh
+
 
 @router.get("/machines", tags=["Machines"])
 async def list_machines(
@@ -249,3 +252,229 @@ async def get_machine_status_history(
             "uptime_percent": round(((status_counts["running"] + status_counts["idle"]) / total_periods) * 100, 2) if total_periods > 0 else 0.0
         }
     }
+
+
+@router.get("/machines/status/{machine_name}", tags=["Machines"])
+async def get_machine_status_by_name(machine_name: str) -> Dict[str, Any]:
+    """
+    Get comprehensive machine status by name (no UUID required).
+    
+    **Voice-assistant optimized** - Resolve machine name and return complete status.
+    
+    **Parameters:**
+    - `machine_name`: Machine name (case-insensitive, partial match supported)
+    
+    **Returns:**
+    - Machine identification (id, name, type, location)
+    - Current status (running/idle/stopped, power, temperature, last reading)
+    - Today's statistics (energy, cost, uptime)
+    - Recent anomalies (count, severity breakdown, latest anomaly)
+    - Production data (units produced, SEC)
+    
+    **Example:**
+    ```bash
+    curl "http://localhost:8001/api/v1/machines/status/Compressor-1"
+    curl "http://localhost:8001/api/v1/machines/status/compressor"
+    ```
+    
+    **OVOS Use Cases:**
+    - "What's the status of Compressor-1?"
+    - "How is the injection molding machine doing?"
+    - "Tell me about the HVAC system"
+    
+    **Voice Response Template:**
+    "Compressor-1 is currently running at 28.5 kilowatts. Temperature is 
+    45.2 degrees celsius. Today it has consumed 245 kilowatt hours costing 
+    $36.87. Uptime is 93.75%. There are 3 anomalies today: 1 critical and 
+    2 warnings. The latest warning was detected at 9:45 AM for power spike."
+    """
+    try:
+        # Get all machines and search for matching name
+        machines = await get_machines()
+        
+        # Search for machine (case-insensitive partial match)
+        search_lower = machine_name.lower()
+        matched_machines = [
+            machine for machine in machines
+            if search_lower in machine.get('name', '').lower()
+        ]
+        
+        if not matched_machines:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No machine found matching name: {machine_name}"
+            )
+        
+        if len(matched_machines) > 1:
+            names = [m.get('name') for m in matched_machines]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Multiple machines found matching '{machine_name}': {names}. Please be more specific."
+            )
+        
+        machine = matched_machines[0]
+        machine_id = machine.get('id')
+        
+        # Get today's date range
+        today = datetime.utcnow().date()
+        start_of_day = datetime.combine(today, datetime.min.time())
+        end_of_day = datetime.combine(today, datetime.max.time())
+        
+        async with db.pool.acquire() as conn:
+            # Get latest reading for current status
+            latest_reading = await conn.fetchrow("""
+                SELECT time, power_kw, energy_kwh
+                FROM energy_readings
+                WHERE machine_id = $1
+                ORDER BY time DESC
+                LIMIT 1
+            """, machine_id)
+            
+            # Get today's energy statistics
+            today_stats = await conn.fetchrow("""
+                SELECT 
+                    SUM(energy_kwh) as total_energy,
+                    AVG(power_kw) as avg_power,
+                    MAX(power_kw) as peak_power,
+                    COUNT(*) as reading_count
+                FROM energy_readings
+                WHERE machine_id = $1
+                    AND time >= $2
+                    AND time <= $3
+            """, machine_id, start_of_day, end_of_day)
+            
+            # Get today's anomalies
+            anomalies = await conn.fetch("""
+                SELECT 
+                    id,
+                    detected_at,
+                    anomaly_type,
+                    severity,
+                    metric_name,
+                    metric_value,
+                    deviation_percent
+                FROM anomalies
+                WHERE machine_id = $1
+                    AND detected_at >= $2
+                    AND detected_at <= $3
+                ORDER BY detected_at DESC
+            """, machine_id, start_of_day, end_of_day)
+            
+            # Get production data for today
+            production = await conn.fetchrow("""
+                SELECT 
+                    SUM(production_count) as total_units,
+                    SUM(production_count_good) as total_good,
+                    SUM(production_count_bad) as total_bad
+                FROM production_data
+                WHERE machine_id = $1
+                    AND time >= $2
+                    AND time <= $3
+            """, machine_id, start_of_day, end_of_day)
+        
+        # Calculate current status
+        current_status = None
+        if latest_reading:
+            power_kw = float(latest_reading['power_kw'])
+            
+            # Determine operational status based on power
+            if power_kw > 5.0:  # Running threshold
+                status = "running"
+            elif power_kw > 0.5:  # Idle threshold
+                status = "idle"
+            else:
+                status = "stopped"
+            
+            current_status = {
+                "status": status,
+                "power_kw": round(power_kw, 2),
+                "last_reading": latest_reading['time'].isoformat()
+            }
+        
+        # Calculate today's statistics
+        total_energy = float(today_stats['total_energy']) if today_stats['total_energy'] else 0.0
+        total_cost = total_energy * ENERGY_RATE
+        
+        # Calculate uptime (hours with readings > 0.5 kW)
+        reading_count = today_stats['reading_count'] if today_stats['reading_count'] else 0
+        hours_elapsed = (datetime.utcnow() - start_of_day).total_seconds() / 3600
+        uptime_hours = reading_count / 12 if reading_count > 0 else 0  # Assuming 5-min intervals
+        uptime_percent = (uptime_hours / hours_elapsed * 100) if hours_elapsed > 0 else 0.0
+        
+        today_statistics = {
+            "energy_kwh": round(total_energy, 2),
+            "cost_usd": round(total_cost, 2),
+            "avg_power_kw": round(float(today_stats['avg_power']), 2) if today_stats['avg_power'] else 0.0,
+            "peak_power_kw": round(float(today_stats['peak_power']), 2) if today_stats['peak_power'] else 0.0,
+            "uptime_hours": round(uptime_hours, 2),
+            "uptime_percent": round(uptime_percent, 2)
+        }
+        
+        # Process anomalies
+        anomaly_counts = {"critical": 0, "warning": 0, "normal": 0}
+        latest_anomaly = None
+        
+        for anomaly in anomalies:
+            severity = anomaly['severity']
+            if severity in anomaly_counts:
+                anomaly_counts[severity] += 1
+            
+            if not latest_anomaly:
+                # Build description from available fields
+                description = f"{anomaly['anomaly_type']}"
+                if anomaly['metric_name']:
+                    description += f" - {anomaly['metric_name']}"
+                if anomaly['deviation_percent']:
+                    description += f" ({float(anomaly['deviation_percent']):.1f}% deviation)"
+                
+                latest_anomaly = {
+                    "anomaly_id": str(anomaly['id']),
+                    "detected_at": anomaly['detected_at'].isoformat(),
+                    "type": anomaly['anomaly_type'],
+                    "severity": severity,
+                    "description": description
+                }
+        
+        recent_anomalies = {
+            "count": len(anomalies),
+            "critical": anomaly_counts['critical'],
+            "warnings": anomaly_counts['warning'],
+            "normal": anomaly_counts['normal'],
+            "latest": latest_anomaly
+        }
+        
+        # Process production data
+        production_today = None
+        if production and production['total_units'] and production['total_units'] > 0:
+            total_units = int(production['total_units'])
+            total_good = int(production['total_good']) if production['total_good'] else 0
+            total_bad = int(production['total_bad']) if production['total_bad'] else 0
+            quality_percent = (total_good / total_units * 100) if total_units > 0 else 0.0
+            
+            production_today = {
+                "units_produced": total_units,
+                "units_good": total_good,
+                "units_bad": total_bad,
+                "quality_percent": round(quality_percent, 2)
+            }
+        
+        # Build response
+        response = {
+            "machine_id": str(machine_id),
+            "machine_name": machine.get('name'),
+            "machine_type": machine.get('type'),
+            "location": machine.get('factory_location'),
+            "is_active": machine.get('is_active'),
+            "current_status": current_status,
+            "today_stats": today_statistics,
+            "recent_anomalies": recent_anomalies,
+            "production_today": production_today,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        return response
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting machine status: {str(e)}")
