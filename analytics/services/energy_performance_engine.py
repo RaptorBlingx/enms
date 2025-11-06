@@ -193,8 +193,39 @@ class EnergyPerformanceEngine:
         logger.info(f"[PERF-ENGINE] Analyzing {seu_name} ({energy_source}) for {analysis_date}")
         
         try:
+            # Step 0: Check if analyzing incomplete day
+            current_time = datetime.utcnow()
+            is_incomplete_day = analysis_date == current_time.date()
+            hours_elapsed = None
+            
+            if is_incomplete_day:
+                start_of_day = datetime.combine(analysis_date, datetime.min.time())
+                hours_elapsed = (current_time - start_of_day).total_seconds() / 3600
+                
+                # Require at least 2 hours of data for partial day analysis
+                if hours_elapsed < 2:
+                    raise ValueError(
+                        f"Cannot analyze {analysis_date} - insufficient data "
+                        f"({hours_elapsed:.1f}h). Please wait or analyze a previous day."
+                    )
+                
+                logger.warning(
+                    f"[PERF-ENGINE] Analyzing incomplete day {analysis_date} "
+                    f"({hours_elapsed:.1f}h of 24h) - will project to full day"
+                )
+            
             # Step 1: Get actual energy consumption
-            actual_kwh = await self._get_actual_energy(seu_name, energy_source, analysis_date)
+            actual_kwh_raw = await self._get_actual_energy(seu_name, energy_source, analysis_date)
+            
+            # Project to 24h if incomplete day
+            if is_incomplete_day:
+                actual_kwh = (actual_kwh_raw / hours_elapsed) * 24
+                logger.info(
+                    f"[PERF-ENGINE] Projected {actual_kwh_raw:.2f} kWh ({hours_elapsed:.1f}h) "
+                    f"to {actual_kwh:.2f} kWh (24h)"
+                )
+            else:
+                actual_kwh = actual_kwh_raw
             
             # Step 2: Get baseline prediction
             baseline_kwh = await self._get_baseline_prediction(seu_name, energy_source, analysis_date)
@@ -205,7 +236,17 @@ class EnergyPerformanceEngine:
             deviation_cost = abs(deviation_kwh) * self.electricity_rate
             
             # Step 4: Calculate efficiency score (0-1, 1 = perfect)
-            efficiency_score = min(baseline_kwh / actual_kwh, 1.0) if actual_kwh > 0 else 0
+            # Lower deviation from baseline = higher score
+            # Penalize both over-consumption AND unusual under-consumption
+            abs_deviation_percent = abs(deviation_percent)
+            if abs_deviation_percent <= 5:
+                efficiency_score = 1.0  # Within 5% = excellent
+            elif abs_deviation_percent <= 15:
+                efficiency_score = 0.8  # Within 15% = good
+            elif abs_deviation_percent <= 30:
+                efficiency_score = 0.6  # Within 30% = acceptable
+            else:
+                efficiency_score = 0.4  # Over 30% = poor
             
             # Step 5: Root cause analysis
             root_cause = await self._analyze_root_cause(
@@ -400,12 +441,21 @@ class EnergyPerformanceEngine:
         
         deviation_percent = ((actual_kwh - baseline_kwh) / baseline_kwh * 100) if baseline_kwh > 0 else 0
         
+        # Check if analyzing incomplete day (projected data)
+        current_time = datetime.utcnow()
+        is_incomplete_day = analysis_date == current_time.date()
+        
         # Simple rule-based root cause (MVP)
         if abs(deviation_percent) < 5:
             primary_factor = "normal_variation"
             impact_description = "Energy consumption within expected range"
             contributing_factors = []
             confidence = 0.9
+            
+            if is_incomplete_day:
+                impact_description += f" (projected from {current_time.hour}h of data)"
+                confidence = 0.7  # Lower confidence for projections
+                
         elif deviation_percent > 0:
             # Over consumption
             primary_factor = "increased_load"
@@ -416,6 +466,12 @@ class EnergyPerformanceEngine:
                 "Inefficient operation"
             ]
             confidence = 0.7
+            
+            if is_incomplete_day:
+                impact_description += f" (projected from {current_time.hour}h of data)"
+                contributing_factors.insert(0, "⚠️ Projection based on partial day - may change")
+                confidence = 0.6  # Lower confidence for projections
+                
         else:
             # Under consumption
             primary_factor = "reduced_load"
@@ -426,6 +482,11 @@ class EnergyPerformanceEngine:
                 "Process optimization"
             ]
             confidence = 0.7
+            
+            if is_incomplete_day:
+                impact_description += f" (projected from {current_time.hour}h of data)"
+                contributing_factors.insert(0, "⚠️ Projection based on partial day - may change")
+                confidence = 0.6  # Lower confidence for projections
         
         return RootCauseAnalysis(
             primary_factor=primary_factor,
@@ -520,26 +581,32 @@ class EnergyPerformanceEngine:
     ) -> str:
         """Create voice-friendly summary for TTS."""
         
+        # Check if this is a projection
+        current_time = datetime.utcnow()
+        projection_note = ""
+        if "projected from" in root_cause.impact_description:
+            projection_note = f" This is a projection based on data through {current_time.hour} hours today."
+        
         if abs(deviation_percent) < 5:
             return (
                 f"{seu_name} is performing as expected. "
                 f"Energy consumption is {actual_kwh:.1f} kilowatt hours, "
-                f"which is within normal range."
+                f"which is within normal range.{projection_note}"
             )
         elif deviation_percent > 0:
             return (
-                f"{seu_name} used {abs(deviation_percent):.1f}% more energy than expected today. "
+                f"{seu_name} used {abs(deviation_percent):.1f}% more energy than expected. "
                 f"Actual consumption was {actual_kwh:.1f} kilowatt hours "
                 f"compared to a baseline of {baseline_kwh:.1f}. "
-                f"This cost an extra ${deviation_cost:.2f}. "
+                f"This cost an extra ${deviation_cost:.2f}.{projection_note} "
                 f"{root_cause.impact_description}."
             )
         else:
             return (
-                f"{seu_name} used {abs(deviation_percent):.1f}% less energy than expected today. "
+                f"{seu_name} used {abs(deviation_percent):.1f}% less energy than expected. "
                 f"Actual consumption was {actual_kwh:.1f} kilowatt hours "
                 f"compared to a baseline of {baseline_kwh:.1f}. "
-                f"This saved ${deviation_cost:.2f}. "
+                f"This saved ${deviation_cost:.2f}.{projection_note} "
                 f"{root_cause.impact_description}."
             )
 
