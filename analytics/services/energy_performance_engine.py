@@ -37,6 +37,7 @@ class ImprovementType(str, Enum):
     INEFFICIENT_SCHEDULING = "inefficient_scheduling"
     EXCESSIVE_IDLE = "excessive_idle"
     BASELINE_DRIFT = "baseline_drift"
+    SUBOPTIMAL_SETPOINTS = "suboptimal_setpoints"
     ANOMALY_PATTERN = "anomaly_pattern"
     PEAK_DEMAND = "peak_demand"
     LOAD_BALANCING = "load_balancing"
@@ -318,11 +319,78 @@ class EnergyPerformanceEngine:
         
         opportunities = []
         
-        # TODO: Implement opportunity detection logic
-        # 1. Query all SEUs in factory
-        # 2. For each SEU, check for patterns
-        # 3. Calculate potential savings
-        # 4. Rank by ROI
+        # Determine date range based on period
+        end_date = datetime.utcnow().date()
+        if period == "week":
+            start_date = end_date - timedelta(days=7)
+        elif period == "quarter":
+            start_date = end_date - timedelta(days=90)
+        else:  # month (default)
+            start_date = end_date - timedelta(days=30)
+        
+        # Get all SEUs in factory
+        query_seus = """
+            SELECT DISTINCT s.id, s.name
+            FROM seus s
+            JOIN machines m ON m.id = ANY(s.machine_ids)
+            WHERE m.factory_id = $1 AND s.is_active = true
+            ORDER BY s.name
+        """
+        
+        async with db.pool.acquire() as conn:
+            seus = await conn.fetch(query_seus, factory_id)
+        
+        if not seus:
+            logger.warning(f"[PERF-ENGINE] No SEUs found for factory {factory_id}")
+            return opportunities
+        
+        # Analyze each SEU for opportunities
+        for seu_record in seus:
+            seu_name = seu_record['name']
+            
+            # For MVP, analyze 'energy' type (electricity)
+            # Future: Multi-energy support (gas, steam, etc.)
+            energy_type = 'energy'
+            
+            try:
+                # Pattern 1: Check for excessive idle time
+                idle_opp = await self._check_excessive_idle(
+                    seu_name, energy_type, start_date, end_date
+                )
+                if idle_opp:
+                    opportunities.append(idle_opp)
+                
+                # Pattern 2: Check for inefficient scheduling
+                schedule_opp = await self._check_inefficient_scheduling(
+                    seu_name, energy_type, start_date, end_date
+                )
+                if schedule_opp:
+                    opportunities.append(schedule_opp)
+                
+                # Pattern 3: Check for baseline drift (degradation)
+                drift_opp = await self._check_baseline_drift(
+                    seu_name, energy_type, start_date, end_date
+                )
+                if drift_opp:
+                    opportunities.append(drift_opp)
+                
+            except Exception as e:
+                logger.warning(
+                    f"[PERF-ENGINE] Failed to analyze {seu_name} ({energy_type}): {e}"
+                )
+                continue
+        
+        # Rank by potential savings (highest first)
+        opportunities.sort(key=lambda x: x.potential_savings_kwh, reverse=True)
+        
+        # Add rank numbers
+        for i, opp in enumerate(opportunities, 1):
+            opp.rank = i
+        
+        logger.info(
+            f"[PERF-ENGINE] Found {len(opportunities)} improvement opportunities "
+            f"(total savings: {sum(o.potential_savings_kwh for o in opportunities):.1f} kWh)"
+        )
         
         return opportunities
     
@@ -343,14 +411,231 @@ class EnergyPerformanceEngine:
         """
         logger.info(f"[PERF-ENGINE] Generating action plan for {seu_name} ({issue_type})")
         
-        # TODO: Implement action plan generation
-        # 1. Analyze historical data
-        # 2. Identify root causes
-        # 3. Generate prioritized actions
-        # 4. Calculate expected outcomes
-        # 5. Define monitoring plan
+        # Validate issue type
+        try:
+            issue_enum = ImprovementType(issue_type)
+        except ValueError:
+            raise ValueError(
+                f"Invalid issue_type: {issue_type}. "
+                f"Valid types: {[t.value for t in ImprovementType]}"
+            )
         
-        raise NotImplementedError("Action plan generation coming in Milestone 2.1.5")
+        # Generate plan ID
+        plan_id = f"AP-{seu_name.replace(' ', '-')}-{issue_type}-{datetime.utcnow().strftime('%Y%m%d')}"
+        
+        # Get current performance data (last 30 days)
+        end_date = datetime.utcnow().date()
+        start_date = end_date - timedelta(days=30)
+        
+        # Template-based action plans (MVP - rule-based)
+        action_templates = {
+            ImprovementType.EXCESSIVE_IDLE: {
+                "problem_statement": f"{seu_name} experiences excessive idle time, consuming energy without productive output",
+                "root_causes": [
+                    "Equipment left running during non-production periods",
+                    "No automatic shutdown timers configured",
+                    "Manual operation without idle detection"
+                ],
+                "actions": [
+                    {
+                        "priority": 1,
+                        "action": "Install and configure automatic idle detection",
+                        "responsible": "Maintenance Team",
+                        "timeline_days": 7,
+                        "resources_needed": "PLC programming, sensors (if needed)"
+                    },
+                    {
+                        "priority": 2,
+                        "action": "Set auto-shutdown timer to 15 minutes of idle",
+                        "responsible": "Operations Team",
+                        "timeline_days": 3,
+                        "resources_needed": "Control system access"
+                    },
+                    {
+                        "priority": 3,
+                        "action": "Train operators on manual shutdown procedures",
+                        "responsible": "Training Coordinator",
+                        "timeline_days": 14,
+                        "resources_needed": "Training materials, 2 hours per shift"
+                    }
+                ],
+                "expected_outcomes": {
+                    "energy_kwh": 500,  # Estimated monthly savings
+                    "cost_usd": 75,
+                    "carbon_kg": 250
+                },
+                "monitoring_plan": [
+                    "Track idle time percentage weekly",
+                    "Monitor auto-shutdown events daily",
+                    "Review energy consumption trend monthly",
+                    "Operator feedback on usability"
+                ]
+            },
+            ImprovementType.INEFFICIENT_SCHEDULING: {
+                "problem_statement": f"{seu_name} operates during off-hours with unnecessary energy consumption",
+                "root_causes": [
+                    "No time-based control schedule configured",
+                    "Equipment runs 24/7 regardless of production needs",
+                    "Setpoints not optimized for off-hours"
+                ],
+                "actions": [
+                    {
+                        "priority": 1,
+                        "action": "Implement time-based setback schedule (reduced capacity 8pm-6am)",
+                        "responsible": "Controls Engineer",
+                        "timeline_days": 5,
+                        "resources_needed": "BMS/PLC programming"
+                    },
+                    {
+                        "priority": 2,
+                        "action": "Configure weekend shutdown or reduced operation",
+                        "responsible": "Operations Manager",
+                        "timeline_days": 7,
+                        "resources_needed": "Production schedule coordination"
+                    },
+                    {
+                        "priority": 3,
+                        "action": "Install occupancy sensors for automatic control",
+                        "responsible": "Facilities Team",
+                        "timeline_days": 21,
+                        "resources_needed": "$500 sensors, 8 hours installation"
+                    }
+                ],
+                "expected_outcomes": {
+                    "energy_kwh": 800,
+                    "cost_usd": 120,
+                    "carbon_kg": 400
+                },
+                "monitoring_plan": [
+                    "Track off-hours energy consumption weekly",
+                    "Verify schedule execution daily",
+                    "Compare monthly totals to baseline",
+                    "Review production impact (should be zero)"
+                ]
+            },
+            ImprovementType.BASELINE_DRIFT: {
+                "problem_statement": f"{seu_name} shows gradual increase in energy consumption indicating equipment degradation",
+                "root_causes": [
+                    "Wear and tear on mechanical components",
+                    "Sensor calibration drift",
+                    "Fouling or blockages reducing efficiency",
+                    "Control system parameter drift"
+                ],
+                "actions": [
+                    {
+                        "priority": 1,
+                        "action": "Schedule comprehensive maintenance inspection",
+                        "responsible": "Maintenance Team",
+                        "timeline_days": 7,
+                        "resources_needed": "4 hours downtime, inspection tools"
+                    },
+                    {
+                        "priority": 2,
+                        "action": "Calibrate sensors and verify control loops",
+                        "responsible": "Instrumentation Technician",
+                        "timeline_days": 10,
+                        "resources_needed": "Calibration equipment, 2 hours"
+                    },
+                    {
+                        "priority": 3,
+                        "action": "Replace worn components identified in inspection",
+                        "responsible": "Maintenance Team",
+                        "timeline_days": 21,
+                        "resources_needed": "Parts budget $500-2000"
+                    }
+                ],
+                "expected_outcomes": {
+                    "energy_kwh": 600,
+                    "cost_usd": 90,
+                    "carbon_kg": 300
+                },
+                "monitoring_plan": [
+                    "Monitor daily energy consumption trend",
+                    "Track equipment efficiency weekly",
+                    "Verify post-maintenance improvement",
+                    "Schedule quarterly preventive maintenance"
+                ]
+            },
+            ImprovementType.SUBOPTIMAL_SETPOINTS: {
+                "problem_statement": f"{seu_name} operating setpoints not optimized for current conditions",
+                "root_causes": [
+                    "Setpoints based on design conditions, not actual needs",
+                    "Seasonal adjustments not implemented",
+                    "Control deadbands too wide"
+                ],
+                "actions": [
+                    {
+                        "priority": 1,
+                        "action": "Review and optimize temperature/pressure setpoints",
+                        "responsible": "Process Engineer",
+                        "timeline_days": 5,
+                        "resources_needed": "Process analysis, 4 hours"
+                    },
+                    {
+                        "priority": 2,
+                        "action": "Implement seasonal adjustment schedule",
+                        "responsible": "Controls Engineer",
+                        "timeline_days": 10,
+                        "resources_needed": "BMS programming"
+                    },
+                    {
+                        "priority": 3,
+                        "action": "Tighten control deadbands to reduce cycling",
+                        "responsible": "Controls Engineer",
+                        "timeline_days": 7,
+                        "resources_needed": "Control tuning, testing"
+                    }
+                ],
+                "expected_outcomes": {
+                    "energy_kwh": 400,
+                    "cost_usd": 60,
+                    "carbon_kg": 200
+                },
+                "monitoring_plan": [
+                    "Monitor setpoint performance daily",
+                    "Track energy vs production correlation",
+                    "Review quarterly for optimization",
+                    "Validate comfort/quality not impacted"
+                ]
+            }
+        }
+        
+        # Get template or use generic
+        template = action_templates.get(issue_enum, {
+            "problem_statement": f"{seu_name} has identified energy efficiency opportunity: {issue_type}",
+            "root_causes": ["Requires detailed analysis"],
+            "actions": [
+                {
+                    "priority": 1,
+                    "action": "Conduct detailed energy audit",
+                    "responsible": "Energy Manager",
+                    "timeline_days": 14,
+                    "resources_needed": "Audit equipment, 8 hours"
+                }
+            ],
+            "expected_outcomes": {"energy_kwh": 300, "cost_usd": 45, "carbon_kg": 150},
+            "monitoring_plan": ["Track weekly energy consumption"]
+        })
+        
+        # Create action plan
+        action_plan = ActionPlan(
+            id=plan_id,
+            seu_name=seu_name,
+            problem_statement=template["problem_statement"],
+            root_causes=template["root_causes"],
+            actions=template["actions"],
+            expected_outcomes=template["expected_outcomes"],
+            monitoring_plan=template["monitoring_plan"],
+            target_date=end_date + timedelta(days=30),
+            status="draft"
+        )
+        
+        logger.info(
+            f"[PERF-ENGINE] Generated action plan {plan_id} with "
+            f"{len(action_plan.actions)} actions"
+        )
+        
+        return action_plan
     
     # ========================================================================
     # Internal Helper Methods
@@ -609,6 +894,213 @@ class EnergyPerformanceEngine:
                 f"This saved ${deviation_cost:.2f}.{projection_note} "
                 f"{root_cause.impact_description}."
             )
+    
+    # ========================================================================
+    # Opportunity Detection Helper Methods
+    # ========================================================================
+    
+    async def _check_excessive_idle(
+        self,
+        seu_name: str,
+        energy_type: str,
+        start_date: date,
+        end_date: date
+    ) -> Optional[ImprovementOpportunity]:
+        """Check for excessive idle time (low power consumption for extended periods)."""
+        
+        # Query for idle time detection (power < 10% of rated power)
+        query = """
+            SELECT 
+                COUNT(*) as idle_count,
+                COUNT(*) * 100.0 / NULLIF((SELECT COUNT(*) FROM energy_readings er2
+                    JOIN machines m2 ON er2.machine_id = m2.id
+                    JOIN seus s2 ON m2.id = ANY(s2.machine_ids)
+                    WHERE s2.name = $1
+                      AND er2.energy_type = $2
+                      AND er2.time >= $3
+                      AND er2.time < $4), 0) as idle_percent,
+                AVG(er.power_kw) as avg_idle_power
+            FROM energy_readings er
+            JOIN machines m ON er.machine_id = m.id
+            JOIN seus s ON m.id = ANY(s.machine_ids)
+            WHERE s.name = $1
+              AND er.energy_type = $2
+              AND er.time >= $3
+              AND er.time < $4
+              AND er.power_kw < (m.rated_power_kw * 0.1)
+        """
+        
+        async with db.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                query, seu_name, energy_type,
+                datetime.combine(start_date, datetime.min.time()),
+                datetime.combine(end_date, datetime.min.time())
+            )
+        
+        if not result or result['idle_percent'] is None:
+            return None
+        
+        idle_percent = float(result['idle_percent'])
+        
+        # Only flag if idle time > 30%
+        if idle_percent > 30:
+            # Estimate savings: reduce idle by 50%
+            idle_power = float(result['avg_idle_power']) if result['avg_idle_power'] else 5.0
+            hours_idle = (idle_percent / 100) * 24 * (end_date - start_date).days
+            potential_savings_kwh = idle_power * hours_idle * 0.5
+            potential_savings_usd = potential_savings_kwh * self.electricity_rate
+            
+            return ImprovementOpportunity(
+                rank=0,  # Will be set later
+                seu_name=seu_name,
+                issue_type=ImprovementType.EXCESSIVE_IDLE,
+                description=f"{seu_name} idle {idle_percent:.1f}% of time - potential for auto-shutdown",
+                potential_savings_kwh=potential_savings_kwh,
+                potential_savings_usd=potential_savings_usd,
+                effort=ImplementationEffort.MEDIUM,
+                roi_days=int((1000 / potential_savings_usd) * 30) if potential_savings_usd > 0 else 999,
+                recommended_action=f"Implement auto-shutdown after 15min idle or reduce idle power setpoint",
+                detailed_analysis=f"System idle {idle_percent:.1f}% of time at {idle_power:.1f} kW average"
+            )
+        
+        return None
+    
+    async def _check_inefficient_scheduling(
+        self,
+        seu_name: str,
+        energy_type: str,
+        start_date: date,
+        end_date: date
+    ) -> Optional[ImprovementOpportunity]:
+        """Check for energy use during non-production hours."""
+        
+        # Query for off-hours consumption (8pm-6am + weekends)
+        query = """
+            SELECT 
+                SUM(er.energy_kwh) as offhours_energy,
+                SUM(er.energy_kwh) * 100.0 / NULLIF((
+                    SELECT SUM(energy_kwh) FROM energy_readings er2
+                    JOIN machines m2 ON er2.machine_id = m2.id
+                    JOIN seus s2 ON m2.id = ANY(s2.machine_ids)
+                    WHERE s2.name = $1
+                      AND er2.energy_type = $2
+                      AND er2.time >= $3
+                      AND er2.time < $4
+                ), 0) as offhours_percent,
+                AVG(er.power_kw) as avg_offhours_power
+            FROM energy_readings er
+            JOIN machines m ON er.machine_id = m.id
+            JOIN seus s ON m.id = ANY(s.machine_ids)
+            WHERE s.name = $1
+              AND er.energy_type = $2
+              AND er.time >= $3
+              AND er.time < $4
+              AND (
+                  EXTRACT(HOUR FROM er.time) < 6 
+                  OR EXTRACT(HOUR FROM er.time) >= 20
+                  OR EXTRACT(DOW FROM er.time) IN (0, 6)
+              )
+        """
+        
+        async with db.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                query, seu_name, energy_type,
+                datetime.combine(start_date, datetime.min.time()),
+                datetime.combine(end_date, datetime.min.time())
+            )
+        
+        if not result or result['offhours_percent'] is None:
+            return None
+        
+        offhours_percent = float(result['offhours_percent'])
+        offhours_energy = float(result['offhours_energy']) if result['offhours_energy'] else 0
+        
+        # Only flag if off-hours consumption > 20%
+        if offhours_percent > 20 and offhours_energy > 50:
+            # Estimate savings: reduce off-hours by 60%
+            potential_savings_kwh = offhours_energy * 0.6
+            potential_savings_usd = potential_savings_kwh * self.electricity_rate
+            
+            return ImprovementOpportunity(
+                rank=0,
+                seu_name=seu_name,
+                issue_type=ImprovementType.INEFFICIENT_SCHEDULING,
+                description=f"{seu_name} uses {offhours_percent:.1f}% energy during off-hours",
+                potential_savings_kwh=potential_savings_kwh,
+                potential_savings_usd=potential_savings_usd,
+                effort=ImplementationEffort.LOW,
+                roi_days=int((500 / potential_savings_usd) * 30) if potential_savings_usd > 0 else 999,
+                recommended_action="Implement time-based setback schedule for off-hours operation",
+                detailed_analysis=f"{offhours_energy:.1f} kWh used outside 6am-8pm M-F"
+            )
+        
+        return None
+    
+    async def _check_baseline_drift(
+        self,
+        seu_name: str,
+        energy_type: str,
+        start_date: date,
+        end_date: date
+    ) -> Optional[ImprovementOpportunity]:
+        """Check for gradual increase in energy consumption (equipment degradation)."""
+        
+        # Compare recent week vs older data
+        mid_date = start_date + (end_date - start_date) / 2
+        
+        # Get average daily energy for first half vs second half
+        query = """
+            SELECT 
+                AVG(CASE WHEN DATE(er.time) < $4 THEN er.energy_kwh END) as early_avg,
+                AVG(CASE WHEN DATE(er.time) >= $4 THEN er.energy_kwh END) as recent_avg,
+                COUNT(DISTINCT DATE(er.time)) as days
+            FROM energy_readings er
+            JOIN machines m ON er.machine_id = m.id
+            JOIN seus s ON m.id = ANY(s.machine_ids)
+            WHERE s.name = $1
+              AND er.energy_type = $2
+              AND er.time >= $3
+              AND er.time < $5
+            GROUP BY DATE(er.time)
+        """
+        
+        async with db.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                query, seu_name, energy_type,
+                datetime.combine(start_date, datetime.min.time()),
+                datetime.combine(mid_date, datetime.min.time()),
+                datetime.combine(end_date, datetime.min.time())
+            )
+        
+        if not result or not result['early_avg'] or not result['recent_avg']:
+            return None
+        
+        early_avg = float(result['early_avg'])
+        recent_avg = float(result['recent_avg'])
+        drift_percent = ((recent_avg - early_avg) / early_avg * 100) if early_avg > 0 else 0
+        
+        # Only flag if drift > 10% increase
+        if drift_percent > 10:
+            # Estimate savings: restore to baseline efficiency
+            days_in_period = (end_date - start_date).days
+            excess_daily = recent_avg - early_avg
+            potential_savings_kwh = excess_daily * days_in_period * 0.7
+            potential_savings_usd = potential_savings_kwh * self.electricity_rate
+            
+            return ImprovementOpportunity(
+                rank=0,
+                seu_name=seu_name,
+                issue_type=ImprovementType.EQUIPMENT_DEGRADATION,
+                description=f"{seu_name} energy consumption increased {drift_percent:.1f}% over period",
+                potential_savings_kwh=potential_savings_kwh,
+                potential_savings_usd=potential_savings_usd,
+                effort=ImplementationEffort.MEDIUM,
+                roi_days=int((2000 / potential_savings_usd) * 30) if potential_savings_usd > 0 else 999,
+                recommended_action="Schedule maintenance inspection - check for wear, leaks, or calibration drift",
+                detailed_analysis=f"Daily average increased from {early_avg:.1f} to {recent_avg:.1f} kWh/day"
+            )
+        
+        return None
 
 
 # ============================================================================

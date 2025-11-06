@@ -264,16 +264,67 @@ async def get_improvement_opportunities(
     - ROI calculation
     - Recommended actions
     
-    **Status:** Coming in Milestone 2.1.4
+    **Status:** ✅ OPERATIONAL (Milestone 2.2)
     """
     logger.info(f"[API] Improvement opportunities request: factory={factory_id}, period={period}")
     
-    # TODO: Implement in Milestone 2.1.4
-    raise HTTPException(
-        status_code=501,
-        detail="Improvement opportunities endpoint coming in Milestone 2.1.4. "
-               "Focus is on completing core performance analysis first."
-    )
+    try:
+        # Validate period
+        valid_periods = ["week", "month", "quarter"]
+        if period not in valid_periods:
+            raise ValueError(f"Invalid period: {period}. Valid options: {valid_periods}")
+        
+        # Get opportunities from Performance Engine
+        engine = get_performance_engine()
+        opportunities = await engine.get_improvement_opportunities(factory_id, period)
+        
+        # Calculate totals
+        total_savings_kwh = sum(opp.potential_savings_kwh for opp in opportunities)
+        total_savings_usd = sum(opp.potential_savings_usd for opp in opportunities)
+        
+        # Convert to response model
+        response = OpportunitiesResponse(
+            factory_id=factory_id,
+            period=period,
+            total_opportunities=len(opportunities),
+            total_potential_savings_kwh=total_savings_kwh,
+            total_potential_savings_usd=total_savings_usd,
+            opportunities=[
+                OpportunityResponse(
+                    rank=opp.rank,
+                    seu_name=opp.seu_name,
+                    issue_type=opp.issue_type.value,
+                    description=opp.description,
+                    potential_savings_kwh=opp.potential_savings_kwh,
+                    potential_savings_usd=opp.potential_savings_usd,
+                    effort=opp.effort.value,
+                    roi_days=opp.roi_days,
+                    recommended_action=opp.recommended_action,
+                    detailed_analysis=opp.detailed_analysis
+                )
+                for opp in opportunities
+            ],
+            timestamp=datetime.utcnow().isoformat()
+        )
+        
+        logger.info(
+            f"[API] Found {len(opportunities)} opportunities "
+            f"(total savings: {total_savings_kwh:.1f} kWh, ${total_savings_usd:.2f})"
+        )
+        return response
+        
+    except ValueError as e:
+        logger.error(f"[API] Validation error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"[API] Failed to get opportunities: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get improvement opportunities: {str(e)}"
+        )
 
 
 @router.post("/action-plan")
@@ -297,16 +348,52 @@ async def generate_action_plan(
     - "Generate improvement plan for compressor"
     - "What steps to fix this energy issue?"
     
-    **Status:** Coming in Milestone 2.1.5
+    **Valid Issue Types:**
+    - inefficient_scheduling
+    - excessive_idle
+    - suboptimal_setpoints
+    - equipment_degradation
+    - process_inefficiency
+    - external_factors
+    
+    **Status:** ✅ OPERATIONAL (Milestone 2.2)
     """
     logger.info(f"[API] Action plan request: {seu_name}, issue={issue_type}")
     
-    # TODO: Implement in Milestone 2.1.5
-    raise HTTPException(
-        status_code=501,
-        detail="Action plan generation coming in Milestone 2.1.5. "
-               "Focus is on completing core performance analysis first."
-    )
+    try:
+        # Generate action plan
+        engine = get_performance_engine()
+        action_plan = await engine.generate_action_plan(seu_name, issue_type)
+        
+        # Convert to response dict
+        response = {
+            "id": action_plan.id,
+            "seu_name": action_plan.seu_name,
+            "problem_statement": action_plan.problem_statement,
+            "root_causes": action_plan.root_causes,
+            "actions": action_plan.actions,
+            "expected_outcomes": action_plan.expected_outcomes,
+            "monitoring_plan": action_plan.monitoring_plan,
+            "target_date": action_plan.target_date.isoformat(),
+            "status": action_plan.status,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"[API] Generated action plan {action_plan.id} with {len(action_plan.actions)} actions")
+        return response
+        
+    except ValueError as e:
+        logger.error(f"[API] Validation error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"[API] Failed to generate action plan: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate action plan: {str(e)}"
+        )
 
 
 @router.get("/health")
