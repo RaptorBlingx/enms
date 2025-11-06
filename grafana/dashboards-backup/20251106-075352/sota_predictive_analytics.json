@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 27,
+  "id": 21,
   "links": [],
   "panels": [
     {
@@ -41,15 +41,15 @@
               },
               {
                 "color": "yellow",
-                "value": 30000
+                "value": 2
               },
               {
                 "color": "red",
-                "value": 50000
+                "value": 5
               }
             ]
           },
-          "unit": "currencyEUR"
+          "unit": "kwatt"
         },
         "overrides": []
       },
@@ -67,7 +67,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "mean"
           ],
           "fields": "",
           "values": false
@@ -87,11 +87,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND(SUM(total_energy_kwh) * 0.18, 2) as \"Monthly Cost\"\nFROM energy_readings_1day\nWHERE bucket >= DATE_TRUNC('month', NOW())\n  AND bucket < DATE_TRUNC('month', NOW()) + INTERVAL '1 month';",
+          "rawSql": "SELECT \n  ROUND(AVG(rmse)::numeric, 3) as \"Avg RMSE\"\nFROM energy_forecasts\nWHERE forecasted_at >= $__timeFrom()\n  AND forecasted_at <= $__timeTo();",
           "refId": "A"
         }
       ],
-      "title": "Current Month Cost",
+      "title": "Average RMSE",
       "type": "stat"
     },
     {
@@ -109,16 +109,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "green",
                 "value": null
               },
               {
                 "color": "yellow",
-                "value": 0
+                "value": 10
               },
               {
-                "color": "green",
-                "value": 5
+                "color": "red",
+                "value": 25
               }
             ]
           },
@@ -140,7 +140,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "mean"
           ],
           "fields": "",
           "values": false
@@ -160,11 +160,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "-- Compare last 30 days vs previous 30 days\nWITH recent_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '30 days'\n    AND bucket < NOW()\n),\nprevious_period AS (\n  SELECT SUM(total_energy_kwh) as kwh\n  FROM energy_readings_1day\n  WHERE bucket >= NOW() - INTERVAL '60 days'\n    AND bucket < NOW() - INTERVAL '30 days'\n)\nSELECT \n  COALESCE(ROUND(((r.kwh - p.kwh) / NULLIF(p.kwh, 0) * 100)::numeric, 2), 0) as \"Cost Variance\"\nFROM recent_period r, previous_period p;",
+          "rawSql": "SELECT \n  ROUND(AVG(mape)::numeric, 2) as \"Avg MAPE\"\nFROM energy_forecasts\nWHERE forecasted_at >= $__timeFrom()\n  AND forecasted_at <= $__timeTo();",
           "refId": "A"
         }
       ],
-      "title": "Monthly Cost Variance",
+      "title": "Average MAPE",
       "type": "stat"
     },
     {
@@ -172,30 +172,33 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
+      "description": "R² metric not available in current forecast data",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "mappings": [],
+          "max": 1,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
                 "color": "yellow",
-                "value": 0.15
+                "value": 0.7
               },
               {
-                "color": "red",
-                "value": 0.25
+                "color": "green",
+                "value": 0.85
               }
             ]
           },
-          "unit": "currencyEUR"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -213,14 +216,14 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "mean"
           ],
           "fields": "",
           "values": false
         },
         "showPercentChange": false,
         "text": {},
-        "textMode": "auto",
+        "textMode": "value",
         "wideLayout": true
       },
       "pluginVersion": "11.2.0",
@@ -233,11 +236,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND((AVG(rate_per_kwh))::numeric, 4) as \"Average Rate\"\nFROM energy_tariffs\nWHERE is_active = true;",
+          "rawSql": "-- R² values are not populated in current forecast data\n-- Showing count of forecasts instead\nSELECT \n  'N/A' as \"Avg R²\"",
           "refId": "A"
         }
       ],
-      "title": "Average Energy Rate",
+      "title": "Average R² Score",
       "type": "stat"
     },
     {
@@ -260,7 +263,7 @@
               }
             ]
           },
-          "unit": "currencyEUR"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -285,7 +288,7 @@
         },
         "showPercentChange": false,
         "text": {},
-        "textMode": "value_and_name",
+        "textMode": "auto",
         "wideLayout": true
       },
       "pluginVersion": "11.2.0",
@@ -298,11 +301,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "-- Estimate potential savings by shifting 20% of peak to off-peak\nWITH peak_usage AS (\n  SELECT SUM(er.energy_kwh) as kwh\n  FROM energy_readings er\n  WHERE EXTRACT(HOUR FROM er.time) BETWEEN 9 AND 20\n    AND er.time >= NOW() - INTERVAL '30 days'\n)\nSELECT \n  ROUND((p.kwh * 0.20 * (0.25 - 0.10))::numeric, 2) as \"Potential Savings\"\nFROM peak_usage p;",
+          "rawSql": "SELECT COUNT(*) as \"Total Forecasts\"\nFROM energy_forecasts\nWHERE forecasted_at >= $__timeFrom()\n  AND forecasted_at <= $__timeTo();",
           "refId": "A"
         }
       ],
-      "title": "Potential Monthly Savings",
+      "title": "Total Forecasts Generated",
       "type": "stat"
     },
     {
@@ -323,7 +326,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 20,
+            "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -331,7 +334,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "smooth",
+            "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
@@ -357,13 +360,128 @@
               }
             ]
           },
-          "unit": "currencyEUR"
+          "unit": "kwatt"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Actual Power"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Forecast"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    5
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Upper Bound"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 20
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    5,
+                    5
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lower Bound"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "light-red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 20
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    5,
+                    5
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 9,
-        "w": 12,
+        "h": 10,
+        "w": 24,
         "x": 0,
         "y": 4
       },
@@ -371,8 +489,8 @@
       "options": {
         "legend": {
           "calcs": [
-            "sum",
-            "mean"
+            "mean",
+            "max"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -380,7 +498,7 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "none"
         }
       },
       "pluginVersion": "11.2.0",
@@ -393,177 +511,24 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  DATE_TRUNC('month', bucket) as time,\n  'Monthly Cost' as metric,\n  ROUND((SUM(total_energy_kwh) * 0.18)::numeric, 2) as value\nFROM energy_readings_1day\nWHERE bucket >= $__timeFrom()\n  AND bucket <= $__timeTo()\nGROUP BY DATE_TRUNC('month', bucket)\nORDER BY time;",
+          "rawSql": "-- Forecasts\nSELECT \n  forecast_time as time,\n  'Forecast' as metric,\n  AVG(predicted_power_kw) as value\nFROM energy_forecasts\nWHERE forecast_time >= $__timeFrom()\n  AND forecast_time <= $__timeTo()\nGROUP BY forecast_time\n\nUNION ALL\n\n-- Upper Bound\nSELECT \n  forecast_time as time,\n  'Upper Bound' as metric,\n  AVG(upper_bound_kw) as value\nFROM energy_forecasts\nWHERE forecast_time >= $__timeFrom()\n  AND forecast_time <= $__timeTo()\n  AND upper_bound_kw IS NOT NULL\nGROUP BY forecast_time\n\nUNION ALL\n\n-- Lower Bound\nSELECT \n  forecast_time as time,\n  'Lower Bound' as metric,\n  AVG(lower_bound_kw) as value\nFROM energy_forecasts\nWHERE forecast_time >= $__timeFrom()\n  AND forecast_time <= $__timeTo()\n  AND lower_bound_kw IS NOT NULL\nGROUP BY forecast_time\n\nORDER BY time, metric;",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "-- Actual power (from energy readings aggregates)\nSELECT \n  bucket as time,\n  'Actual Power' as metric,\n  AVG(avg_power_kw) as value\nFROM energy_readings_1min\nWHERE bucket >= $__timeFrom()\n  AND bucket <= $__timeTo()\nGROUP BY bucket\nORDER BY bucket;",
+          "refId": "B"
         }
       ],
-      "title": "Monthly Cost Trend (12 Months)",
+      "title": "Power Forecast vs Actual (24-Hour)",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": [],
-          "unit": "currencyEUR"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 4
-      },
-      "id": 6,
-      "options": {
-        "displayLabels": [
-          "percent",
-          "value"
-        ],
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "values": [
-            "value",
-            "percent"
-          ]
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "WITH hourly_costs AS (\n  SELECT \n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 'Peak (9AM-9PM)'\n      ELSE 'Off-Peak (9PM-9AM)'\n    END as period,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 0.25\n      ELSE 0.10\n    END as rate,\n    energy_kwh\n  FROM energy_readings\n  WHERE time >= NOW() - INTERVAL '30 days'\n)\nSELECT \n  period as \"Period\",\n  ROUND((SUM(energy_kwh) * MAX(rate))::numeric, 2) as \"Cost\"\nFROM hourly_costs\nGROUP BY period\nORDER BY \"Cost\" DESC;",
-          "refId": "A"
-        }
-      ],
-      "title": "Cost by Time-of-Use Period",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "currencyEUR"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 13
-      },
-      "id": 7,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.9,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [
-            "sum"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "orientation": "horizontal",
-        "showValue": "always",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  ROUND((SUM(er.energy_kwh) * 0.18)::numeric, 2) as \"Cost (EUR)\"\nFROM energy_readings er\nJOIN machines m ON er.machine_id = m.id\nWHERE er.time >= NOW() - INTERVAL '30 days'\nGROUP BY m.name\nORDER BY SUM(er.energy_kwh) DESC\nLIMIT 8;",
-          "refId": "A"
-        }
-      ],
-      "title": "Top Cost Contributors (Last 30 Days)",
-      "type": "barchart"
     },
     {
       "datasource": {
@@ -597,40 +562,64 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Opportunity"
+              "options": "Machine"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 300
+                "value": 160
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Category"
+              "options": "Model"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 140
+                "value": 100
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Potential Savings"
+              "options": "Horizon"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 140
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RMSE"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
               },
               {
                 "id": "unit",
-                "value": "currencyEUR"
+                "value": "kwatt"
               },
               {
                 "id": "custom.cellOptions",
@@ -656,11 +645,11 @@
                     },
                     {
                       "color": "yellow",
-                      "value": 500
+                      "value": 1
                     },
                     {
-                      "color": "orange",
-                      "value": 1000
+                      "color": "red",
+                      "value": 3
                     }
                   ]
                 }
@@ -670,7 +659,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Priority"
+              "options": "MAPE"
             },
             "properties": [
               {
@@ -678,44 +667,93 @@
                 "value": 90
               },
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "High": {
-                        "color": "red",
-                        "text": "🔴 High"
-                      }
-                    },
-                    "type": "value",
-                    "value": "High"
-                  },
-                  {
-                    "options": {
-                      "Medium": {
-                        "color": "orange",
-                        "text": "🟠 Medium"
-                      }
-                    },
-                    "type": "value",
-                    "value": "Medium"
-                  },
-                  {
-                    "options": {
-                      "Low": {
-                        "color": "yellow",
-                        "text": "🟡 Low"
-                      }
-                    },
-                    "type": "value",
-                    "value": "Low"
-                  }
-                ]
+                "id": "unit",
+                "value": "percent"
               },
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "type": "color-text"
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 10
+                    },
+                    {
+                      "color": "red",
+                      "value": 25
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "R²"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "gauge"
+                }
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 0.7
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.85
+                    }
+                  ]
                 }
               }
             ]
@@ -723,12 +761,12 @@
         ]
       },
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
-        "x": 12,
-        "y": 13
+        "x": 0,
+        "y": 14
       },
-      "id": 8,
+      "id": 6,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -742,8 +780,8 @@
         "showHeader": true,
         "sortBy": [
           {
-            "desc": true,
-            "displayName": "Potential Savings"
+            "desc": false,
+            "displayName": "RMSE"
           }
         ]
       },
@@ -757,11 +795,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "-- Static cost savings opportunities based on analysis\nSELECT \n  'Shift 20% peak usage to off-peak hours' as \"Opportunity\",\n  'Load Shifting' as \"Category\",\n  'High' as \"Priority\",\n  ROUND(((\n    SELECT SUM(energy_kwh) \n    FROM energy_readings \n    WHERE EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 \n      AND time >= NOW() - INTERVAL '30 days'\n  ) * 0.20 * (0.25 - 0.10))::numeric, 2) as \"Potential Savings\"\n\nUNION ALL\n\nSELECT \n  'Optimize Compressor-1 efficiency during peak hours',\n  'Equipment Upgrade',\n  'High',\n  ROUND(((\n    SELECT SUM(er.energy_kwh) \n    FROM energy_readings er\n    JOIN machines m ON er.machine_id = m.id\n    WHERE m.name = 'Compressor-1'\n      AND EXTRACT(HOUR FROM er.time) BETWEEN 9 AND 20\n      AND er.time >= NOW() - INTERVAL '30 days'\n  ) * 0.15 * 0.25)::numeric, 2)\n\nUNION ALL\n\nSELECT \n  'Implement power factor correction',\n  'Infrastructure',\n  'Medium',\n  ROUND(((\n    SELECT SUM(energy_kwh)\n    FROM energy_readings\n    WHERE time >= NOW() - INTERVAL '30 days'\n  ) * 0.05 * 0.18)::numeric, 2)\n\nUNION ALL\n\nSELECT \n  'Schedule maintenance during off-peak hours',\n  'Operations',\n  'Low',\n  ROUND(((\n    SELECT SUM(energy_kwh)\n    FROM energy_readings\n    WHERE EXTRACT(HOUR FROM time) BETWEEN 9 AND 20\n      AND time >= NOW() - INTERVAL '30 days'\n  ) * 0.02 * (0.25 - 0.10))::numeric, 2)\n\nORDER BY \"Potential Savings\" DESC;",
+          "rawSql": "SELECT \n  m.name as \"Machine\",\n  ef.model_type::text as \"Model\",\n  ef.horizon::text as \"Horizon\",\n  COUNT(*) as \"Count\",\n  ROUND(AVG(ef.rmse)::numeric, 3) as \"RMSE\",\n  ROUND(AVG(ef.mape)::numeric, 2) as \"MAPE\",\n  ROUND(AVG(ef.r2)::numeric, 4) as \"R²\",\n  TO_CHAR(MAX(ef.forecasted_at), 'Mon DD HH24:MI') as \"Latest\"\nFROM energy_forecasts ef\nJOIN machines m ON ef.machine_id = m.id\nWHERE ef.forecasted_at >= $__timeFrom()\n  AND ef.forecasted_at <= $__timeTo()\nGROUP BY m.name, ef.model_type, ef.horizon\nORDER BY AVG(ef.rmse);",
           "refId": "A"
         }
       ],
-      "title": "Cost Savings Opportunities",
+      "title": "Model Performance Comparison",
       "type": "table"
     },
     {
@@ -782,7 +820,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 30,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -800,7 +838,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -816,53 +854,22 @@
               }
             ]
           },
-          "unit": "currencyEUR"
+          "unit": "kwatt"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Peak Cost"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Off-Peak Cost"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 21
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
       },
-      "id": 9,
+      "id": 7,
       "options": {
         "legend": {
           "calcs": [
-            "sum",
-            "mean"
+            "mean",
+            "max"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -883,41 +890,170 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "WITH hourly_data AS (\n  SELECT \n    DATE_TRUNC('hour', time) as hour,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 'Peak Cost'\n      ELSE 'Off-Peak Cost'\n    END as period,\n    CASE \n      WHEN EXTRACT(HOUR FROM time) BETWEEN 9 AND 20 THEN 0.25\n      ELSE 0.10\n    END as rate,\n    SUM(energy_kwh) as kwh\n  FROM energy_readings\n  WHERE time >= $__timeFrom()\n    AND time <= $__timeTo()\n  GROUP BY hour, period, rate\n)\nSELECT \n  hour as time,\n  period as metric,\n  ROUND((kwh * rate)::numeric, 2) as value\nFROM hourly_data\nORDER BY time, period;",
+          "rawSql": "SELECT \n  forecasted_at as time,\n  'RMSE' as metric,\n  AVG(rmse) as value\nFROM energy_forecasts\nWHERE forecasted_at >= $__timeFrom()\n  AND forecasted_at <= $__timeTo()\nGROUP BY forecasted_at\nORDER BY forecasted_at;",
           "refId": "A"
         }
       ],
-      "title": "Peak vs Off-Peak Cost Breakdown",
+      "title": "Forecast Accuracy Over Time (RMSE)",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "description": "Showing most recent historical forecasts. Future forecasts not available in current data.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hour"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Predicted (kW)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "unit",
+                "value": "kwatt"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lower Bound"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "unit",
+                "value": "kwatt"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Upper Bound"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              },
+              {
+                "id": "unit",
+                "value": "kwatt"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "-- Showing most recent 24 hourly forecasts (historical)\nSELECT \n  TO_CHAR(forecast_time, 'Mon DD HH24:00') as \"Hour\",\n  ROUND(AVG(predicted_power_kw)::numeric, 2) as \"Predicted (kW)\",\n  ROUND(AVG(lower_bound_kw)::numeric, 2) as \"Lower Bound\",\n  ROUND(AVG(upper_bound_kw)::numeric, 2) as \"Upper Bound\",\n  ROUND(AVG(confidence_level)::numeric * 100, 0) as \"Confidence %\"\nFROM energy_forecasts\nWHERE forecast_time >= (SELECT MAX(forecast_time) - INTERVAL '24 hours' FROM energy_forecasts)\nGROUP BY forecast_time\nORDER BY forecast_time DESC\nLIMIT 24;",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent 24-Hour Forecasts (Historical)",
+      "type": "table"
     }
   ],
-  "refresh": "5m",
+  "refresh": "1m",
   "schemaVersion": 39,
   "tags": [
     "sota",
-    "cost",
-    "tariff",
-    "optimization"
+    "forecast",
+    "predictive",
+    "ml"
   ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-12M",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
+      "1m",
       "5m",
       "15m",
       "30m",
-      "1h",
-      "1d"
+      "1h"
     ]
   },
   "timezone": "browser",
-  "title": "SOTA Energy Cost Analytics",
-  "uid": "sota_cost_analytics",
-  "version": 4,
+  "title": "SOTA Predictive Analytics",
+  "uid": "sota_predictive_analytics",
+  "version": 10,
   "weekStart": ""
 }

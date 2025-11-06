@@ -24,14 +24,15 @@
 | ~~`/api/v1/ovos/energy-sources`~~ | **`/api/v1/energy-sources`** | ✅ Already exists |
 | ~~`/api/v1/ovos/summary`~~ | **`/api/v1/factory/summary`** | ✅ Live now |
 | ~~`/api/v1/ovos/top-consumers`~~ | **`/api/v1/analytics/top-consumers`** | ✅ Live now |
-| ~~`/api/v1/ovos/machines/{name}/status`~~ | **`/api/v1/machines/status/{name}`** | 🚧 Coming soon |
-| ~~`/api/v1/ovos/forecast/tomorrow`~~ | **`/api/v1/forecast/short-term`** | 🚧 Coming soon |
+| ~~`/api/v1/ovos/machines/{name}/status`~~ | **`/api/v1/machines/status/{name}`** | ✅ Live now (Nov 6) |
+| ~~`/api/v1/ovos/forecast/tomorrow`~~ | **`/api/v1/forecast/short-term`** | ✅ Live now (Nov 6) |
 
 **⚠️ Action Required:** Update your OVOS integration NOW. Old endpoints deprecated and will be removed.
 
 ---
 
 **Recent Enhancements**:
+- ✅ **November 6, 2025**: Phase 1 milestone 1.2 - Added `/machines/status/{name}`, `/forecast/short-term`, `/baseline/train-seu`
 - ✅ **November 5, 2025**: Phase 0 complete - v2 foundation validated (58/58 tests passing)
 - ✅ **November 5, 2025**: Phase 1 started - API cleanup, created `/seus`, `/factory/summary`, `/analytics/top-consumers`
 - ✅ **November 4, 2025**: Enhanced `/baseline/predict` - Dual input (UUID OR SEU name) + voice messages
@@ -375,6 +376,100 @@ curl "http://localhost:8001/api/v1/machines/c0000000-0000-0000-0000-000000000001
 **Notes:**
 - ✅ Returns 404 if machine_id not found
 - Use `/machines?search={name}` first to get machine ID
+
+---
+
+### 4a. Get Machine Status by Name (NEW - Nov 6) ⭐
+**Purpose:** Get comprehensive machine status using name instead of UUID
+
+**Endpoint:** `GET /api/v1/machines/status/{machine_name}`
+
+**Parameters:**
+- `machine_name` (required): Machine name (case-insensitive, partial match supported)
+
+**OVOS Use Cases:**
+- "What's the status of Compressor-1?"
+- "How is the injection molding machine doing?"
+- "Tell me about the HVAC system"
+
+```bash
+curl "http://localhost:8001/api/v1/machines/status/Compressor-1"
+curl "http://localhost:8001/api/v1/machines/status/compressor"
+```
+
+**Response:**
+```json
+{
+  "machine_id": "c0000000-0000-0000-0000-000000000001",
+  "machine_name": "Compressor-1",
+  "machine_type": "compressor",
+  "location": "Silicon Valley, CA, USA",
+  "is_active": true,
+  "current_status": {
+    "status": "running",
+    "power_kw": 46.22,
+    "last_reading": "2025-11-06T07:46:14.691624+00:00"
+  },
+  "today_stats": {
+    "energy_kwh": 344.66,
+    "cost_usd": 51.7,
+    "avg_power_kw": 44.41,
+    "peak_power_kw": 54.85,
+    "uptime_hours": 7.76,
+    "uptime_percent": 99.74
+  },
+  "recent_anomalies": {
+    "count": 0,
+    "critical": 0,
+    "warnings": 0,
+    "normal": 0,
+    "latest": null
+  },
+  "production_today": {
+    "units_produced": 5987460,
+    "units_good": 5987460,
+    "units_bad": 0,
+    "quality_percent": 100.0
+  },
+  "timestamp": "2025-11-06T07:46:14.889774"
+}
+```
+
+**Response Fields:**
+- `machine_id`: Machine UUID
+- `machine_name`: Machine name
+- `machine_type`: Machine category
+- `location`: Physical location
+- `is_active`: Active status
+- `current_status`: Real-time status
+  - `status`: "running", "idle", or "stopped"
+  - `power_kw`: Current power draw
+  - `last_reading`: Latest sensor timestamp
+- `today_stats`: Today's statistics
+  - `energy_kwh`: Total energy consumed today
+  - `cost_usd`: Estimated cost ($0.15/kWh)
+  - `avg_power_kw`: Average power
+  - `peak_power_kw`: Peak power
+  - `uptime_hours`: Hours online
+  - `uptime_percent`: Uptime percentage
+- `recent_anomalies`: Today's anomalies
+  - `count`: Total anomalies
+  - `critical`, `warnings`, `normal`: Count by severity
+  - `latest`: Most recent anomaly details
+- `production_today`: Production metrics (if available)
+  - `units_produced`: Total units
+  - `units_good`, `units_bad`: Quality breakdown
+  - `quality_percent`: Quality rate
+
+**Voice Response Template:**
+"Compressor-1 is currently running at 46.2 kilowatts. Today it has consumed 344.7 kilowatt hours costing $51.70. Uptime is 99.74%. There are no anomalies. Production: 5,987,460 units with 100% quality."
+
+**Notes:**
+- ✅ **No UUID required** - Uses machine name directly
+- ✅ Case-insensitive partial matching
+- ✅ Returns 404 if no match found
+- ✅ Returns 400 if multiple matches (be more specific)
+- ✅ Perfect for voice assistants (no UUID lookup needed)
 
 ---
 
@@ -2332,6 +2427,109 @@ curl -G http://localhost:8001/api/v1/forecast/demand \
 **OVOS Use Case:**  
 - "How much energy will we consume tomorrow?"
 - "Predict energy usage for next 24 hours"
+
+---
+
+### 15a. Get Short-Term Forecast (NEW - Nov 6) ⭐
+**Purpose:** Get simplified energy forecast for tomorrow (24 hours) - OVOS-optimized
+
+**Endpoint:** `GET /api/v1/forecast/short-term`
+
+**Parameters:**
+- `machine_id` (optional): Specific machine UUID. If omitted, returns factory-wide forecast.
+
+**OVOS Use Cases:**
+- "How much energy will we use tomorrow?"
+- "What's the forecast for Compressor-1 tomorrow?"
+- "When will peak demand occur tomorrow?"
+
+```bash
+# Factory-wide forecast
+curl "http://localhost:8001/api/v1/forecast/short-term"
+
+# Single machine forecast
+curl "http://localhost:8001/api/v1/forecast/short-term?machine_id=c0000000-0000-0000-0000-000000000001"
+```
+
+**Factory-Wide Response:**
+```json
+{
+  "forecast_type": "factory_wide",
+  "forecast_date": "2025-11-07",
+  "total_predicted_energy_kwh": 61539.52,
+  "total_predicted_cost_usd": 9230.93,
+  "predicted_peak_demand_kw": 2249.52,
+  "predicted_peak_time": "14:00:00",
+  "peak_machine": "Boiler-1",
+  "average_confidence": 0.77,
+  "machines_forecasted": 8,
+  "by_machine": [
+    {
+      "machine_id": "...",
+      "machine_name": "Compressor-1",
+      "predicted_energy_kwh": 942.78,
+      "predicted_cost_usd": 141.42,
+      "confidence": 0.73
+    }
+  ],
+  "method": "7-day moving average (per machine)",
+  "timestamp": "2025-11-06T07:52:15.123456"
+}
+```
+
+**Single Machine Response:**
+```json
+{
+  "forecast_type": "single_machine",
+  "forecast_date": "2025-11-07",
+  "machine_id": "c0000000-0000-0000-0000-000000000001",
+  "machine_name": "Compressor-1",
+  "machine_type": "compressor",
+  "predicted_energy_kwh": 942.78,
+  "predicted_cost_usd": 141.42,
+  "predicted_avg_power_kw": 39.28,
+  "predicted_peak_power_kw": 54.23,
+  "predicted_peak_time": "14:00:00",
+  "confidence": 0.73,
+  "historical_days_used": 7,
+  "method": "7-day moving average",
+  "timestamp": "2025-11-06T07:46:20.456789"
+}
+```
+
+**Response Fields:**
+
+**Factory-Wide:**
+- `total_predicted_energy_kwh`: Total energy for all machines (kWh)
+- `total_predicted_cost_usd`: Total cost ($0.15/kWh)
+- `predicted_peak_demand_kw`: Highest expected power demand (kW)
+- `predicted_peak_time`: Time of peak demand (HH:MM:SS)
+- `peak_machine`: Machine with highest peak
+- `average_confidence`: Average confidence across all machines (0-1)
+- `machines_forecasted`: Number of machines included
+- `by_machine`: Array of per-machine forecasts
+
+**Single Machine:**
+- `predicted_energy_kwh`: Tomorrow's energy consumption (kWh)
+- `predicted_cost_usd`: Estimated cost ($0.15/kWh)
+- `predicted_avg_power_kw`: Average power demand (kW)
+- `predicted_peak_power_kw`: Peak power demand (kW)
+- `predicted_peak_time`: Expected peak time
+- `confidence`: Forecast confidence (0-1, higher = more reliable)
+- `historical_days_used`: Days of historical data used (typically 7)
+- `method`: Forecasting algorithm (7-day moving average)
+
+**Voice Response Template:**
+"Tomorrow's forecast: The factory will consume approximately 61,540 kilowatt hours costing $9,231. Peak demand of 2,250 kilowatts is expected at 2 PM from Boiler-1. Confidence is 77%."
+
+**Notes:**
+- ✅ **Simple forecast** - Uses 7-day moving average (fast, reliable)
+- ✅ **No training required** - Works out of the box
+- ✅ **Voice-friendly** - Returns all needed info in one call
+- ✅ **Factory or machine** - Supports both use cases
+- ✅ Standard rate: $0.15/kWh
+- ✅ Peak time: Simplified to 14:00 (2 PM)
+- ⚠️ Requires at least 7 days of historical data
 
 ---
 
