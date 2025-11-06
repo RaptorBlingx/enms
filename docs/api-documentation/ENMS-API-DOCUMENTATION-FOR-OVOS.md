@@ -2443,7 +2443,7 @@ curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
 
 **Testing Examples:**
 ```bash
-# Example 1: Compressor-1 (use energy_source="energy")
+# Example 1: Today (incomplete day - will project to 24h)
 curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
   -H "Content-Type: application/json" \
   -d '{
@@ -2452,22 +2452,52 @@ curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
     "analysis_date": "2025-11-06"
   }' | jq
 
-# Example 2: Boiler-1 (use energy_source="electricity")
+# Response (projected):
+{
+  "actual_energy_kwh": 1105.52,  # Projected from 664 kWh (14.4h)
+  "baseline_energy_kwh": 1008.85,
+  "deviation_percent": 9.6,
+  "efficiency_score": 0.8,
+  "root_cause_analysis": {
+    "impact_description": "Energy consumption 9.6% above baseline (projected from 14h of data)",
+    "contributing_factors": [
+      "⚠️ Projection based on partial day - may change",
+      ...
+    ],
+    "confidence": 0.6
+  },
+  "voice_summary": "Compressor-1 used 9.6% more energy than expected. Actual consumption was 1105.5 kilowatt hours compared to a baseline of 1008.9. This cost an extra $14.50. This is a projection based on data through 14 hours today. Energy consumption 9.6% above baseline (projected from 14h of data)."
+}
+
+# Example 2: Yesterday (complete 24h data - no projection)
+curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seu_name": "Compressor-1",
+    "energy_source": "energy",
+    "analysis_date": "2025-11-05"
+  }' | jq
+
+# Response (actual):
+{
+  "actual_energy_kwh": 1115.55,  # Full 24h actual data
+  "baseline_energy_kwh": 997.00,
+  "deviation_percent": 11.9,
+  "efficiency_score": 0.8,
+  "root_cause_analysis": {
+    "impact_description": "Energy consumption 11.9% above baseline",
+    "confidence": 0.7  # Higher confidence for complete data
+  },
+  "voice_summary": "Compressor-1 used 11.9% more energy than expected. Actual consumption was 1115.6 kilowatt hours compared to a baseline of 997.0. This cost an extra $17.78. Energy consumption 11.9% above baseline."
+}
+
+# Example 3: Boiler-1 (use energy_source="electricity")
 curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
   -H "Content-Type: application/json" \
   -d '{
     "seu_name": "Boiler-1 Electrical System",
     "energy_source": "electricity",
-    "analysis_date": "2025-11-06"
-  }' | jq
-
-# Example 3: HVAC system
-curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "seu_name": "HVAC-Main",
-    "energy_source": "energy",
-    "analysis_date": "2025-11-06"
+    "analysis_date": "2025-11-05"
   }' | jq
 ```
 
@@ -2476,6 +2506,20 @@ curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
 2. **30-Day Baseline**: System uses 30-day historical average for baseline prediction (ML models coming in Phase 3).
 3. **MVP Root Cause**: Current logic uses rule-based heuristics. Advanced ML attribution coming in Phase 3.
 4. **Performance**: Typically <500ms response time for single SEU analysis.
+5. **⭐ Incomplete Day Handling (NEW)**: When analyzing current day (incomplete data):
+   - System **projects to 24 hours** automatically
+   - Example: 664 kWh in 14.4 hours → projected 1,105 kWh for full day
+   - Voice summary includes: "This is a projection based on data through 14 hours today"
+   - Root cause confidence lowered to 0.6 (from 0.7) for projections
+   - Contributing factors include warning: "⚠️ Projection based on partial day - may change"
+   - Requires minimum 2 hours of data (rejects analysis if less)
+6. **Efficiency Score Logic (NEW)**: 
+   - Based on deviation from baseline, NOT raw energy usage
+   - ±5% deviation = 1.0 (excellent)
+   - ±15% deviation = 0.8 (good)
+   - ±30% deviation = 0.6 (acceptable)
+   - >30% deviation = 0.4 (poor)
+   - Penalizes both over-consumption AND unusual under-consumption
 
 **OVOS Voice Integration Examples:**
 - 🎙️ "How did Compressor-1 perform today?"
