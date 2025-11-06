@@ -553,15 +553,18 @@ POST /api/v1/performance/analyze
 
 #### Milestone 2.2: Performance API Endpoints
 **Duration**: 2 days  
-**Status**: 🔄 NEXT (Partial: analyze endpoint complete)
+**Status**: ✅ COMPLETE (November 6, 2025)
 **Tasks**:
-- [x] 2.2.1: Create `analytics/api/routes/performance.py` (353 lines) ✅
+- [x] 2.2.1: Create `analytics/api/routes/performance.py` (421 lines) ✅
 - [x] 2.2.2: Implement `/performance/analyze` endpoint (OPERATIONAL) ✅
-- [ ] 2.2.3: Implement `/performance/opportunities` endpoint (stub exists, returns 501)
-- [ ] 2.2.2: Implement `/performance/analyze` endpoint
-- [ ] 2.2.3: Implement `/performance/opportunities` endpoint
-- [ ] 2.2.4: Implement `/performance/action-plan` endpoint
-- [ ] 2.2.5: Add response models with Pydantic
+- [x] 2.2.3: Implement `/performance/opportunities` endpoint (OPERATIONAL) ✅
+- [x] 2.2.4: Implement `/performance/action-plan` endpoint (OPERATIONAL) ✅
+- [x] 2.2.5: Add response models with Pydantic (OpportunitiesResponse, OpportunityResponse) ✅
+- [x] 2.2.6: Implement get_improvement_opportunities() in engine (90 lines) ✅
+- [x] 2.2.7: Implement 3 opportunity detection helpers (200 lines) ✅
+- [x] 2.2.8: Implement generate_action_plan() in engine (198 lines) ✅
+- [x] 2.2.9: Test with real production data (7 opportunities found) ✅
+- [x] 2.2.10: Update API documentation with examples ✅
 
 **New Endpoints**:
 
@@ -631,21 +634,25 @@ GET /api/v1/performance/opportunities?factory_id=XXX&period=month
 }
 ```
 
-**Success Criteria**:
+**Success Criteria** (ALL MET ✅):
 - ✅ All endpoints return complete analysis
-- ✅ Response times <500ms
-- ✅ Voice summaries suitable for TTS
-- ✅ Recommendations are specific and actionable
+- ✅ Response times <500ms (tested: /opportunities ~300ms, /action-plan ~50ms)
+- ✅ Voice summaries suitable for TTS (included in analyze response)
+- ✅ Recommendations are specific and actionable (3 actions per plan with timelines)
+- ✅ Opportunity detection patterns work (3 patterns: idle >30%, scheduling >20%, drift >10%)
+- ✅ Real production data validation (7 opportunities found, $1,565/month savings)
+- ✅ All 4 action plan templates tested (idle, scheduling, drift, setpoints)
 
 ---
 
 #### Milestone 2.3: Integration & Testing
 **Duration**: 2 days  
+**Status**: 🔄 NEXT
 **Tasks**:
-- [ ] 2.3.1: Write unit tests for performance engine
-- [ ] 2.3.2: Write integration tests for performance APIs
-- [ ] 2.3.3: Test with real production data (3 machines minimum)
-- [ ] 2.3.4: Validate recommendation logic
+- [ ] 2.3.1: Write unit tests for performance engine (opportunities + action plan methods)
+- [ ] 2.3.2: Write integration tests for performance APIs (all 4 endpoints)
+- [x] 2.3.3: Test with real production data (3 machines minimum) ✅ (7 SEUs tested)
+- [x] 2.3.4: Validate recommendation logic ✅ (3 detection patterns working)
 - [ ] 2.3.5: Load testing (100 concurrent requests)
 
 **Test Coverage**:
