@@ -54,7 +54,7 @@ class TestAnomalyRecent:
     """Task 2: Enhanced anomaly/recent with date range"""
     
     @pytest.mark.asyncio
-    async def test_recent_anomalies_default(self, client: AsyncClient):
+    async def test_recent_anomalies_default(self, client: httpx.AsyncClient):
         """Test recent anomalies without date filters"""
         response = await client.get(f"{BASE_URL}/anomaly/recent")
         assert response.status_code == 200
@@ -63,7 +63,7 @@ class TestAnomalyRecent:
         assert "count" in data
     
     @pytest.mark.asyncio
-    async def test_recent_anomalies_with_date_range(self, client: AsyncClient):
+    async def test_recent_anomalies_with_date_range(self, client: httpx.AsyncClient):
         """Test anomalies with specific date range"""
         start = "2025-10-19T00:00:00Z"
         end = "2025-10-20T00:00:00Z"
@@ -79,7 +79,7 @@ class TestAnomalyRecent:
             assert start <= anomaly["timestamp"] <= end
     
     @pytest.mark.asyncio
-    async def test_recent_anomalies_with_limit(self, client: AsyncClient):
+    async def test_recent_anomalies_with_limit(self, client: httpx.AsyncClient):
         """Test limit parameter"""
         response = await client.get(f"{BASE_URL}/anomaly/recent?limit=5")
         assert response.status_code == 200
@@ -87,7 +87,7 @@ class TestAnomalyRecent:
         assert len(data["anomalies"]) <= 5
     
     @pytest.mark.asyncio
-    async def test_recent_anomalies_invalid_date(self, client: AsyncClient):
+    async def test_recent_anomalies_invalid_date(self, client: httpx.AsyncClient):
         """Test invalid date format returns 422"""
         response = await client.get(
             f"{BASE_URL}/anomaly/recent?start_date=invalid-date"
@@ -99,7 +99,7 @@ class TestOVOSSummary:
     """Task 3: OVOS summary endpoint"""
     
     @pytest.mark.asyncio
-    async def test_ovos_summary(self, client: AsyncClient):
+    async def test_ovos_summary(self, client: httpx.AsyncClient):
         """Test factory-wide summary"""
         response = await client.get(f"{BASE_URL}/ovos/summary")
         assert response.status_code == 200
@@ -123,7 +123,7 @@ class TestTopConsumers:
     """Task 4: Top consumers ranking"""
     
     @pytest.mark.asyncio
-    async def test_top_consumers_energy(self, client: AsyncClient):
+    async def test_top_consumers_energy(self, client: httpx.AsyncClient):
         """Test top energy consumers"""
         response = await client.get(f"{BASE_URL}/ovos/top-consumers?metric=energy")
         assert response.status_code == 200
@@ -139,7 +139,7 @@ class TestTopConsumers:
         assert values == sorted(values, reverse=True)
     
     @pytest.mark.asyncio
-    async def test_top_consumers_cost(self, client: AsyncClient):
+    async def test_top_consumers_cost(self, client: httpx.AsyncClient):
         """Test top cost consumers"""
         response = await client.get(f"{BASE_URL}/ovos/top-consumers?metric=cost")
         assert response.status_code == 200
@@ -147,7 +147,7 @@ class TestTopConsumers:
         assert data["metric"] == "cost"
     
     @pytest.mark.asyncio
-    async def test_top_consumers_power(self, client: AsyncClient):
+    async def test_top_consumers_power(self, client: httpx.AsyncClient):
         """Test top power consumers"""
         response = await client.get(f"{BASE_URL}/ovos/top-consumers?metric=power")
         assert response.status_code == 200
@@ -155,7 +155,7 @@ class TestTopConsumers:
         assert data["metric"] == "power"
     
     @pytest.mark.asyncio
-    async def test_top_consumers_carbon(self, client: AsyncClient):
+    async def test_top_consumers_carbon(self, client: httpx.AsyncClient):
         """Test top carbon emitters"""
         response = await client.get(f"{BASE_URL}/ovos/top-consumers?metric=carbon")
         assert response.status_code == 200
@@ -163,7 +163,7 @@ class TestTopConsumers:
         assert data["metric"] == "carbon"
     
     @pytest.mark.asyncio
-    async def test_top_consumers_with_limit(self, client: AsyncClient):
+    async def test_top_consumers_with_limit(self, client: httpx.AsyncClient):
         """Test limit parameter"""
         response = await client.get(f"{BASE_URL}/ovos/top-consumers?metric=energy&limit=3")
         assert response.status_code == 200
@@ -171,7 +171,7 @@ class TestTopConsumers:
         assert len(data["consumers"]) <= 3
     
     @pytest.mark.asyncio
-    async def test_top_consumers_invalid_metric(self, client: AsyncClient):
+    async def test_top_consumers_invalid_metric(self, client: httpx.AsyncClient):
         """Test invalid metric returns 422"""
         response = await client.get(f"{BASE_URL}/ovos/top-consumers?metric=invalid")
         assert response.status_code == 422
@@ -181,7 +181,7 @@ class TestMachineStatus:
     """Task 5: OVOS machine status by name"""
     
     @pytest.mark.asyncio
-    async def test_machine_status_existing(self, client: AsyncClient):
+    async def test_machine_status_existing(self, client: httpx.AsyncClient):
         """Test status for existing machine"""
         response = await client.get(f"{BASE_URL}/ovos/machine/status?name=Compressor-1")
         assert response.status_code == 200
@@ -194,13 +194,13 @@ class TestMachineStatus:
         assert "voice_response" in data
     
     @pytest.mark.asyncio
-    async def test_machine_status_nonexistent(self, client: AsyncClient):
+    async def test_machine_status_nonexistent(self, client: httpx.AsyncClient):
         """Test status for non-existent machine returns 404"""
         response = await client.get(f"{BASE_URL}/ovos/machine/status?name=NonExistent999")
         assert response.status_code == 404
     
     @pytest.mark.asyncio
-    async def test_machine_status_missing_name(self, client: AsyncClient):
+    async def test_machine_status_missing_name(self, client: httpx.AsyncClient):
         """Test missing name parameter returns 422"""
         response = await client.get(f"{BASE_URL}/ovos/machine/status")
         assert response.status_code == 422
@@ -210,7 +210,7 @@ class TestFactoryKPI:
     """Task 6: Factory-wide KPI aggregation"""
     
     @pytest.mark.asyncio
-    async def test_single_factory_kpi(self, client: AsyncClient):
+    async def test_single_factory_kpi(self, client: httpx.AsyncClient):
         """Test single factory KPI aggregation"""
         # Use Demo Plant factory ID
         factory_id = "f0000000-0000-0000-0000-000000000001"
@@ -226,7 +226,7 @@ class TestFactoryKPI:
         assert "total_production_units" in data
     
     @pytest.mark.asyncio
-    async def test_all_factories_kpi(self, client: AsyncClient):
+    async def test_all_factories_kpi(self, client: httpx.AsyncClient):
         """Test all factories KPI aggregation"""
         response = await client.get(f"{BASE_URL}/kpi/factories")
         assert response.status_code == 200
@@ -250,7 +250,7 @@ class TestFactoryKPI:
         assert "percentage" in rankings[0]
     
     @pytest.mark.asyncio
-    async def test_nonexistent_factory(self, client: AsyncClient):
+    async def test_nonexistent_factory(self, client: httpx.AsyncClient):
         """Test non-existent factory returns 404"""
         fake_id = "f9999999-9999-9999-9999-999999999999"
         response = await client.get(f"{BASE_URL}/kpi/factory/{fake_id}")
@@ -261,7 +261,7 @@ class TestTimeOfUsePricing:
     """Task 7: Time-of-use pricing tiers"""
     
     @pytest.mark.asyncio
-    async def test_standard_tariff(self, client: AsyncClient):
+    async def test_standard_tariff(self, client: httpx.AsyncClient):
         """Test standard flat rate tariff"""
         machine_id = "c0000000-0000-0000-0000-000000000001"
         start = "2025-10-19T00:00:00Z"
@@ -280,7 +280,7 @@ class TestTimeOfUsePricing:
         assert "rate_per_kwh" in data
     
     @pytest.mark.asyncio
-    async def test_time_of_use_tariff(self, client: AsyncClient):
+    async def test_time_of_use_tariff(self, client: httpx.AsyncClient):
         """Test time-of-use tariff with peak/off-peak rates"""
         machine_id = "c0000000-0000-0000-0000-000000000001"
         start = "2025-10-19T00:00:00Z"
@@ -302,7 +302,7 @@ class TestTimeOfUsePricing:
         assert "savings_vs_standard" in data
     
     @pytest.mark.asyncio
-    async def test_demand_charge_tariff(self, client: AsyncClient):
+    async def test_demand_charge_tariff(self, client: httpx.AsyncClient):
         """Test demand charge tariff"""
         machine_id = "c0000000-0000-0000-0000-000000000001"
         start = "2025-10-19T00:00:00Z"
@@ -323,7 +323,7 @@ class TestTimeOfUsePricing:
         assert "total_cost_usd" in data
     
     @pytest.mark.asyncio
-    async def test_invalid_tariff_type(self, client: AsyncClient):
+    async def test_invalid_tariff_type(self, client: httpx.AsyncClient):
         """Test invalid tariff type returns 422"""
         machine_id = "c0000000-0000-0000-0000-000000000001"
         start = "2025-10-19T00:00:00Z"
@@ -340,7 +340,7 @@ class TestForecastEndpoint:
     """Task 10: Simplified forecast endpoint"""
     
     @pytest.mark.asyncio
-    async def test_factory_wide_forecast(self, client: AsyncClient):
+    async def test_factory_wide_forecast(self, client: httpx.AsyncClient):
         """Test factory-wide forecast"""
         response = await client.get(f"{BASE_URL}/ovos/forecast/tomorrow")
         assert response.status_code == 200
@@ -362,7 +362,7 @@ class TestForecastEndpoint:
         assert data["forecast_date"] == tomorrow
     
     @pytest.mark.asyncio
-    async def test_single_machine_forecast(self, client: AsyncClient):
+    async def test_single_machine_forecast(self, client: httpx.AsyncClient):
         """Test single machine forecast"""
         machine_id = "c0000000-0000-0000-0000-000000000001"
         response = await client.get(
@@ -385,7 +385,7 @@ class TestForecastEndpoint:
         assert data["method"] == "7-day moving average"
     
     @pytest.mark.asyncio
-    async def test_forecast_invalid_machine_id(self, client: AsyncClient):
+    async def test_forecast_invalid_machine_id(self, client: httpx.AsyncClient):
         """Test forecast with invalid machine ID returns 404"""
         fake_id = "c9999999-9999-9999-9999-999999999999"
         response = await client.get(
@@ -398,13 +398,13 @@ class TestEdgeCases:
     """Test error handling and edge cases"""
     
     @pytest.mark.asyncio
-    async def test_invalid_uuid_format(self, client: AsyncClient):
+    async def test_invalid_uuid_format(self, client: httpx.AsyncClient):
         """Test endpoints with invalid UUID format"""
         response = await client.get(f"{BASE_URL}/kpi/factory/not-a-uuid")
         assert response.status_code == 422
     
     @pytest.mark.asyncio
-    async def test_future_date_range(self, client: AsyncClient):
+    async def test_future_date_range(self, client: httpx.AsyncClient):
         """Test endpoints with future dates"""
         start = "2026-01-01T00:00:00Z"
         end = "2026-01-02T00:00:00Z"
@@ -417,7 +417,7 @@ class TestEdgeCases:
         assert data["count"] == 0
     
     @pytest.mark.asyncio
-    async def test_invalid_date_range(self, client: AsyncClient):
+    async def test_invalid_date_range(self, client: httpx.AsyncClient):
         """Test start date after end date"""
         start = "2025-10-20T00:00:00Z"
         end = "2025-10-19T00:00:00Z"
@@ -428,11 +428,7 @@ class TestEdgeCases:
         assert response.status_code in [200, 422]
 
 
-# Pytest fixtures
-@pytest.fixture
-def client():
-    """Create async HTTP client"""
-    return AsyncClient(base_url="http://localhost:8001", timeout=30.0)
+# Pytest fixtures - not needed anymore, tests use httpx.AsyncClient directly
 
 
 if __name__ == "__main__":

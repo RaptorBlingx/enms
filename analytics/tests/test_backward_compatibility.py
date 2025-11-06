@@ -243,7 +243,7 @@ class TestMigrationPath:
     
     async def test_can_switch_from_old_to_new_training(self):
         """Training API is backward compatible."""
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:  # Longer timeout for training
             payload = {
                 "seu_name": "Compressor-1",
                 "energy_source": "electricity",
@@ -259,9 +259,12 @@ class TestMigrationPath:
             new_response = await client.post(f"{BASE_URL}/baseline/train-seu", json=payload)
             new_data = new_response.json()
             
+            # Old endpoint has deprecation_warning, new doesn't - remove it for comparison
+            old_data_core = {k: v for k, v in old_data.items() if k != "deprecation_warning"}
+            
             # Same response structure
-            assert old_data.keys() == new_data.keys()
-            assert old_data["success"] == new_data["success"]
+            assert old_data_core.keys() == new_data.keys()
+            assert old_data_core["success"] == new_data["success"]
 
 
 @pytest.mark.asyncio

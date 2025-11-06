@@ -323,6 +323,109 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+# Deprecation warning middleware (Phase 1 Milestone 1.4)
+@app.middleware("http")
+async def add_deprecation_warnings(request: Request, call_next):
+    """
+    Add deprecation warnings to old /ovos/* endpoints.
+    
+    Adds:
+    - X-Deprecated header with new endpoint path
+    - deprecation_warning field in JSON response body
+    
+    Phase 1 Milestone 1.4 - November 6, 2025
+    """
+    # Old endpoint mapping to new endpoints
+    DEPRECATED_ENDPOINTS = {
+        "/api/v1/ovos/seus": "/api/v1/seus",
+        "/api/v1/ovos/train-baseline": "/api/v1/baseline/train-seu",
+        "/api/v1/ovos/summary": "/api/v1/factory/summary",
+        "/api/v1/ovos/top-consumers": "/api/v1/analytics/top-consumers",
+        "/api/v1/ovos/forecast/tomorrow": "/api/v1/forecast/short-term",
+        "/api/v1/ovos/machines": "/api/v1/machines/status",  # Pattern match needed
+    }
+    
+    # Check if request path is deprecated
+    is_deprecated = False
+    new_endpoint = None
+    request_path = request.url.path
+    
+    # Exact match
+    if request_path in DEPRECATED_ENDPOINTS:
+        is_deprecated = True
+        new_endpoint = DEPRECATED_ENDPOINTS[request_path]
+    # Pattern match for /ovos/machines/{name}/status
+    elif request_path.startswith("/api/v1/ovos/machines/") and "/status" in request_path:
+        is_deprecated = True
+        # Extract machine name
+        parts = request_path.split("/")
+        if len(parts) >= 6:
+            machine_name = parts[5]
+            new_endpoint = f"/api/v1/machines/status/{machine_name}"
+    # Generic /ovos/* catch-all
+    elif "/ovos/" in request_path:
+        is_deprecated = True
+        # Try to suggest new endpoint
+        new_endpoint = request_path.replace("/ovos/", "/").replace("/api/v1/", "/api/v1/")
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Add deprecation headers if deprecated
+    if is_deprecated:
+        # Add X-Deprecated header
+        if new_endpoint:
+            response.headers["X-Deprecated"] = f"true; use={new_endpoint}"
+        else:
+            response.headers["X-Deprecated"] = "true"
+        
+        response.headers["X-Deprecation-Message"] = "This endpoint is deprecated and will be removed in a future version"
+        
+        # Inject deprecation_warning into JSON response body
+        if "application/json" in response.headers.get("content-type", ""):
+            try:
+                import io
+                from starlette.responses import StreamingResponse
+                
+                # Collect response body
+                response_body = bytearray()
+                async for chunk in response.body_iterator:
+                    response_body.extend(chunk)
+                
+                # Parse and modify JSON
+                data = json.loads(response_body.decode())
+                
+                # Add deprecation warning
+                if new_endpoint:
+                    data["deprecation_warning"] = {
+                        "message": "⚠️ This endpoint is deprecated and will be removed soon",
+                        "new_endpoint": new_endpoint,
+                        "migration_guide": "See ENMS-API-DOCUMENTATION-FOR-OVOS.md"
+                    }
+                else:
+                    data["deprecation_warning"] = {
+                        "message": "⚠️ This endpoint is deprecated and will be removed soon",
+                        "action": "Contact support for migration assistance"
+                    }
+                
+                # Create new streaming response
+                modified_body = json.dumps(data).encode()
+                response.headers["content-length"] = str(len(modified_body))
+                
+                return StreamingResponse(
+                    iter([modified_body]),
+                    status_code=response.status_code,
+                    headers=dict(response.headers),
+                    media_type="application/json"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to inject deprecation warning: {e}")
+                # Return original response if modification fails
+                pass
+    
+    return response
+
+
 # ============================================================================
 # Exception Handlers
 # ============================================================================
