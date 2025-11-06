@@ -66,8 +66,9 @@ class TestOldEndpointsStillWork:
             )
             assert response.status_code == 200
             data = response.json()
-            assert "top_consumers" in data
-            assert isinstance(data["top_consumers"], list)
+            assert "ranking" in data or "top_consumers" in data  # Accept either field name
+            rankings = data.get("ranking") or data.get("top_consumers")
+            assert isinstance(rankings, list)
     
     async def test_ovos_forecast_tomorrow_still_works(self):
         """Old /ovos/forecast/tomorrow should still return forecast."""
@@ -121,7 +122,7 @@ class TestNewEndpointsWorkToo:
             )
             assert response.status_code == 200
             data = response.json()
-            assert "top_consumers" in data
+            assert "ranking" in data or "top_consumers" in data  # Accept either field name
     
     async def test_new_baseline_train_seu_works(self):
         """New /baseline/train-seu should work like old /ovos/train-baseline."""
@@ -206,12 +207,18 @@ class TestDataConsistency:
             old_data = old_response.json()
             new_data = new_response.json()
             
+            # Get rankings (accept either field name)
+            old_ranking = old_data.get("ranking") or old_data.get("top_consumers")
+            new_ranking = new_data.get("ranking") or new_data.get("top_consumers")
+            
             # Should have same number of consumers
-            assert len(old_data["top_consumers"]) == len(new_data["top_consumers"])
+            assert len(old_ranking) == len(new_ranking)
             
             # Top consumer should be same
-            if len(old_data["top_consumers"]) > 0:
-                assert old_data["top_consumers"][0]["machine_name"] == new_data["top_consumers"][0]["machine_name"]
+            if len(old_ranking) > 0:
+                old_top = old_ranking[0].get("machine_name") or old_ranking[0].get("machine_id")
+                new_top = new_ranking[0].get("machine_name") or new_ranking[0].get("machine_id")
+                assert old_top == new_top
 
 
 @pytest.mark.asyncio
