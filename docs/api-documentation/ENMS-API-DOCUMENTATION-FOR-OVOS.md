@@ -2,8 +2,8 @@
 
 **Author:** Mohamad  
 **Date:** October 2025  
-**Last Updated:** November 6, 2025 (Phase 1 Complete)  
-**Status:** ✅ PRODUCTION READY + 🎯 PHASE 1 COMPLETE + 🔥 MULTI-ENERGY SUPPORT + 🧪 96 TESTS PASSING  
+**Last Updated:** November 6, 2025 (Phase 2 Milestone 2.1 Complete)  
+**Status:** ✅ PRODUCTION READY + 🎯 PHASE 1 COMPLETE + 🚀 PERFORMANCE ENGINE LIVE + 🔥 MULTI-ENERGY SUPPORT + 🧪 96 TESTS PASSING  
 **Purpose:** Complete API reference for Burak's OVOS project integration
 
 ---
@@ -54,6 +54,7 @@ X-Deprecation-Message: This endpoint is deprecated and will be removed in v4.0
 ---
 
 **Recent Enhancements**:
+- 🚀 **November 6, 2025**: **Phase 2 Milestone 2.1 COMPLETE** - Performance Engine live with `/performance/analyze` endpoint
 - ✅ **November 6, 2025**: **Phase 1 COMPLETE** - API cleanup, deprecation middleware, 96 tests passing
 - ✅ **November 6, 2025**: Milestones 1.3-1.4 - Backward compatibility tests + deprecation warnings
 - ✅ **November 5, 2025**: Milestones 1.1-1.2 - API renaming + route organization
@@ -2355,8 +2356,166 @@ curl -G "http://localhost:8001/api/v1/analytics/top-consumers" \
 
 ## 📊 KPI & Performance
 
-### 14. Get KPIs for Time Period
-**Purpose:** Get calculated KPIs
+### 🆕 **ENERGY PERFORMANCE ENGINE (Phase 2 - Nov 6, 2025)** 🚀
+
+The **Performance Engine** is the intelligence layer of EnMS v3 - it orchestrates baseline models, anomaly detection, and KPI calculations to deliver **complete energy performance analysis in a single API call**.
+
+#### **What Changed:**
+- 🎯 **NEW**: Complete SEU performance analysis with root cause identification
+- 🎯 **NEW**: Automated recommendations with ROI calculations
+- 🎯 **NEW**: ISO 50001 compliance status determination
+- 🎯 **NEW**: Voice-optimized summaries for OVOS integration
+
+---
+
+### 14a. 🆕 Analyze SEU Performance (Complete Insight) ⭐⭐⭐
+**Purpose:** Get complete energy performance analysis for any SEU - actual vs baseline, root causes, actionable recommendations, and cost impact.
+
+**Endpoint:** `POST /api/v1/performance/analyze`
+
+**Why This Matters:**
+Previously, you needed 3+ API calls (get energy → get baseline → detect anomalies → calculate KPIs). Now, **one API call gives you everything**: actual consumption, baseline comparison, root cause analysis, cost savings, and voice-ready summaries.
+
+**Request Body:**
+```json
+{
+  "seu_name": "Compressor-1",
+  "energy_source": "energy",
+  "analysis_date": "2025-11-06"
+}
+```
+
+**Parameters:**
+- `seu_name` (required): SEU name (e.g., "Compressor-1", "HVAC-Main")
+- `energy_source` (required): Energy type - use `"energy"` for most machines, `"electricity"` for Boiler-1
+- `analysis_date` (required): Date to analyze (ISO format: "YYYY-MM-DD")
+
+**Response:**
+```json
+{
+  "seu_name": "Compressor-1",
+  "energy_source": "energy",
+  "date": "2025-11-06",
+  "actual_energy_kwh": 598.07,
+  "baseline_energy_kwh": 1008.85,
+  "deviation_kwh": -410.79,
+  "deviation_percent": -40.72,
+  "deviation_cost_usd": 61.62,
+  "efficiency_score": 1.0,
+  "root_cause_analysis": {
+    "primary_factor": "reduced_load",
+    "impact_description": "Energy consumption 40.7% below baseline",
+    "contributing_factors": [
+      "Production decrease",
+      "Equipment offline",
+      "Process optimization"
+    ],
+    "confidence": 0.7
+  },
+  "recommendations": [],
+  "iso50001_status": "excellent",
+  "voice_summary": "Compressor-1 used 40.7% less energy than expected today. Actual consumption was 598.1 kilowatt hours compared to a baseline of 1008.9. This saved $61.62. Energy consumption 40.7% below baseline.",
+  "timestamp": "2025-11-06T13:02:43.123316"
+}
+```
+
+**Field Explanations:**
+- `deviation_kwh`: Difference from baseline (negative = savings, positive = excess)
+- `deviation_percent`: Percentage deviation (negative = below baseline = good for efficiency)
+- `deviation_cost_usd`: Cost impact at $0.15/kWh (negative = savings)
+- `efficiency_score`: 0.0-1.0 scale (1.0 = excellent, <0.6 = poor)
+- `root_cause_analysis.primary_factor`: Main reason for deviation (`reduced_load`, `high_demand`, `equipment_issue`, `process_change`, `external_factors`)
+- `root_cause_analysis.confidence`: 0.0-1.0 (MVP uses rule-based heuristics, 0.7 typical)
+- `iso50001_status`: Compliance level (`excellent`, `on_target`, `requires_attention`, `non_compliant`)
+- `voice_summary`: TTS-friendly natural language summary for OVOS
+
+**Example with High Consumption:**
+```bash
+# Analyze a different date with high consumption
+curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seu_name": "Compressor-1",
+    "energy_source": "energy",
+    "analysis_date": "2025-11-05"
+  }'
+```
+
+**Testing Examples:**
+```bash
+# Example 1: Compressor-1 (use energy_source="energy")
+curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seu_name": "Compressor-1",
+    "energy_source": "energy",
+    "analysis_date": "2025-11-06"
+  }' | jq
+
+# Example 2: Boiler-1 (use energy_source="electricity")
+curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seu_name": "Boiler-1 Electrical System",
+    "energy_source": "electricity",
+    "analysis_date": "2025-11-06"
+  }' | jq
+
+# Example 3: HVAC system
+curl -X POST "http://localhost:8001/api/v1/performance/analyze" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "seu_name": "HVAC-Main",
+    "energy_source": "energy",
+    "analysis_date": "2025-11-06"
+  }' | jq
+```
+
+**⚠️ Important Notes:**
+1. **Energy Source Mapping**: Most machines use `"energy"`, but Boiler-1 uses `"electricity"`. Check energy_type in database if unsure.
+2. **30-Day Baseline**: System uses 30-day historical average for baseline prediction (ML models coming in Phase 3).
+3. **MVP Root Cause**: Current logic uses rule-based heuristics. Advanced ML attribution coming in Phase 3.
+4. **Performance**: Typically <500ms response time for single SEU analysis.
+
+**OVOS Voice Integration Examples:**
+- 🎙️ "How did Compressor-1 perform today?"
+- 🎙️ "Analyze HVAC energy usage for yesterday"
+- 🎙️ "What's causing the high energy consumption in Compressor-1?"
+- 🎙️ "Give me a performance summary for all compressors"
+
+**Next Steps (Coming in Milestone 2.2):**
+- `/performance/opportunities` - Proactive improvement suggestions across all SEUs
+- `/performance/action-plan` - ISO 50001 compliant action plans for issues
+
+---
+
+### 14b. Performance Engine Health Check
+**Purpose:** Verify Performance Engine service status
+
+**Endpoint:** `GET /api/v1/performance/health`
+
+```bash
+curl "http://localhost:8001/api/v1/performance/health" | jq
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "Energy Performance Engine",
+  "version": "1.0.0",
+  "features": {
+    "performance_analysis": "operational",
+    "improvement_opportunities": "coming_soon",
+    "action_plans": "coming_soon"
+  }
+}
+```
+
+---
+
+### 14c. Get KPIs for Time Period
+**Purpose:** Get calculated KPIs (granular metrics)
 
 ```bash
 # Get KPIs for October 2025 (current month)

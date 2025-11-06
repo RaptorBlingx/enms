@@ -330,9 +330,9 @@ class EnergyPerformanceEngine:
             SELECT COALESCE(SUM(energy_kwh), 0) as total_energy
             FROM energy_readings er
             JOIN machines m ON er.machine_id = m.id
-            JOIN seus s ON m.id = s.machine_id
+            JOIN seus s ON m.id = ANY(s.machine_ids)
             WHERE s.name = $1
-              AND er.energy_source = $2
+              AND er.energy_type = $2
               AND er.time >= $3
               AND er.time < $4
         """
@@ -366,9 +366,9 @@ class EnergyPerformanceEngine:
                 SELECT DATE(er.time) as date, SUM(er.energy_kwh) as daily_energy
                 FROM energy_readings er
                 JOIN machines m ON er.machine_id = m.id
-                JOIN seus s ON m.id = s.machine_id
+                JOIN seus s ON m.id = ANY(s.machine_ids)
                 WHERE s.name = $1
-                  AND er.energy_source = $2
+                  AND er.energy_type = $2
                   AND DATE(er.time) >= $3
                   AND DATE(er.time) <= $4
                 GROUP BY DATE(er.time)
