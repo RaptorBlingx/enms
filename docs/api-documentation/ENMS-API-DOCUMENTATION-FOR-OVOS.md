@@ -2,39 +2,62 @@
 
 **Author:** Mohamad  
 **Date:** October 2025  
-**Last Updated:** November 5, 2025  
-**Status:** ✅ PRODUCTION READY + 🔥 MULTI-ENERGY SUPPORT + 🎯 ENHANCED BASELINE ENDPOINTS + 🧪 COMPREHENSIVE TEST SUITE  
+**Last Updated:** November 6, 2025 (Phase 1 Complete)  
+**Status:** ✅ PRODUCTION READY + 🎯 PHASE 1 COMPLETE + 🔥 MULTI-ENERGY SUPPORT + 🧪 96 TESTS PASSING  
 **Purpose:** Complete API reference for Burak's OVOS project integration
 
 ---
 
-## ⚠️ **IMPORTANT: API ENDPOINTS DEPRECATED (Phase 1 - November 5, 2025)**
+## ✅ **PHASE 1 COMPLETE (November 6, 2025)**
 
-**EnMS v3 Transformation** - All `/ovos/*` endpoints are **DEPRECATED NOW**. Use new clean RESTful endpoints immediately.
+**EnMS v3 API Cleanup** - All `/ovos/*` endpoints are **DEPRECATED** with active warnings. Migration window: 6 months before removal in v4.0.
 
-### What Changed:
-- ❌ **DEPRECATED NOW**: All `/ovos/*` endpoints (will be removed soon)
-- ✅ **USE THESE**: Clean RESTful endpoints (`/seus`, `/factory/summary`, `/analytics/top-consumers`)
+### What's New:
+- ✅ **Clean RESTful API**: 6 new endpoints replacing `/ovos/*` paths
+- ✅ **Backward Compatible**: Old endpoints still work with deprecation warnings
+- ✅ **Deprecation Middleware**: Automatic warnings in headers + response body
+- ✅ **96 Tests Passing**: 19 backward compat + 77 core tests
+- ✅ **Zero Breaking Changes**: Seamless migration path
 
-### Migration Guide:
-| ~~Old Endpoint (DEPRECATED)~~ | **New Endpoint (USE THIS)** | Status |
+### Migration Status:
+| ~~Old Endpoint (DEPRECATED)~~ | **New Endpoint (USE THIS)** | Warning Status |
 |--------------|--------------|--------|
-| ~~`/api/v1/ovos/train-baseline`~~ | **`/api/v1/baseline/train-seu`** | ✅ Live now |
-| ~~`/api/v1/ovos/seus`~~ | **`/api/v1/seus`** | ✅ Live now |
-| ~~`/api/v1/ovos/energy-sources`~~ | **`/api/v1/energy-sources`** | ✅ Already exists |
-| ~~`/api/v1/ovos/summary`~~ | **`/api/v1/factory/summary`** | ✅ Live now |
-| ~~`/api/v1/ovos/top-consumers`~~ | **`/api/v1/analytics/top-consumers`** | ✅ Live now |
-| ~~`/api/v1/ovos/machines/{name}/status`~~ | **`/api/v1/machines/status/{name}`** | ✅ Live now (Nov 6) |
-| ~~`/api/v1/ovos/forecast/tomorrow`~~ | **`/api/v1/forecast/short-term`** | ✅ Live now (Nov 6) |
+| ~~`/api/v1/ovos/train-baseline`~~ | **`/api/v1/baseline/train-seu`** | 🟡 Shows warning |
+| ~~`/api/v1/ovos/seus`~~ | **`/api/v1/seus`** | 🟡 Shows warning |
+| ~~`/api/v1/ovos/energy-sources`~~ | **`/api/v1/energy-sources`** | ✅ Already migrated |
+| ~~`/api/v1/ovos/summary`~~ | **`/api/v1/factory/summary`** | 🟡 Shows warning |
+| ~~`/api/v1/ovos/top-consumers`~~ | **`/api/v1/analytics/top-consumers`** | 🟡 Shows warning |
+| ~~`/api/v1/ovos/machines/{name}/status`~~ | **`/api/v1/machines/status/{name}`** | 🟡 Shows warning |
+| ~~`/api/v1/ovos/forecast/tomorrow`~~ | **`/api/v1/forecast/short-term`** | 🟡 Shows warning |
 
-**⚠️ Action Required:** Update your OVOS integration NOW. Old endpoints deprecated and will be removed.
+**Deprecation Response Example:**
+```json
+{
+  "success": true,
+  "data": {...},
+  "deprecation_warning": {
+    "message": "⚠️ This endpoint is deprecated and will be removed in v4.0",
+    "new_endpoint": "/api/v1/seus",
+    "migration_guide": "See ENMS-API-DOCUMENTATION-FOR-OVOS.md"
+  }
+}
+```
+
+**HTTP Headers Added:**
+```http
+X-Deprecated: true; use=/api/v1/seus
+X-Deprecation-Message: This endpoint is deprecated and will be removed in v4.0
+```
+
+**⚠️ Action Required:** Update OVOS integration to use new endpoints. Old endpoints work but show warnings. Removal planned for v4.0 (Q2 2026).
 
 ---
 
 **Recent Enhancements**:
-- ✅ **November 6, 2025**: Phase 1 milestone 1.2 - Added `/machines/status/{name}`, `/forecast/short-term`, `/baseline/train-seu`
+- ✅ **November 6, 2025**: **Phase 1 COMPLETE** - API cleanup, deprecation middleware, 96 tests passing
+- ✅ **November 6, 2025**: Milestones 1.3-1.4 - Backward compatibility tests + deprecation warnings
+- ✅ **November 5, 2025**: Milestones 1.1-1.2 - API renaming + route organization
 - ✅ **November 5, 2025**: Phase 0 complete - v2 foundation validated (58/58 tests passing)
-- ✅ **November 5, 2025**: Phase 1 started - API cleanup, created `/seus`, `/factory/summary`, `/analytics/top-consumers`
 - ✅ **November 4, 2025**: Enhanced `/baseline/predict` - Dual input (UUID OR SEU name) + voice messages
 - ✅ **November 4, 2025**: Enhanced `/baseline/models` - Dual input filter + batch explanations
 - ✅ **November 4, 2025**: Created `model_explainer.py` service - Natural language ML explanations
