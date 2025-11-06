@@ -2,8 +2,8 @@
 
 **Author:** Mohamad  
 **Date:** October 2025  
-**Last Updated:** November 6, 2025 (Phase 2 Milestone 2.1 Complete)  
-**Status:** ✅ PRODUCTION READY + 🎯 PHASE 1 COMPLETE + 🚀 PERFORMANCE ENGINE LIVE + 🔥 MULTI-ENERGY SUPPORT + 🧪 96 TESTS PASSING  
+**Last Updated:** November 6, 2025 (Phase 2 Milestone 2.2 Complete)  
+**Status:** ✅ PRODUCTION READY + 🎯 PHASE 1 COMPLETE + 🚀 PERFORMANCE ENGINE LIVE + 🎁 OPPORTUNITIES & ACTION PLANS + 🔥 MULTI-ENERGY SUPPORT + 🧪 96 TESTS PASSING  
 **Purpose:** Complete API reference for Burak's OVOS project integration
 
 ---
@@ -4434,7 +4434,222 @@ is 62.4% of total consumption."
 
 ---
 
-#### 13. ⏸️ **API Key Authentication** (DEFERRED - Priority 2)
+#### 13. ✅ **Improvement Opportunities Discovery** (PHASE 2.2 COMPLETE)
+**Endpoint:** `GET /api/v1/performance/opportunities`  
+**Status:** ✅ Implemented, Deployed, Tested  
+**Added:** November 6, 2025 (Milestone 2.2)
+
+**Features:**
+- ✅ Automated opportunity detection (3 patterns: idle, scheduling, drift)
+- ✅ Ranked by potential savings (highest first)
+- ✅ ROI calculation for each opportunity
+- ✅ ISO 50001 compliance support
+- ✅ Multi-period analysis (week/month/quarter)
+
+**Parameters:**
+- `factory_id`: Required - Factory UUID
+- `period`: Required - Analysis period: `week`, `month`, or `quarter`
+
+**Detection Patterns:**
+1. **Excessive Idle** (>30% idle time): Auto-shutdown opportunities
+2. **Inefficient Scheduling** (>20% off-hours consumption): Time-based control
+3. **Baseline Drift** (>10% increase): Equipment degradation flagging
+
+**Usage Examples:**
+```bash
+# Get monthly improvement opportunities
+curl "http://localhost:8001/api/v1/performance/opportunities?factory_id=11111111-1111-1111-1111-111111111111&period=month"
+
+# Get weekly opportunities
+curl "http://localhost:8001/api/v1/performance/opportunities?factory_id=11111111-1111-1111-1111-111111111111&period=week"
+```
+
+**Test Results - Monthly Analysis (Factory, Nov 2025):**
+```json
+{
+  "factory_id": "11111111-1111-1111-1111-111111111111",
+  "period": "month",
+  "total_opportunities": 7,
+  "total_potential_savings_kwh": 10435.28,
+  "total_potential_savings_usd": 1565.29,
+  "opportunities": [
+    {
+      "rank": 1,
+      "seu_name": "Injection-Molding-1",
+      "issue_type": "inefficient_scheduling",
+      "description": "Injection-Molding-1 uses 50.1% energy during off-hours",
+      "potential_savings_kwh": 3187.14,
+      "potential_savings_usd": 478.07,
+      "effort": "low",
+      "roi_days": 31,
+      "recommended_action": "Implement time-based setback schedule for off-hours operation",
+      "detailed_analysis": "5311.9 kWh used outside 6am-8pm M-F"
+    },
+    {
+      "rank": 2,
+      "seu_name": "Compressor-1",
+      "issue_type": "inefficient_scheduling",
+      "description": "Compressor-1 uses 51.4% energy during off-hours",
+      "potential_savings_kwh": 3108.71,
+      "potential_savings_usd": 466.31,
+      "effort": "low",
+      "roi_days": 32,
+      "recommended_action": "Implement time-based setback schedule for off-hours operation",
+      "detailed_analysis": "5181.2 kWh used outside 6am-8pm M-F"
+    },
+    {
+      "rank": 3,
+      "seu_name": "HVAC-Main",
+      "issue_type": "excessive_idle",
+      "description": "HVAC-Main idle 92.4% of time - potential for auto-shutdown",
+      "potential_savings_kwh": 2366.03,
+      "potential_savings_usd": 354.90,
+      "effort": "medium",
+      "roi_days": 84,
+      "recommended_action": "Implement auto-shutdown after 15min idle or reduce idle power setpoint",
+      "detailed_analysis": "System idle 92.4% of time at 7.1 kW average"
+    }
+  ],
+  "timestamp": "2025-11-06T14:47:06.093603"
+}
+```
+
+**OVOS Voice Use Cases:**
+- "What energy improvements can we make?"
+- "Show me opportunities to save energy"
+- "What are the top 3 energy savings recommendations?"
+- "How much can we save on Compressor-1?"
+
+**Field Definitions:**
+- `effort`: Implementation effort (`low` <1 day, `medium` 1-5 days, `high` >5 days)
+- `roi_days`: Days to break even on $1000 implementation cost
+- `issue_type`: Pattern detected (`excessive_idle`, `inefficient_scheduling`, `baseline_drift`)
+
+---
+
+#### 14. ✅ **ISO 50001 Action Plan Generation** (PHASE 2.2 COMPLETE)
+**Endpoint:** `POST /api/v1/performance/action-plan`  
+**Status:** ✅ Implemented, Deployed, Tested  
+**Added:** November 6, 2025 (Milestone 2.2)
+
+**Features:**
+- ✅ ISO 50001 compliant action plans
+- ✅ Template-based generation (4 issue types)
+- ✅ Prioritized action steps with timelines
+- ✅ Expected outcomes (energy/cost/carbon)
+- ✅ Monitoring plan included
+- ✅ 30-day implementation target
+
+**Parameters:**
+- `seu_name`: Required - SEU name (e.g., "Compressor-1")
+- `issue_type`: Required - Issue type (see valid types below)
+
+**Valid Issue Types:**
+1. `excessive_idle`: Equipment left running with no productive output
+2. `inefficient_scheduling`: Off-hours or weekend operation without optimization
+3. `baseline_drift`: Gradual efficiency degradation over time
+4. `suboptimal_setpoints`: Control setpoints not optimized for conditions
+
+**Usage Examples:**
+```bash
+# Generate action plan for excessive idle
+curl -X POST "http://localhost:8001/api/v1/performance/action-plan?seu_name=HVAC-Main&issue_type=excessive_idle"
+
+# Generate action plan for scheduling issue
+curl -X POST "http://localhost:8001/api/v1/performance/action-plan?seu_name=Compressor-1&issue_type=inefficient_scheduling"
+
+# Generate action plan for equipment degradation
+curl -X POST "http://localhost:8001/api/v1/performance/action-plan?seu_name=Injection-Molding-1&issue_type=baseline_drift"
+```
+
+**Test Results - Excessive Idle (HVAC-Main):**
+```json
+{
+  "id": "AP-HVAC-Main-excessive_idle-20251106",
+  "seu_name": "HVAC-Main",
+  "problem_statement": "HVAC-Main experiences excessive idle time, consuming energy without productive output",
+  "root_causes": [
+    "Equipment left running during non-production periods",
+    "No automatic shutdown timers configured",
+    "Manual operation without idle detection"
+  ],
+  "actions": [
+    {
+      "priority": 1,
+      "action": "Install and configure automatic idle detection",
+      "responsible": "Maintenance Team",
+      "timeline_days": 7,
+      "resources_needed": "PLC programming, sensors (if needed)"
+    },
+    {
+      "priority": 2,
+      "action": "Set auto-shutdown timer to 15 minutes of idle",
+      "responsible": "Operations Team",
+      "timeline_days": 3,
+      "resources_needed": "Control system access"
+    },
+    {
+      "priority": 3,
+      "action": "Train operators on manual shutdown procedures",
+      "responsible": "Training Coordinator",
+      "timeline_days": 14,
+      "resources_needed": "Training materials, 2 hours per shift"
+    }
+  ],
+  "expected_outcomes": {
+    "energy_kwh": 500,
+    "cost_usd": 75,
+    "carbon_kg": 250
+  },
+  "monitoring_plan": [
+    "Track idle time percentage weekly",
+    "Monitor auto-shutdown events daily",
+    "Review energy consumption trend monthly",
+    "Operator feedback on usability"
+  ],
+  "target_date": "2025-12-06",
+  "status": "draft",
+  "timestamp": "2025-11-06T14:54:27.441371"
+}
+```
+
+**Test Results - Inefficient Scheduling (Compressor-1):**
+```json
+{
+  "id": "AP-Compressor-1-inefficient_scheduling-20251106",
+  "problem_statement": "Compressor-1 operates during off-hours with unnecessary energy consumption",
+  "actions": [
+    {
+      "priority": 1,
+      "action": "Implement time-based setback schedule (reduced capacity 8pm-6am)",
+      "responsible": "Controls Engineer",
+      "timeline_days": 5
+    }
+  ],
+  "expected_outcomes": {
+    "energy_kwh": 800,
+    "cost_usd": 120,
+    "carbon_kg": 400
+  }
+}
+```
+
+**OVOS Voice Use Cases:**
+- "Create action plan for Compressor-1 idle time"
+- "Generate ISO 50001 action plan for HVAC scheduling"
+- "What actions should we take to fix baseline drift on Injection-Molding-1?"
+- "Show me implementation steps for energy improvement"
+
+**Integration Workflow:**
+1. Call `/opportunities` to discover issues
+2. User selects opportunity to address
+3. Call `/action-plan` with `seu_name` and `issue_type` from opportunity
+4. Present action plan to user with timeline and expected savings
+5. Track implementation progress
+
+---
+
+#### 15. ⏸️ **API Key Authentication** (DEFERRED - Priority 2)
 **Status:** Deferred by user decision - "let's do them later"  
 **Problem:** APIs are completely open, no security  
 **Implementation:**
