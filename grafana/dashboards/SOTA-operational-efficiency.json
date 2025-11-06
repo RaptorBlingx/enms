@@ -416,31 +416,13 @@
             "uid": "TimescaleDB"
           },
           "editorMode": "code",
-          "format": "table",
+          "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  pd.production_count as \"Production Units\",\n  er.total_energy_kwh as \"Energy\",\n  m.name as metric\nFROM production_data pd\nJOIN energy_readings_1min er ON pd.machine_id = er.machine_id \n  AND DATE_TRUNC('minute', pd.time) = er.bucket\nJOIN machines m ON pd.machine_id = m.id\nWHERE pd.time >= NOW() - INTERVAL '24 hours'\n  AND er.bucket >= NOW() - INTERVAL '24 hours'\nORDER BY pd.time DESC\nLIMIT 500;",
+          "rawSql": "SELECT \n  er.bucket as time,\n  m.name as metric,\n  AVG(pd.production_count) as value\nFROM production_data pd\nJOIN energy_readings_1min er ON pd.machine_id = er.machine_id \n  AND DATE_TRUNC('minute', pd.time) = er.bucket\nJOIN machines m ON pd.machine_id = m.id\nWHERE pd.time >= $__timeFrom()\n  AND pd.time <= $__timeTo()\n  AND er.bucket >= $__timeFrom()\n  AND er.bucket <= $__timeTo()\nGROUP BY er.bucket, m.name\nORDER BY er.bucket;",
           "refId": "A"
         }
       ],
       "title": "Production vs Energy Efficiency",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "number",
-                "targetField": "Production Units"
-              },
-              {
-                "destinationType": "number",
-                "targetField": "Energy"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
       "type": "timeseries"
     },
     {

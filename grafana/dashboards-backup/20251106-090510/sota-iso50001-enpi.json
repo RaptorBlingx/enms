@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 30,
+  "id": 32,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -27,37 +27,45 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Total models being tracked across all machines",
+      "description": "Energy Performance Indicator - Lower is better",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "decimals": 2,
           "mappings": [],
+          "max": 1.5,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.9
+              },
+              {
+                "color": "red",
+                "value": 1.1
               }
             ]
           },
-          "unit": "short"
+          "unit": "kwatth"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
+        "h": 8,
+        "w": 8,
         "x": 0,
         "y": 0
       },
       "id": 1,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -66,11 +74,12 @@
           "fields": "",
           "values": false
         },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
         "text": {
-          "titleSize": 14,
-          "valueSize": 32
-        },
-        "textMode": "value_and_name"
+          "titleSize": 16,
+          "valueSize": 28
+        }
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -82,11 +91,83 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(DISTINCT CONCAT(machine_id, '-', model_type)) as \"Active Models\"\nFROM model_performance_metrics;",
+          "rawSql": "SELECT \n  ROUND(AVG(enpi_value)::numeric, 3) as \"EnPI\"\nFROM seu_energy_performance\nWHERE period_start >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month'\n  AND enpi_value IS NOT NULL;",
           "refId": "A"
         }
       ],
-      "title": "Active Models",
+      "title": "Current EnPI Score",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "description": "Monthly energy savings vs baseline",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 5000
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  ROUND(SUM(expected_consumption - actual_consumption)::numeric, 0) as \"Savings (kWh)\"\nFROM seu_energy_performance\nWHERE period_start >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month';",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Energy Savings",
       "type": "stat"
     },
     {
@@ -94,15 +175,15 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Average R² Score across all models (last 30 days)",
+      "description": "Compliance status percentage",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "decimals": 4,
+          "decimals": 0,
           "mappings": [],
-          "max": 1,
+          "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
@@ -112,114 +193,30 @@
                 "value": null
               },
               {
-                "color": "orange",
-                "value": 0.7
-              },
-              {
                 "color": "yellow",
-                "value": 0.85
+                "value": 70
               },
               {
                 "color": "green",
-                "value": 0.9
+                "value": 90
               }
             ]
           },
-          "unit": "short"
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 32
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT ROUND(AVG(r_squared)::numeric, 4) as \"Avg R² Score\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '30 days'\n  AND r_squared IS NOT NULL;",
-          "refId": "A"
-        }
-      ],
-      "title": "Average R² Score",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "description": "Average RMSE across all models (last 30 days)",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 15
-              },
-              {
-                "color": "orange",
-                "value": 20
-              },
-              {
-                "color": "red",
-                "value": 25
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
+        "h": 8,
+        "w": 8,
+        "x": 16,
         "y": 0
       },
       "id": 3,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -228,11 +225,7 @@
           "fields": "",
           "values": false
         },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 32
-        },
-        "textMode": "value_and_name"
+        "textMode": "auto"
       },
       "pluginVersion": "10.2.0",
       "targets": [
@@ -244,11 +237,11 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT ROUND(AVG(rmse)::numeric, 2) as \"Avg RMSE\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '30 days'\n  AND rmse IS NOT NULL;",
+          "rawSql": "SELECT \n  ROUND((COUNT(*) FILTER (WHERE compliance_status = 'compliant') * 100.0 / NULLIF(COUNT(*), 0))::numeric, 0) as \"Compliance Rate\"\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '6 months';",
           "refId": "A"
         }
       ],
-      "title": "Average RMSE",
+      "title": "ISO 50001 Compliance Rate",
       "type": "stat"
     },
     {
@@ -256,100 +249,33 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Total evaluations performed in the last 30 days",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 0
-      },
-      "id": 4,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {
-          "titleSize": 14,
-          "valueSize": 32
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) as \"Total Evaluations\"\nFROM model_performance_metrics\nWHERE evaluation_date >= NOW() - INTERVAL '30 days';",
-          "refId": "A"
-        }
-      ],
-      "title": "Total Evaluations (30d)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "description": "R² Score trend over time by machine",
+      "description": "Cumulative Sum (CUSUM) deviation from baseline",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "palette-classic"
           },
           "custom": {
-            "axisCenteredZero": false,
+            "axisCenteredZero": true,
             "axisColorMode": "text",
-            "axisLabel": "R² Score",
+            "axisLabel": "Cumulative Deviation (kWh)",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 20,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "smooth",
+            "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "always",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -359,24 +285,21 @@
               "mode": "line"
             }
           },
-          "decimals": 4,
           "mappings": [],
-          "max": 1,
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "transparent",
+                "color": "green",
                 "value": null
               },
               {
                 "color": "red",
-                "value": 0.85
+                "value": 0
               }
             ]
           },
-          "unit": "short"
+          "unit": "kwatth"
         },
         "overrides": []
       },
@@ -384,17 +307,17 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 4
+        "y": 8
       },
-      "id": 5,
+      "id": 4,
       "options": {
         "legend": {
           "calcs": [
             "mean",
-            "last"
+            "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "right",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
@@ -412,11 +335,11 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  mpm.evaluation_date as time,\n  CONCAT(m.name, ' (v', mpm.model_version, ')') as metric,\n  mpm.r_squared as value\nFROM model_performance_metrics mpm\nJOIN machines m ON mpm.machine_id = m.id\nWHERE mpm.evaluation_date >= $__timeFrom()\n  AND mpm.evaluation_date <= $__timeTo()\n  AND mpm.r_squared IS NOT NULL\nORDER BY mpm.evaluation_date;",
+          "rawSql": "SELECT \n  period_start as time,\n  s.name as metric,\n  SUM(sep.cusum_deviation) OVER (PARTITION BY s.id ORDER BY sep.period_start) as value\nFROM seu_energy_performance sep\nJOIN seus s ON sep.seu_id = s.id\nWHERE sep.period_start >= NOW() - INTERVAL '6 months'\nORDER BY period_start, s.name;",
           "refId": "A"
         }
       ],
-      "title": "R² Score Over Time",
+      "title": "CUSUM Control Chart",
       "type": "timeseries"
     },
     {
@@ -424,7 +347,7 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "RMSE trend over time by machine",
+      "description": "Actual vs expected energy consumption with confidence intervals",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -433,7 +356,120 @@
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "RMSE",
+            "axisLabel": "Energy (kWh)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expected"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  period_start as time,\n  'Actual' as metric,\n  SUM(actual_consumption) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '6 months'\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Expected' as metric,\n  SUM(expected_consumption) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '6 months'\nGROUP BY period_start\n\nORDER BY time, metric;",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Energy: Baseline vs Actual",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "description": "EnPI trend with improvement target line",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "EnPI (kWh/unit)",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
@@ -450,7 +486,7 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "always",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -460,46 +496,71 @@
               "mode": "line"
             }
           },
-          "decimals": 2,
+          "decimals": 3,
           "mappings": [],
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "transparent",
+                "color": "green",
                 "value": null
               },
               {
                 "color": "red",
-                "value": 20
+                "value": 1.0
               }
             ]
           },
-          "unit": "short"
+          "unit": "kwatth"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Target (-5%)"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    5
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 4
+        "x": 0,
+        "y": 16
       },
       "id": 6,
       "options": {
         "legend": {
           "calcs": [
             "mean",
-            "last"
+            "lastNotNull"
           ],
           "displayMode": "table",
-          "placement": "right",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "asc"
+          "sort": "desc"
         }
       },
       "pluginVersion": "10.2.0",
@@ -512,11 +573,11 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  mpm.evaluation_date as time,\n  CONCAT(m.name, ' (v', mpm.model_version, ')') as metric,\n  mpm.rmse as value\nFROM model_performance_metrics mpm\nJOIN machines m ON mpm.machine_id = m.id\nWHERE mpm.evaluation_date >= $__timeFrom()\n  AND mpm.evaluation_date <= $__timeTo()\n  AND mpm.rmse IS NOT NULL\nORDER BY mpm.evaluation_date;",
+          "rawSql": "WITH baseline AS (\n  SELECT AVG(enpi_value) as baseline_enpi\n  FROM seu_energy_performance\n  WHERE period_start >= DATE_TRUNC('year', NOW())\n    AND enpi_value IS NOT NULL\n)\nSELECT \n  sep.period_start as time,\n  'Current EnPI' as metric,\n  AVG(sep.enpi_value) as value\nFROM seu_energy_performance sep\nWHERE sep.period_start >= NOW() - INTERVAL '6 months'\n  AND sep.enpi_value IS NOT NULL\nGROUP BY sep.period_start\n\nUNION ALL\n\nSELECT \n  sep.period_start as time,\n  'Target (-5%)' as metric,\n  (SELECT baseline_enpi * 0.95 FROM baseline) as value\nFROM seu_energy_performance sep\nWHERE sep.period_start >= NOW() - INTERVAL '6 months'\n  AND sep.enpi_value IS NOT NULL\nGROUP BY sep.period_start\n\nORDER BY time, metric;",
           "refId": "A"
         }
       ],
-      "title": "RMSE Over Time",
+      "title": "EnPI Improvement Trend",
       "type": "timeseries"
     },
     {
@@ -524,25 +585,48 @@
         "type": "postgres",
         "uid": "TimescaleDB"
       },
-      "description": "Latest model performance metrics by machine",
+      "description": "Heating/Cooling degree days vs energy consumption",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
-            "align": "center",
-            "cellOptions": {
-              "type": "auto"
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "inspect": false
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "green",
                 "value": null
               }
             ]
@@ -552,229 +636,48 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "R² Score"
+              "options": "Heating Degree-Days"
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
+                "id": "unit",
+                "value": "degree"
               },
               {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 0.7
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 0.85
-                    },
-                    {
-                      "color": "green",
-                      "value": 0.9
-                    }
-                  ]
-                }
+                "id": "custom.axisPlacement",
+                "value": "left"
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "RMSE"
+              "options": "Cooling Degree-Days"
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
+                "id": "unit",
+                "value": "degree"
               },
               {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 15
-                    },
-                    {
-                      "color": "orange",
-                      "value": 20
-                    },
-                    {
-                      "color": "red",
-                      "value": 25
-                    }
-                  ]
-                }
+                "id": "custom.axisPlacement",
+                "value": "left"
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Drift"
+              "options": "Energy"
             },
             "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
+                "id": "unit",
+                "value": "kwatth"
               },
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "false": {
-                        "color": "green",
-                        "index": 0,
-                        "text": "No"
-                      },
-                      "true": {
-                        "color": "red",
-                        "index": 1,
-                        "text": "YES"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 7,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "enablePagination": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "R² Score"
-          }
-        ]
-      },
-      "pluginVersion": "10.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "TimescaleDB"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \n  vlmp.machine_name as \"Machine\",\n  vlmp.model_type as \"Model Type\",\n  vlmp.model_version as \"Version\",\n  TO_CHAR(vlmp.evaluation_date, 'Mon DD HH24:MI') as \"Last Evaluated\",\n  ROUND(vlmp.r_squared::numeric, 4) as \"R² Score\",\n  ROUND(vlmp.rmse::numeric, 2) as \"RMSE\",\n  ROUND(vlmp.mae::numeric, 2) as \"MAE\",\n  vlmp.drift_detected as \"Drift\",\n  vlmp.sample_count as \"Samples\"\nFROM v_latest_model_performance vlmp\nORDER BY vlmp.r_squared DESC NULLS LAST;",
-          "refId": "A"
-        }
-      ],
-      "title": "Latest Model Performance by Machine",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "TimescaleDB"
-      },
-      "description": "Model version progression and performance improvement",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "center",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Status"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "completed": {
-                        "color": "green",
-                        "index": 0,
-                        "text": "Completed"
-                      },
-                      "failed": {
-                        "color": "red",
-                        "index": 3,
-                        "text": "Failed"
-                      },
-                      "pending": {
-                        "color": "blue",
-                        "index": 2,
-                        "text": "Pending"
-                      },
-                      "running": {
-                        "color": "yellow",
-                        "index": 1,
-                        "text": "Running"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
+                "id": "custom.axisPlacement",
+                "value": "right"
               }
             ]
           }
@@ -784,14 +687,157 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 16
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "TimescaleDB"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT \n  period_start as time,\n  'Heating Degree-Days' as metric,\n  SUM(heating_degree_days) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '12 months'\n  AND heating_degree_days IS NOT NULL\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Cooling Degree-Days' as metric,\n  SUM(cooling_degree_days) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '12 months'\n  AND cooling_degree_days IS NOT NULL\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Energy' as metric,\n  SUM(actual_consumption) / 1000 as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '12 months'\nGROUP BY period_start\n\nORDER BY time, metric;",
+          "refId": "A"
+        }
+      ],
+      "title": "Weather Normalization (Degree-Days)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "TimescaleDB"
+      },
+      "description": "Top SEUs by energy consumption and savings potential",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Compliance"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "compliant": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "✓ Compliant"
+                      },
+                      "critical": {
+                        "color": "red",
+                        "index": 2,
+                        "text": "✗ Critical"
+                      },
+                      "warning": {
+                        "color": "yellow",
+                        "index": 1,
+                        "text": "⚠ Warning"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Deviation %"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": -10
+                    },
+                    {
+                      "color": "red",
+                      "value": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
       },
       "id": 8,
       "options": {
         "cellHeight": "sm",
         "footer": {
           "countRows": false,
-          "enablePagination": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -802,7 +848,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Started"
+            "displayName": "Total Energy (kWh)"
           }
         ]
       },
@@ -816,43 +862,42 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  m.name as \"Machine\",\n  mth.model_type as \"Model Type\",\n  mth.model_version as \"Version\",\n  mth.training_status as \"Status\",\n  TO_CHAR(mth.training_start, 'Mon DD HH24:MI') as \"Started\",\n  ROUND(EXTRACT(EPOCH FROM (mth.training_end - mth.training_start))/60, 2) as \"Duration (min)\",\n  mth.trigger_type as \"Trigger\",\n  mth.training_samples as \"Samples\"\nFROM model_training_history mth\nJOIN machines m ON mth.machine_id = m.id\nWHERE mth.training_start >= NOW() - INTERVAL '30 days'\nORDER BY mth.training_start DESC\nLIMIT 10;",
+          "rawSql": "SELECT \n  s.name as \"SEU Name\",\n  s.description as \"Description\",\n  ROUND(SUM(sep.actual_consumption)::numeric, 0) as \"Total Energy (kWh)\",\n  ROUND(AVG(sep.deviation_percent)::numeric, 1) as \"Deviation %\",\n  ROUND(SUM(sep.expected_consumption - sep.actual_consumption)::numeric, 0) as \"Savings (kWh)\",\n  ROUND(AVG(sep.enpi_value)::numeric, 3) as \"EnPI\",\n  MAX(sep.compliance_status) as \"Compliance\",\n  TO_CHAR(MAX(sep.period_end), 'Mon DD') as \"Latest Period\"\nFROM seu_energy_performance sep\nJOIN seus s ON sep.seu_id = s.id\nWHERE sep.period_start >= NOW() - INTERVAL '3 months'\nGROUP BY s.name, s.description\nORDER BY SUM(sep.actual_consumption) DESC\nLIMIT 10;",
           "refId": "A"
         }
       ],
-      "title": "Recent Model Training History (30d)",
+      "title": "Significant Energy Uses (SEU) Performance",
       "type": "table"
     }
   ],
-  "refresh": "30s",
+  "refresh": "5m",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "sota",
-    "ml",
-    "performance",
-    "models",
-    "analytics"
+    "iso50001",
+    "enpi",
+    "compliance",
+    "sustainability"
   ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-6M",
     "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
-      "30s",
-      "1m",
       "5m",
       "15m",
-      "30m"
+      "30m",
+      "1h"
     ]
   },
   "timezone": "",
-  "title": "SOTA ML Model Performance",
-  "uid": "sota-ml-performance",
-  "version": 8,
+  "title": "SOTA ISO 50001 EnPI",
+  "uid": "sota-iso50001-enpi",
+  "version": 1,
   "weekStart": ""
 }
