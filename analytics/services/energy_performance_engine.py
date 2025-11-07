@@ -653,19 +653,27 @@ class EnergyPerformanceEngine:
         start_time = datetime.combine(analysis_date, datetime.min.time())
         end_time = start_time + timedelta(days=1)
         
+        # BUGFIX (Phase 4.1): Handle 'energy' as alias for 'electricity'
+        # Node-RED flow maps all energy types to 'energy' for routing,
+        # causing energy_type mismatch. Accept both for backward compatibility.
+        if energy_source == 'electricity':
+            energy_types = ['electricity', 'energy']
+        else:
+            energy_types = [energy_source]
+        
         query = """
             SELECT COALESCE(SUM(energy_kwh), 0) as total_energy
             FROM energy_readings er
             JOIN machines m ON er.machine_id = m.id
             JOIN seus s ON m.id = ANY(s.machine_ids)
             WHERE s.name = $1
-              AND er.energy_type = $2
+              AND er.energy_type = ANY($2::text[])
               AND er.time >= $3
               AND er.time < $4
         """
         
         async with db.pool.acquire() as conn:
-            result = await conn.fetchrow(query, seu_name, energy_source, start_time, end_time)
+            result = await conn.fetchrow(query, seu_name, energy_types, start_time, end_time)
             
         if result is None or result['total_energy'] == 0:
             raise ValueError(f"No data found for {seu_name} on {analysis_date}")
@@ -687,6 +695,12 @@ class EnergyPerformanceEngine:
         start_date = analysis_date - timedelta(days=30)
         end_date = analysis_date - timedelta(days=1)
         
+        # BUGFIX (Phase 4.1): Handle 'energy' as alias for 'electricity'
+        if energy_source == 'electricity':
+            energy_types = ['electricity', 'energy']
+        else:
+            energy_types = [energy_source]
+        
         query = """
             SELECT AVG(daily_energy) as avg_energy
             FROM (
@@ -695,7 +709,7 @@ class EnergyPerformanceEngine:
                 JOIN machines m ON er.machine_id = m.id
                 JOIN seus s ON m.id = ANY(s.machine_ids)
                 WHERE s.name = $1
-                  AND er.energy_type = $2
+                  AND er.energy_type = ANY($2::text[])
                   AND DATE(er.time) >= $3
                   AND DATE(er.time) <= $4
                 GROUP BY DATE(er.time)
@@ -703,7 +717,7 @@ class EnergyPerformanceEngine:
         """
         
         async with db.pool.acquire() as conn:
-            result = await conn.fetchrow(query, seu_name, energy_source, start_date, end_date)
+            result = await conn.fetchrow(query, seu_name, energy_types, start_date, end_date)
         
         if result is None or result['avg_energy'] is None:
             raise ValueError(f"No baseline data available for {seu_name}")
