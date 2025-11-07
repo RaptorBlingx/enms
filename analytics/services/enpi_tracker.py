@@ -774,10 +774,12 @@ class EnPITracker:
                     period_type=period_type
                 )
                 
+                # BUGFIX (Phase 4.1): Use expected_energy_kwh (period-specific) not baseline_energy_kwh (historical)
+                # baseline_energy_kwh is historical reference, expected_energy_kwh is baseline × actual production
                 seu_breakdown.append({
                     "seu_name": seu_name,
                     "energy_source": seu['energy_source'],
-                    "baseline_energy_kwh": round(baseline.baseline_energy_kwh, 2),
+                    "baseline_energy_kwh": round(performance.expected_energy_kwh, 2),  # FIX: was baseline.baseline_energy_kwh
                     "actual_energy_kwh": round(performance.actual_energy_kwh, 2),
                     "deviation_kwh": round(performance.deviation_kwh, 2),
                     "deviation_percent": round(performance.deviation_percent, 2),
