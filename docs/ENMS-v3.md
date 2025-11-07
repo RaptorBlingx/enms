@@ -991,42 +991,87 @@ PUT /api/v1/iso50001/action-plans/{id}/progress
 ### 📍 **PHASE 4: Comprehensive Testing & Bug Fixing** (Week 5)
 **Goal**: Zero bugs, all outputs validated, performance optimized
 
-#### Milestone 4.1: Data Quality Validation
-**Duration**: 2 days  
-**Tasks**:
-- [ ] 4.1.1: Create data sanity test suite
-- [ ] 4.1.2: Test all API outputs for logical correctness
-- [ ] 4.1.3: Validate calculations (energy, cost, carbon)
-- [ ] 4.1.4: Check for null values in required fields
-- [ ] 4.1.5: Verify date ranges and timestamps
+#### Milestone 4.1: Data Quality Validation ✅ COMPLETE
+**Duration**: 2 days (Session 10, November 7, 2025)  
+**Status**: ✅ COMPLETE - 20/20 tests passing  
+**Commits**: 62e38a0, e56b613, aca72cd  
 
-**Sanity Checks**:
-```python
-# tests/test_data_sanity.py
-class TestDataSanity:
-    async def test_energy_values_positive():
-        """All energy values must be > 0"""
-        
-    async def test_percentages_valid_range():
-        """All percentages between 0-100"""
-        
-    async def test_costs_calculated_correctly():
-        """Cost = Energy × Rate"""
-        
-    async def test_r_squared_valid_range():
-        """R² between 0-1"""
-        
-    async def test_timestamps_valid():
-        """All timestamps in valid ISO 8601 format"""
-        
-    async def test_no_null_in_required_fields():
-        """Required fields never null"""
-```
+**Tasks**:
+- [x] 4.1.1: Create data sanity test suite (test_data_sanity_phase4.py, 396 lines)
+- [x] 4.1.2: Test all API outputs for logical correctness
+- [x] 4.1.3: Validate calculations (energy, cost, deviation)
+- [x] 4.1.4: Check for null values in required fields
+- [x] 4.1.5: Verify date ranges and timestamps
+
+**Test Suite Created**: `analytics/tests/test_data_sanity_phase4.py`
+- **Total Tests**: 20 (100% passing)
+- **Execution Time**: 91 seconds
+- **Test Classes**:
+  - TestPerformanceEngineSanity (7 tests)
+  - TestISO50001Sanity (6 tests)
+  - TestBaselineSanity (4 tests)
+  - TestGeneralSanity (3 tests)
+
+**Critical Bugs Discovered & Fixed**:
+1. **BUG-002**: energy_type='energy' alias handling
+   - **Impact**: 96% of energy_readings had wrong energy_type value
+   - **Fix**: Accept both 'electricity' and 'energy' as aliases using PostgreSQL ANY()
+   - **File**: analytics/services/energy_performance_engine.py
+   - **Commit**: 62e38a0
+
+2. **BUG-003**: EnPI baseline display bug
+   - **Impact**: EnPI reports showed mathematically impossible data (200 OK but wrong values)
+   - **Symptom**: baseline=22,702, actual=27,852, deviation=-4.16% (CONTRADICTION!)
+   - **Fix**: Use period-adjusted expected_energy_kwh instead of historical baseline_energy_kwh
+   - **File**: analytics/services/enpi_tracker.py (line 780)
+   - **Commit**: e56b613
+
+**Logical Validation Patterns Implemented**:
+- ✅ All energy values > 0
+- ✅ Math consistency: deviation = actual - baseline
+- ✅ Percentage calculations: (deviation / baseline) × 100
+- ✅ Cost calculations: kWh × $0.15/kWh
+- ✅ Contradiction detection: If actual > baseline, deviation must be positive
+- ✅ Business logic: UNDER baseline = positive savings
+- ✅ ISO status values in valid set
+- ✅ No null values in required numeric fields
+- ✅ Timestamps in ISO 8601 format
+
+**Key Learning** (Validated User's Warning):
+> "200 OK ≠ Correct Data" - User was 100% right!
+
+**BUG-003 proved this**:
+- HTTP Status: 200 OK ✓
+- JSON Structure: Valid ✓
+- Field Types: Correct ✓
+- **Logical Consistency: FAILED** ❌
+
+Traditional testing would check HTTP 200 and mark as PASS. Logical validation checked the actual math and discovered the contradiction:
+- Expected: If actual (27,852) > baseline (22,702) → deviation should be +22.7%
+- Actual shown: -4.16% (negative)
+- **Impossibility detected**: Actual is HIGHER but showing as LOWER
+
+**Validation Process Applied**:
+1. Get API response (check HTTP 200)
+2. Extract key values (actual, baseline, deviation)
+3. **Verify math**: `deviation = actual - baseline`
+4. **Verify percent**: `(deviation / baseline) × 100`
+5. **Check contradictions**: Flag impossible data combinations
+6. **Verify business logic**: UNDER baseline = savings (positive value)
 
 **Success Criteria**:
-- ✅ All sanity tests passing
-- ✅ Zero logical errors in outputs
-- ✅ All calculations validated
+- ✅ All sanity tests passing (20/20)
+- ✅ Zero logical errors in outputs (2 bugs found and fixed)
+- ✅ All calculations validated (math, percentages, costs)
+- ✅ Schema mismatches fixed (field names aligned)
+- ✅ Timeout handling added (30s for slow endpoints)
+
+**Test Results Summary**:
+```
+20/20 tests passing (100% success rate)
+Execution time: 91 seconds (~4.5s per test)
+Zero failures after schema fixes
+```
 
 ---
 
@@ -2465,7 +2510,59 @@ OVOS (voice): "You're using 8% more energy than expected today. The HVAC system 
 
 ---
 
-**Document Version**: 1.3  
+### Session 11 - November 7, 2025 (Continued)
+**Completed**: Phase 4.1 Data Quality Validation  
+**Current Status**: ✅ COMPLETE - 20/20 tests passing  
+**Commits**: aca72cd  
+**Time Spent**: ~1.5 hours  
+
+**Session Tasks**:
+1. ✅ Fixed test schema mismatches (10+ field name corrections)
+2. ✅ Updated endpoint paths (/opportunities/identify → /opportunities)
+3. ✅ Fixed timeout issues (increased to 30s for slow endpoints)
+4. ✅ Corrected response structure expectations (models array, nested objects)
+5. ✅ Validated all 20 tests passing (100% success rate)
+6. ✅ Committed Phase 4.1 completion
+
+**Schema Fixes Applied**:
+- `expected_energy_kwh` → `baseline_energy_kwh`
+- `iso_status` → `iso50001_status` (performance engine)
+- `savings_kwh/savings_usd` → `deviation_kwh/deviation_cost_usd`
+- `opportunities/identify` → `opportunities` (endpoint path)
+- `priority` → `effort` (opportunities field)
+- `models` response: flat structure, not nested
+- `trained_at` → `created_at` (baseline models)
+- Added SEU breakdown tests for ISO 50001
+- Added `requires_attention` to valid ISO statuses
+
+**Final Test Results**:
+```bash
+======================== 20 passed in 91.04s (0:01:31) =========================
+```
+
+**Test Coverage**:
+- Performance Engine: 7/7 passing (analyze, opportunities)
+- ISO 50001: 6/6 passing (EnPI report, SEU breakdown)
+- Baseline: 4/4 passing (predict, models validation)
+- General Sanity: 3/3 passing (timestamps, nulls, percentages)
+
+**Phase 4.1 Achievement Summary**:
+- ✅ Comprehensive test suite created (396 lines, 20 tests)
+- ✅ 2 critical bugs discovered via logical validation
+- ✅ Both bugs fixed and validated
+- ✅ All tests passing (20/20, 100% success)
+- ✅ Logical validation patterns implemented
+- ✅ Schema mismatches identified and fixed
+- ✅ Documentation updated in ENMS-v3.md
+
+**Next Session**: Phase 4.2 - End-to-End Workflow Testing  
+**Focus**: Multi-step user workflows, OVOS integration scenarios  
+
+**Blockers**: None  
+
+---
+
+**Document Version**: 1.4  
 **Last Updated**: November 7, 2025  
-**Status**: 🧪 TESTING PHASE - Phase 4 (Milestone 4.1) IN PROGRESS  
-**Next Review**: After Phase 4.1 completion
+**Status**: 🧪 TESTING PHASE - Phase 4 (Milestone 4.1) ✅ COMPLETE, 4.2 NEXT  
+**Next Review**: After Phase 4.2 completion
