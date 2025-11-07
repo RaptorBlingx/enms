@@ -1230,6 +1230,8 @@ curl "http://localhost:8001/api/v1/baseline/models?seu_name=InvalidMachine-999&e
 
 **⭐ ENHANCEMENT (November 2025):** Now accepts **BOTH** UUID and SEU name!
 
+**⏱️ Performance:** Excellent (0.01-0.05s typical response time)
+
 **Parameters (JSON body):**
 - **Option 1 - Dashboard usage (UUID):**
   - `machine_id` (UUID): Machine identifier
@@ -2391,6 +2393,8 @@ Previously, you needed 3+ API calls (get energy → get baseline → detect anom
 - `seu_name` (required): SEU name (e.g., "Compressor-1", "HVAC-Main")
 - `energy_source` (required): Energy type - use `"energy"` for most machines, `"electricity"` for Boiler-1
 - `analysis_date` (required): Date to analyze (ISO format: "YYYY-MM-DD")
+
+**⏱️ Performance:** Fast (2-8s typical response time)
 
 **Response:**
 ```json
@@ -4441,6 +4445,8 @@ is 62.4% of total consumption."
 **Status:** ✅ Implemented, Deployed, Tested  
 **Added:** November 6, 2025 (Milestone 2.2)
 
+**⚠️ PERFORMANCE NOTE:** Slow endpoint (~35s response time). **Set timeout to 60s minimum** in OVOS integration.
+
 **Features:**
 - ✅ Automated opportunity detection (3 patterns: idle, scheduling, drift)
 - ✅ Ranked by potential savings (highest first)
@@ -4962,6 +4968,8 @@ curl "http://localhost:8001/api/v1/ovos/forecast/tomorrow?machine_id=c0000000-00
 **Endpoint:** `GET /api/v1/iso50001/enpi-report`
 
 **Description:** Generate factory-wide ISO 50001 compliance report with SEU-level breakdown, overall performance vs baseline, and action plans status.
+
+**⏱️ Performance:** Acceptable (2-10s typical for quarterly reports, 10-15s for annual reports)
 
 **Parameters:**
 - `factory_id` (required): Factory UUID
