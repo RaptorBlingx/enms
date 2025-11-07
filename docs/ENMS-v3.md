@@ -2325,7 +2325,147 @@ OVOS (voice): "You're using 8% more energy than expected today. The HVAC system 
 
 ---
 
+### Session 10 - Phase 4.1 Data Quality Validation (November 7, 2025)
+**Objective**: Validate all API outputs for logical correctness (beyond HTTP 200 OK)  
+**Status**: ✅ CRITICAL BUGS DISCOVERED & FIXED  
+**Duration**: 2 hours
+
+**Milestone 4.1 Status**: 🔄 IN PROGRESS
+
+#### Bugs Discovered (Logical Validation Approach)
+
+**BUG-002: energy_type='energy' Data Quality Issue** 🔴 CRITICAL
+- **Discovered**: Phase 4.1 testing - `/performance/analyze` returned 400 "No data found"
+- **Root Cause**: 96% of energy_readings had `energy_type='energy'` instead of proper values
+  - Node-RED flow maps MQTT topic `/electricity` → `dataType='energy'` for routing
+  - Original energy type lost during database insert
+  - Performance engine queries filtered by `energy_type='electricity'` → 0 results
+- **Impact**: ALL Performance Engine queries failing (critical system functionality broken)
+- **Fix Applied**: 
+  - Updated `_get_actual_energy()` to accept `['electricity', 'energy']` array
+  - Updated `_get_baseline_prediction()` to accept energy type aliases
+  - Uses PostgreSQL `ANY($2::text[])` operator for flexible matching
+- **Validation**:
+  ```bash
+  # Before fix: "No data found for Compressor-1"
+  # After fix:
+  {
+    "actual_energy_kwh": 1085.77,
+    "baseline_energy_kwh": 1034.56,
+    "deviation_kwh": 51.21,      # CORRECT: 1085.77 - 1034.56 = 51.21 ✓
+    "deviation_percent": 4.95,    # CORRECT: (51.21 / 1034.56) × 100 = 4.95% ✓
+    "deviation_cost_usd": 7.68,   # CORRECT: 51.21 × $0.15 = $7.68 ✓
+    "iso50001_status": "on_target"  # CORRECT: <5% deviation ✓
+  }
+  ```
+- **Files Changed**: `analytics/services/energy_performance_engine.py` (2 methods)
+- **Commit**: 62e38a0
+
+**BUG-003: EnPI Report Baseline Display Bug** 🔴 CRITICAL
+- **Discovered**: Phase 4.1 testing - EnPI report returned 200 OK but nonsense data
+- **Symptom**: 
+  ```json
+  {
+    "baseline_energy_kwh": 22702.14,   # WRONG VALUE
+    "actual_energy_kwh": 27852.53,
+    "deviation_kwh": -1208.58,
+    "deviation_percent": -4.16
+  }
+  ```
+- **Logical Validation FAILED**:
+  - If actual (27,852) > baseline (22,702) → deviation should be POSITIVE
+  - But deviation shown as -4.16% (negative) → CONTRADICTION!
+  - Checked DB: `expected_energy_kwh = 29,063` (correct)
+  - Conclusion: **200 OK but WRONG DATA** (exactly as user warned!)
+- **Root Cause**: 
+  - Line 780 used `baseline.baseline_energy_kwh` (historical reference, 22,702)
+  - Should use `performance.expected_energy_kwh` (period-adjusted, 29,063)
+  - Expected energy = baseline SEC × actual production for period
+- **Fix Applied**: Changed `baseline_energy_kwh` field to use `expected_energy_kwh`
+- **Validation After Fix**:
+  ```json
+  {
+    "baseline_energy_kwh": 29063.57,   # NOW CORRECT (expected for period)
+    "actual_energy_kwh": 27852.53,
+    "deviation_kwh": -1211.05,          # ✓ (27852.53 - 29063.57 = -1211.05)
+    "deviation_percent": -4.17,         # ✓ (-1211.05 / 29063.57 × 100 = -4.17%)
+    "savings_kwh": 1211.05              # ✓ UNDER baseline = savings
+  }
+  ```
+- **Files Changed**: `analytics/services/enpi_tracker.py` (1 line fix)
+- **Commit**: e56b613
+
+#### Test Suite Status
+
+**Created**:
+- `analytics/tests/test_data_sanity_phase4.py` (430 lines, 20 tests)
+  - TestPerformanceEngineSanity (7 tests)
+  - TestISO50001Sanity (6 tests)
+  - TestBaselineSanity (4 tests)
+  - TestGeneralSanity (3 tests)
+
+**Test Results** (After Bugfixes):
+- Initial: 1/20 passing (fixture issues)
+- After energy_type fix: 4/20 passing
+- Remaining failures: Test schema mismatches (expect wrong field names)
+  - Tests expect: `expected_energy_kwh` → API returns: `baseline_energy_kwh`
+  - Tests expect: `iso_status` → API returns: `iso50001_status`
+  - Tests expect: `/opportunities/identify` → Actual: `/opportunities`
+  
+**Logical Validation Success** ✅:
+- ✅ Energy values > 0
+- ✅ Deviation calculations correct (actual - baseline)
+- ✅ Percentage calculations correct ((deviation/baseline) × 100)
+- ✅ Cost calculations correct (kWh × $0.15/kWh)
+- ✅ ISO status logic correct (<5% = on_target)
+- ✅ Savings logic correct (negative deviation = positive savings)
+
+#### Key Learnings
+
+**"200 OK ≠ Correct Data"** (User's Warning Validated):
+- HTTP status only confirms request succeeded
+- MUST validate response data logically:
+  - Energy > 0
+  - Percentages valid ranges
+  - Calculations match expected math
+  - No contradictions (e.g., actual > baseline but negative deviation)
+  
+**Logical Validation Process**:
+1. Get API response (200 OK)
+2. Extract key values (actual, baseline, deviation)
+3. Verify math: `deviation = actual - baseline`
+4. Verify percent: `(deviation / baseline) × 100`
+5. Check for contradictions
+6. Verify business logic (e.g., savings = UNDER baseline)
+
+**Bug Discovery Effectiveness**:
+- Traditional testing: Would mark 200 OK as "pass"
+- Logical validation: Found 2 critical bugs hiding behind 200 OK
+- **Conclusion**: User was 100% correct - need logical validation, not just HTTP status
+
+#### Next Steps
+
+**Remaining Phase 4.1 Work**:
+- [ ] Fix test schema mismatches (update field names to match API)
+- [ ] Re-run full test suite (target: 20/20 passing)
+- [ ] Manual endpoint testing with logical validation
+- [ ] Document all findings
+- [ ] Mark Milestone 4.1 as COMPLETE
+
+**Phase 4.2: End-to-End Workflow Testing** (Next):
+- User workflow scenarios
+- Multi-step analysis chains
+- OVOS voice integration testing
+- Performance under load
+
+**Technical Debt**:
+- TODO: Fix Node-RED flow to preserve originalDataType properly
+- TODO: Data migration to standardize energy_type values
+- TODO: Add automated logical validation to test suite
+
+---
+
 **Document Version**: 1.3  
 **Last Updated**: November 7, 2025  
-**Status**: 📋 IN PROGRESS - Phase 3 (Milestone 3.1) COMPLETE + VALIDATED  
-**Next Review**: After Phase 3 full completion
+**Status**: 🧪 TESTING PHASE - Phase 4 (Milestone 4.1) IN PROGRESS  
+**Next Review**: After Phase 4.1 completion
