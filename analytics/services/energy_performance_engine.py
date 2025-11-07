@@ -89,6 +89,7 @@ class Recommendation:
 
 
 @dataclass
+@dataclass
 class PerformanceAnalysis:
     """Complete SEU performance analysis"""
     seu_name: str
