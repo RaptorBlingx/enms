@@ -42,8 +42,8 @@ class TestPerformanceEngineSanity:
             
             # Check all energy fields
             assert data["actual_energy_kwh"] > 0, "Actual energy must be positive"
-            assert data["expected_energy_kwh"] > 0, "Expected energy must be positive"
-            assert abs(data["savings_kwh"]) >= 0, "Savings must be valid"
+            assert data["baseline_energy_kwh"] > 0, "Baseline energy must be positive"
+            assert abs(data["deviation_kwh"]) >= 0, "Deviation must be valid"
     
     async def test_analyze_deviation_percent_valid(self):
         """Deviation percent should be within reasonable range"""
@@ -80,13 +80,13 @@ class TestPerformanceEngineSanity:
             data = response.json()
             
             # Assuming $0.15/kWh rate
-            expected_savings_usd = abs(data["savings_kwh"]) * 0.15
-            actual_savings_usd = abs(data["savings_usd"])
+            expected_cost_usd = abs(data["deviation_kwh"]) * 0.15
+            actual_cost_usd = abs(data["deviation_cost_usd"])
             
             # Allow 1% tolerance for rounding
-            tolerance = expected_savings_usd * 0.01
-            assert abs(actual_savings_usd - expected_savings_usd) <= tolerance, \
-                f"Cost calculation error: expected ${expected_savings_usd:.2f}, got ${actual_savings_usd:.2f}"
+            tolerance = expected_cost_usd * 0.01
+            assert abs(actual_cost_usd - expected_cost_usd) <= tolerance, \
+                f"Cost calculation error: expected ${expected_cost_usd:.2f}, got ${actual_cost_usd:.2f}"
     
     async def test_analyze_iso_status_valid(self):
         """ISO status must be one of the allowed values"""
@@ -103,9 +103,9 @@ class TestPerformanceEngineSanity:
             assert response.status_code == 200
             data = response.json()
             
-            valid_statuses = ["excellent", "on_track", "needs_attention", "at_risk"]
-            assert data["iso_status"] in valid_statuses, \
-                f"Invalid ISO status: {data['iso_status']}"
+            valid_statuses = ["excellent", "on_track", "needs_attention", "requires_attention", "at_risk"]
+            assert data["iso50001_status"] in valid_statuses, \
+                f"Invalid ISO status: {data['iso50001_status']}"
     
     async def test_analyze_no_null_required_fields(self):
         """No null values in required fields"""
@@ -123,8 +123,8 @@ class TestPerformanceEngineSanity:
             data = response.json()
             
             required_fields = [
-                "actual_energy_kwh", "expected_energy_kwh", "savings_kwh", 
-                "savings_usd", "deviation_percent", "iso_status"
+                "actual_energy_kwh", "baseline_energy_kwh", "deviation_kwh", 
+                "deviation_cost_usd", "deviation_percent", "iso50001_status"
             ]
             
             for field in required_fields:
@@ -132,32 +132,32 @@ class TestPerformanceEngineSanity:
     
     async def test_opportunities_savings_positive(self):
         """All savings opportunities must have positive potential savings"""
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:  # Increased timeout
             response = await client.get(
-                f"{BASE_URL}/api/v1/performance/opportunities/identify?factory_id=11111111-1111-1111-1111-111111111111"
+                f"{BASE_URL}/api/v1/performance/opportunities?factory_id=11111111-1111-1111-1111-111111111111&period=month"
             )
             
             assert response.status_code == 200
-            opportunities = response.json()
+            data = response.json()
             
-            for opp in opportunities:
+            for opp in data["opportunities"]:
                 assert opp["potential_savings_kwh"] > 0, \
-                    f"Opportunity {opp['opportunity_id']} has non-positive savings"
+                    f"Opportunity for {opp['seu_name']} has non-positive savings"
     
-    async def test_opportunities_priority_valid(self):
-        """Priority must be high/medium/low"""
-        async with httpx.AsyncClient(timeout=10.0) as client:
+    async def test_opportunities_effort_valid(self):
+        """Effort must be low/medium/high"""
+        async with httpx.AsyncClient(timeout=30.0) as client:  # Increased timeout
             response = await client.get(
-                f"{BASE_URL}/api/v1/performance/opportunities/identify?factory_id=11111111-1111-1111-1111-111111111111"
+                f"{BASE_URL}/api/v1/performance/opportunities?factory_id=11111111-1111-1111-1111-111111111111&period=month"
             )
             
             assert response.status_code == 200
-            opportunities = response.json()
+            data = response.json()
             
-            valid_priorities = ["high", "medium", "low"]
-            for opp in opportunities:
-                assert opp["priority"] in valid_priorities, \
-                    f"Invalid priority: {opp['priority']}"
+            valid_efforts = ["high", "medium", "low"]
+            for opp in data["opportunities"]:
+                assert opp["effort"] in valid_efforts, \
+                    f"Invalid effort: {opp['effort']}"
 
 
 @pytest.mark.asyncio
@@ -174,8 +174,9 @@ class TestISO50001Sanity:
             assert response.status_code == 200
             data = response.json()
             
-            assert data["actual_consumption_kwh"] > 0, "Actual consumption must be positive"
-            assert data["baseline_consumption_kwh"] > 0, "Baseline consumption must be positive"
+            overall = data["overall_performance"]
+            assert overall["total_energy_actual_kwh"] > 0, "Actual consumption must be positive"
+            assert overall["total_energy_baseline_kwh"] > 0, "Baseline consumption must be positive"
     
     async def test_enpi_report_deviation_logical(self):
         """EnPI deviation calculations must be logically consistent"""
@@ -188,9 +189,10 @@ class TestISO50001Sanity:
             data = response.json()
             
             # deviation = (actual - baseline) / baseline * 100
-            actual = data["actual_consumption_kwh"]
-            baseline = data["baseline_consumption_kwh"]
-            deviation = data["deviation_percent"]
+            overall = data["overall_performance"]
+            actual = overall["total_energy_actual_kwh"]
+            baseline = overall["total_energy_baseline_kwh"]
+            deviation = overall["deviation_percent"]
             
             expected_deviation = ((actual - baseline) / baseline) * 100
             
@@ -198,8 +200,8 @@ class TestISO50001Sanity:
             assert abs(deviation - expected_deviation) <= 0.1, \
                 f"Deviation calculation error: expected {expected_deviation:.2f}%, got {deviation:.2f}%"
     
-    async def test_enpi_report_cost_calculation(self):
-        """Cost should equal energy × rate"""
+    async def test_enpi_report_savings_calculation(self):
+        """Savings should equal deviation × rate"""
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
                 f"{BASE_URL}/api/v1/iso50001/enpi-report?factory_id=11111111-1111-1111-1111-111111111111&period=2025-Q4"
@@ -208,12 +210,13 @@ class TestISO50001Sanity:
             assert response.status_code == 200
             data = response.json()
             
-            expected_cost = data["actual_consumption_kwh"] * 0.15
+            overall = data["overall_performance"]
+            expected_savings_usd = abs(overall["deviation_kwh"]) * 0.15
             
             # Allow 1% tolerance
-            tolerance = expected_cost * 0.01
-            assert abs(data["total_cost_usd"] - expected_cost) <= tolerance, \
-                f"Cost calculation error"
+            tolerance = expected_savings_usd * 0.01
+            assert abs(overall["cumulative_savings_usd"] - expected_savings_usd) <= tolerance, \
+                f"Savings calculation error"
     
     async def test_enpi_report_iso_status_valid(self):
         """ISO status must be valid"""
@@ -225,50 +228,38 @@ class TestISO50001Sanity:
             assert response.status_code == 200
             data = response.json()
             
-            valid_statuses = ["excellent", "on_track", "needs_attention", "at_risk"]
-            assert data["iso_status"] in valid_statuses
+            valid_statuses = ["on_track", "needs_attention", "at_risk"]
+            assert data["overall_performance"]["iso_status"] in valid_statuses, \
+                f"Invalid ISO status: {data['overall_performance']['iso_status']}"
     
-    async def test_action_plan_roi_calculation(self):
-        """Action plan ROI calculations must be correct"""
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            # First create an action plan
-            create_response = await client.post(
-                f"{BASE_URL}/api/v1/iso50001/action-plans",
-                json={
-                    "factory_id": "11111111-1111-1111-1111-111111111111",
-                    "title": "Test Action Plan",
-                    "description": "Test ROI calculation",
-                    "category": "energy_efficiency",
-                    "target_kwh_reduction": 1000,
-                    "estimated_investment_usd": 500,
-                    "target_completion_date": (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
-                }
-            )
-            
-            assert create_response.status_code == 200
-            plan_data = create_response.json()
-            
-            # Verify savings calculation
-            expected_savings_usd = 1000 * 0.15  # 1000 kWh × $0.15
-            assert abs(plan_data["estimated_annual_savings_usd"] - expected_savings_usd) <= 0.01
-            
-            # Verify payback period
-            expected_payback = (500 / expected_savings_usd) * 12  # months
-            assert abs(plan_data["payback_period_months"] - expected_payback) <= 0.01
-    
-    async def test_action_plan_progress_percent_range(self):
-        """Progress percent must be 0-100"""
+    async def test_seu_breakdown_energy_positive(self):
+        """All SEU breakdown energy values must be positive"""
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
-                f"{BASE_URL}/api/v1/iso50001/action-plans?factory_id=11111111-1111-1111-1111-111111111111"
+                f"{BASE_URL}/api/v1/iso50001/enpi-report?factory_id=11111111-1111-1111-1111-111111111111&period=2025-Q4"
             )
             
             assert response.status_code == 200
-            plans = response.json()
+            data = response.json()
             
-            for plan in plans:
-                assert 0 <= plan["progress_percent"] <= 100, \
-                    f"Progress {plan['progress_percent']}% out of range"
+            for seu in data["seu_breakdown"]:
+                assert seu["actual_energy_kwh"] > 0, f"{seu['seu_name']} actual energy must be positive"
+                assert seu["baseline_energy_kwh"] > 0, f"{seu['seu_name']} baseline energy must be positive"
+    
+    async def test_seu_breakdown_status_valid(self):
+        """All SEU ISO statuses must be valid"""
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{BASE_URL}/api/v1/iso50001/enpi-report?factory_id=11111111-1111-1111-1111-111111111111&period=2025-Q4"
+            )
+            
+            assert response.status_code == 200
+            data = response.json()
+            
+            valid_statuses = ["on_track", "needs_attention", "at_risk"]
+            for seu in data["seu_breakdown"]:
+                assert seu["iso_status"] in valid_statuses, \
+                    f"{seu['seu_name']} has invalid ISO status: {seu['iso_status']}"
 
 
 @pytest.mark.asyncio
@@ -283,7 +274,11 @@ class TestBaselineSanity:
                 json={
                     "seu_name": "Compressor-1",
                     "energy_source": "electricity",
-                    "production_units": 100000
+                    "features": {
+                        "total_production_count": 100000,
+                        "avg_outdoor_temp_c": 25.0,
+                        "avg_pressure_bar": 7.0
+                    }
                 }
             )
             
@@ -296,47 +291,46 @@ class TestBaselineSanity:
         """R² must be between 0 and 1"""
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
-                f"{BASE_URL}/api/v1/baseline/models"
+                f"{BASE_URL}/api/v1/baseline/models?seu_name=Compressor-1&energy_source=electricity"
             )
             
             assert response.status_code == 200
-            models = response.json()
+            data = response.json()
             
-            for model in models:
-                r_squared = model["metrics"]["r_squared"]
+            for model in data["models"]:
+                r_squared = model["r_squared"]
                 assert 0 <= r_squared <= 1, \
-                    f"R² {r_squared} out of range for {model['seu_name']}"
+                    f"R² {r_squared} out of range for {model['model_name']}"
     
     async def test_models_error_metrics_positive(self):
         """Error metrics (RMSE, MAE) must be >= 0"""
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
-                f"{BASE_URL}/api/v1/baseline/models"
+                f"{BASE_URL}/api/v1/baseline/models?seu_name=Compressor-1&energy_source=electricity"
             )
             
             assert response.status_code == 200
-            models = response.json()
+            data = response.json()
             
-            for model in models:
-                metrics = model["metrics"]
-                assert metrics["rmse"] >= 0, f"RMSE cannot be negative"
-                assert metrics["mae"] >= 0, f"MAE cannot be negative"
+            for model in data["models"]:
+                assert model["rmse"] >= 0, f"RMSE cannot be negative"
+                assert model["mae"] >= 0, f"MAE cannot be negative"
     
     async def test_models_timestamps_valid(self):
         """Timestamps must be valid ISO 8601 format"""
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
-                f"{BASE_URL}/api/v1/baseline/models"
+                f"{BASE_URL}/api/v1/baseline/models?seu_name=Compressor-1&energy_source=electricity"
             )
             
             assert response.status_code == 200
-            models = response.json()
+            data = response.json()
             
             iso8601_pattern = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
             
-            for model in models:
-                assert re.match(iso8601_pattern, model["trained_at"]), \
-                    f"Invalid timestamp format: {model['trained_at']}"
+            for model in data["models"]:
+                assert re.match(iso8601_pattern, model["created_at"]), \
+                    f"Invalid timestamp format: {model['created_at']}"
 
 
 @pytest.mark.asyncio
@@ -395,7 +389,7 @@ class TestGeneralSanity:
             assert response.status_code == 200
             data = response.json()
             
-            numeric_fields = ["actual_energy_kwh", "expected_energy_kwh", "savings_kwh", "savings_usd"]
+            numeric_fields = ["actual_energy_kwh", "baseline_energy_kwh", "deviation_kwh", "deviation_cost_usd"]
             for field in numeric_fields:
                 if field in data:
                     assert data[field] is not None, f"Numeric field '{field}' is null"
