@@ -4946,6 +4946,296 @@ curl "http://localhost:8001/api/v1/ovos/forecast/tomorrow?machine_id=c0000000-00
 ---
 
 
-**Last Updated:** November 4, 2025  
-**Status:** ✅ **PRODUCTION READY** + 🎯 **ENHANCED BASELINE ENDPOINTS** (Tasks 2-7 Complete)
+**Last Updated:** November 7, 2025  
+**Status:** ✅ **PRODUCTION READY** + 🎯 **ENHANCED BASELINE ENDPOINTS** + 📊 **ISO 50001 COMPLIANCE** (Phase 3.2 Complete)
+
+---
+
+## 📊 ISO 50001 Compliance Reporting (Phase 3.2)
+
+**Purpose:** Generate comprehensive ISO 50001 EnPI (Energy Performance Indicator) reports and manage energy improvement action plans for compliance and management review.
+
+### **EnPI Compliance Report**
+
+**Endpoint:** `GET /api/v1/iso50001/enpi-report`
+
+**Description:** Generate factory-wide ISO 50001 compliance report with SEU-level breakdown, overall performance vs baseline, and action plans status.
+
+**Parameters:**
+- `factory_id` (required): Factory UUID
+- `period` (required): Report period
+  - Quarterly: `2025-Q1`, `2025-Q2`, `2025-Q3`, `2025-Q4`
+  - Annual: `2025`
+- `baseline_year` (optional): Baseline year (auto-detected if omitted)
+
+**Example - Quarterly Report:**
+```bash
+curl "http://localhost:8001/api/v1/iso50001/enpi-report?factory_id=11111111-1111-1111-1111-111111111111&period=2025-Q4"
+```
+
+**Response:**
+```json
+{
+  "factory_id": "11111111-1111-1111-1111-111111111111",
+  "report_period": "2025-Q4",
+  "period_start": "2025-10-01",
+  "period_end": "2025-12-31",
+  "baseline_year": 2024,
+  "seus_analyzed": 1,
+  "overall_performance": {
+    "total_energy_baseline_kwh": 28887.73,
+    "total_energy_actual_kwh": 27852.53,
+    "deviation_kwh": -1035.2,
+    "deviation_percent": -3.58,
+    "cumulative_savings_kwh": 1035.22,
+    "cumulative_savings_usd": 155.28,
+    "iso_status": "on_track"
+  },
+  "seu_breakdown": [
+    {
+      "seu_name": "Compressor-1",
+      "energy_source": "electricity",
+      "baseline_energy_kwh": 22702.14,
+      "actual_energy_kwh": 27852.53,
+      "deviation_kwh": -1035.2,
+      "deviation_percent": -3.58,
+      "savings_kwh": 1035.2,
+      "iso_status": "on_track"
+    }
+  ],
+  "action_plans_status": {
+    "total_plans": 1,
+    "completed": 1,
+    "in_progress": 0,
+    "planned": 0,
+    "cancelled": 0,
+    "on_hold": 0
+  },
+  "generated_at": "2025-11-07T07:38:34.329406"
+}
+```
+
+**Example - Annual Report:**
+```bash
+curl "http://localhost:8001/api/v1/iso50001/enpi-report?factory_id=11111111-1111-1111-1111-111111111111&period=2025"
+```
+
+**ISO Status Indicators:**
+- `excellent`: Deviation ≤ -10% (far exceeding target)
+- `on_track`: -10% < Deviation ≤ -2% (meeting target)
+- `needs_attention`: -2% < Deviation ≤ 2% (marginal performance)
+- `at_risk`: Deviation > 2% (exceeding baseline consumption)
+
+**OVOS Voice Query Example:**
+> "What's our ISO 50001 performance for Q4 2025?"
+
+```python
+# Voice intent → API call
+factory_id = "11111111-1111-1111-1111-111111111111"
+period = "2025-Q4"
+report = requests.get(f"/iso50001/enpi-report?factory_id={factory_id}&period={period}")
+iso_status = report["overall_performance"]["iso_status"]
+savings = report["overall_performance"]["cumulative_savings_kwh"]
+
+# Voice response
+speak(f"Your ISO 50001 status is {iso_status}. You've saved {savings} kilowatt-hours this quarter.")
+```
+
+---
+
+### **Action Plan Management**
+
+**Purpose:** Track energy improvement initiatives for ISO 50001 compliance.
+
+#### **Create Action Plan**
+
+**Endpoint:** `POST /api/v1/iso50001/action-plans`
+
+**Description:** Create new energy improvement action plan with automatic ROI calculation.
+
+**Request Body:**
+```json
+{
+  "title": "Optimize Compressor Operating Hours",
+  "objective": "Reduce overnight idle running by 30%",
+  "description": "Install automated shutdown controls for non-production hours",
+  "target_savings_kwh": 5000,
+  "responsible_person": "John Smith",
+  "target_date": "2025-12-31",
+  "seu_id": "aaaaaaaa-1111-1111-1111-111111111111",
+  "factory_id": "11111111-1111-1111-1111-111111111111",
+  "priority": "high",
+  "estimated_investment_usd": 2500,
+  "created_by": "api_user"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "7e301d02-589f-4ba1-82a6-d9fddc091e38",
+  "title": "Optimize Compressor Operating Hours",
+  "objective": "Reduce overnight idle running by 30%",
+  "description": "Install automated shutdown controls for non-production hours",
+  "target_savings_kwh": 5000.0,
+  "target_savings_usd": 750.0,
+  "status": "planned",
+  "priority": "high",
+  "responsible_person": "John Smith",
+  "target_date": "2025-12-31",
+  "estimated_investment_usd": 2500.0,
+  "payback_period_months": 40.0,
+  "created_at": "2025-11-07T07:38:58.186596+00:00"
+}
+```
+
+**Auto-Calculated Fields:**
+- `target_savings_usd`: `target_savings_kwh × $0.15/kWh`
+- `payback_period_months`: `(investment / annual_savings) × 12`
+
+**Priority Levels:** `low`, `medium`, `high`, `critical`
+
+---
+
+#### **List Action Plans**
+
+**Endpoint:** `GET /api/v1/iso50001/action-plans`
+
+**Description:** Get action plans with optional filtering.
+
+**Query Parameters:**
+- `factory_id` (optional): Filter by factory
+- `seu_id` (optional): Filter by SEU
+- `status` (optional): `planned`, `in_progress`, `completed`, `cancelled`, `on_hold`
+- `priority` (optional): `low`, `medium`, `high`, `critical`
+
+**Example - Filter by Status:**
+```bash
+curl "http://localhost:8001/api/v1/iso50001/action-plans?factory_id=11111111-1111-1111-1111-111111111111&status=in_progress"
+```
+
+**Response:**
+```json
+{
+  "total_plans": 1,
+  "action_plans": [
+    {
+      "id": "7e301d02-589f-4ba1-82a6-d9fddc091e38",
+      "title": "Optimize Compressor Operating Hours",
+      "objective": "Reduce overnight idle running by 30%",
+      "seu_name": "Compressor-1",
+      "target_savings_kwh": 5000.0,
+      "actual_savings_kwh": null,
+      "status": "in_progress",
+      "priority": "high",
+      "progress_percent": 35,
+      "responsible_person": "John Smith",
+      "target_date": "2025-12-31",
+      "payback_period_months": 40.0,
+      "created_at": "2025-11-07T07:38:58.186596+00:00"
+    }
+  ]
+}
+```
+
+**Sorting:** By priority (critical → high → medium → low), then target date (earliest first)
+
+---
+
+#### **Update Action Plan Progress**
+
+**Endpoint:** `PUT /api/v1/iso50001/action-plans/{action_plan_id}/progress`
+
+**Description:** Update action plan status, progress, and actual results.
+
+**Request Body (all fields optional):**
+```json
+{
+  "status": "in_progress",
+  "progress_percent": 35,
+  "start_date": "2025-11-01"
+}
+```
+
+**Example - Mark Completed:**
+```bash
+curl -X PUT http://localhost:8001/api/v1/iso50001/action-plans/7e301d02-589f-4ba1-82a6-d9fddc091e38/progress \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "completed",
+    "actual_savings_kwh": 6200,
+    "actual_investment_usd": 2300,
+    "completion_notes": "Achieved 124% of target savings. ROI exceeded expectations."
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": "7e301d02-589f-4ba1-82a6-d9fddc091e38",
+  "title": "Optimize Compressor Operating Hours",
+  "status": "completed",
+  "progress_percent": 100.0,
+  "actual_savings_kwh": 6200.0,
+  "actual_savings_usd": 930.0,
+  "payback_period_months": 29.68,
+  "completion_date": "2025-11-07",
+  "updated_at": "2025-11-07T07:39:44.446618+00:00"
+}
+```
+
+**Auto-Updates When Completed:**
+- `progress_percent` → 100%
+- `completion_date` → today
+- `actual_savings_usd` → `actual_savings_kwh × $0.15`
+- `payback_period_months` recalculated with actual values
+
+**Status Workflow:**
+```
+planned → in_progress → completed
+   ↓           ↓            ↓
+cancelled   on_hold    on_hold
+```
+
+---
+
+### **OVOS Integration Examples**
+
+**Query 1: "How many action plans are in progress?"**
+```python
+response = requests.get("/iso50001/action-plans?status=in_progress")
+count = response.json()["total_plans"]
+speak(f"There are {count} action plans currently in progress.")
+```
+
+**Query 2: "What's our energy savings this quarter?"**
+```python
+report = requests.get("/iso50001/enpi-report?factory_id=X&period=2025-Q4")
+savings_kwh = report["overall_performance"]["cumulative_savings_kwh"]
+savings_usd = report["overall_performance"]["cumulative_savings_usd"]
+speak(f"You've saved {savings_kwh} kilowatt-hours this quarter, worth {savings_usd} dollars.")
+```
+
+**Query 3: "Show high-priority action plans"**
+```python
+response = requests.get("/iso50001/action-plans?priority=high")
+plans = response.json()["action_plans"]
+for plan in plans:
+    speak(f"{plan['title']}: {plan['progress_percent']}% complete")
+```
+
+---
+
+## 🗂️ Quick Reference Summary
+
+**ISO 50001 Endpoints:**
+- `GET /api/v1/iso50001/enpi-report` - Quarterly/annual compliance reports
+- `POST /api/v1/iso50001/action-plans` - Create energy improvement plan
+- `GET /api/v1/iso50001/action-plans` - List/filter action plans
+- `PUT /api/v1/iso50001/action-plans/{id}/progress` - Update plan status
+
+---
+
+**Last Updated:** November 7, 2025  
+**Status:** ✅ **PRODUCTION READY** + 🎯 **ENHANCED BASELINE ENDPOINTS** + 📊 **ISO 50001 COMPLIANCE** (Phase 3.2 Complete)
 
