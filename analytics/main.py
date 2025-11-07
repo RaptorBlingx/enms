@@ -493,6 +493,7 @@ from api.routes.seus import router as seus_router  # SEU Management
 from api.routes.factory import router as factory_router  # Factory Analytics
 from api.routes.analytics import router as analytics_router  # Analytics endpoints (Phase 1)
 from api.routes.performance import router as performance_router  # Performance Engine (Phase 2)
+from api.routes.iso50001 import router as iso50001_router  # ISO 50001 Compliance (Phase 3)
 
 # Register API routes with prefix
 app.include_router(baseline_router, prefix=settings.API_PREFIX)
@@ -513,6 +514,7 @@ app.include_router(seus_router, prefix=settings.API_PREFIX)  # /seus endpoints
 app.include_router(factory_router, prefix=settings.API_PREFIX)  # /factory/* endpoints
 app.include_router(analytics_router, prefix=settings.API_PREFIX)  # /analytics/* endpoints
 app.include_router(performance_router, prefix=settings.API_PREFIX)  # /performance/* endpoints (Phase 2)
+app.include_router(iso50001_router)  # /api/v1/iso50001/* endpoints (Phase 3)
 # DEPRECATED: Old /ovos/* routes (still work but marked for removal)
 app.include_router(ovos_router, prefix=settings.API_PREFIX)  # DEPRECATED - Use /factory, /analytics
 app.include_router(ovos_training_router, prefix=f"{settings.API_PREFIX}/ovos", tags=["OVOS Training (DEPRECATED)"])  # DEPRECATED - Use /baseline/train-seu
