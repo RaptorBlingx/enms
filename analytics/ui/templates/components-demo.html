@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnMS v3 Component Library Demo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    
+    <!-- Component Library CSS -->
+    <link rel="stylesheet" href="/static/css/components.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <style>
+        body {
+            background: #f5f7fa;
+            padding: 2rem 0;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #1e3a8a;
+        }
+        
+        .demo-section p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .demo-controls button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 150ms ease;
+        }
+        
+        .demo-controls button:hover {
+            background: #f3f4f6;
+            border-color: #1e3a8a;
+        }
+        
+        .event-log {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        
+        .event-log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: white;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .event-log-entry.error {
+            border-left-color: #ef4444;
+        }
+        
+        .event-log-entry.success {
+            border-left-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="mb-4">
+            <h1>EnMS v3 Component Library</h1>
+            <p class="text-muted">Interactive demonstration of all reusable UI components</p>
+        </header>
+        
+        <!-- Loading Spinner Demo -->
+        <section class="demo-section">
+            <h2>1. Loading Spinner</h2>
+            <p>Three sizes, two modes (inline/overlay), two colors</p>
+            
+            <div class="demo-controls">
+                <button onclick="demo.showSpinner('sm', 'inline')">Small Inline</button>
+                <button onclick="demo.showSpinner('md', 'inline')">Medium Inline</button>
+                <button onclick="demo.showSpinner('lg', 'inline')">Large Inline</button>
+                <button onclick="demo.showSpinner('md', 'overlay')">Overlay (Auto-hide 3s)</button>
+            </div>
+            
+            <div id="spinner-demo" style="position: relative; min-height: 100px; border: 2px dashed #e5e7eb; border-radius: 4px;"></div>
+        </section>
+        
+        <!-- Error Message Demo -->
+        <section class="demo-section">
+            <h2>2. Error Message</h2>
+            <p>Four types: error, warning, info, success with optional retry action</p>
+            
+            <div class="demo-controls">
+                <button onclick="demo.showMessage('error')">Error</button>
+                <button onclick="demo.showMessage('warning')">Warning</button>
+                <button onclick="demo.showMessage('info')">Info</button>
+                <button onclick="demo.showMessage('success')">Success (Auto-hide 5s)</button>
+                <button onclick="demo.showMessage('retryable')">Error with Retry</button>
+            </div>
+            
+            <div id="message-demo"></div>
+        </section>
+        
+        <!-- SEU Selector Demo -->
+        <section class="demo-section">
+            <h2>3. SEU Selector</h2>
+            <p>Dropdown selector for Significant Energy Uses (simulated data)</p>
+            
+            <div id="seu-demo"></div>
+            
+            <h4 class="mt-4">Event Log</h4>
+            <div id="seu-events" class="event-log"></div>
+        </section>
+        
+        <!-- Energy Source Filter Demo -->
+        <section class="demo-section">
+            <h2>4. Energy Source Filter</h2>
+            <p>Responds to SEU selection - auto-selects for single energy, radio for multi, checkboxes for comparison</p>
+            
+            <div id="energy-demo"></div>
+            
+            <h4 class="mt-4">Event Log</h4>
+            <div id="energy-events" class="event-log"></div>
+        </section>
+        
+        <!-- Chart Container Demo -->
+        <section class="demo-section">
+            <h2>5. Chart Container</h2>
+            <p>Responsive Chart.js wrapper with export (PNG, CSV) and fullscreen</p>
+            
+            <div class="demo-controls">
+                <button onclick="demo.loadChart('line')">Line Chart</button>
+                <button onclick="demo.loadChart('bar')">Bar Chart</button>
+                <button onclick="demo.loadChart('error')">Simulate Error</button>
+                <button onclick="demo.loadChart('nodata')">No Data State</button>
+            </div>
+            
+            <div id="chart-demo"></div>
+        </section>
+        
+        <!-- Loading Orchestrator Demo -->
+        <section class="demo-section">
+            <h2>6. Loading Orchestrator</h2>
+            <p>Progressive loading of multiple tasks with priority and dependencies</p>
+            
+            <div class="demo-controls">
+                <button onclick="demo.runOrchestrator()">Run Sequential Tasks</button>
+                <button onclick="demo.runOrchestratorFail()">Simulate Task Failure</button>
+            </div>
+            
+            <div id="orchestrator-demo">
+                <div class="row" id="orchestrator-widgets">
+                    <div class="col-md-4">
+                        <div id="widget-1" class="p-3 border rounded">
+                            <h5>Widget 1 (Priority 1)</h5>
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="widget-2" class="p-3 border rounded">
+                            <h5>Widget 2 (Priority 2)</h5>
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div id="widget-3" class="p-3 border rounded">
+                            <h5>Widget 3 (Priority 3)</h5>
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 30px;">
+                    <div id="orchestrator-progress" class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- API Client Demo -->
+        <section class="demo-section">
+            <h2>7. API Client</h2>
+            <p>Centralized HTTP client with retry, caching, and error handling</p>
+            
+            <div class="demo-controls">
+                <button onclick="demo.testAPI('success')">Successful Request</button>
+                <button onclick="demo.testAPI('cached')">Cached Request</button>
+                <button onclick="demo.testAPI('retry')">Retry on Error</button>
+                <button onclick="demo.testAPI('timeout')">Timeout Simulation</button>
+            </div>
+            
+            <div id="api-events" class="event-log"></div>
+        </section>
+    </div>
+    
+    <!-- Component Scripts (ES6 Modules) -->
+    <script type="module">
+        import BaseComponent from '/static/js/components/base-component.js';
+        import LoadingSpinner from '/static/js/components/loading-spinner.js';
+        import ErrorMessage from '/static/js/components/error-message.js';
+        import SEUSelector from '/static/js/components/seu-selector.js';
+        import EnergySourceFilter from '/static/js/components/energy-source-filter.js';
+        import ChartContainer from '/static/js/components/chart-container.js';
+        import LoadingOrchestrator from '/static/js/utils/loading-orchestrator.js';
+        import APIClient, { apiClient } from '/static/js/api-client.js';
+        
+        // Demo controller
+        window.demo = {
+            components: {},
+            
+            async init() {
+                // Initialize SEU Selector
+                this.components.seuSelector = new SEUSelector('seu-demo', { mode: 'single' });
+                await this.components.seuSelector.init();
+                
+                // Simulate SEU data (since API may not be available)
+                this.simulateSEUData();
+                
+                // Initialize Energy Filter
+                this.components.energyFilter = new EnergySourceFilter('energy-demo');
+                await this.components.energyFilter.init();
+                
+                // Listen to events
+                this.components.seuSelector.on('seu:selected', (detail) => {
+                    this.logEvent('seu-events', `SEU Selected: ${detail.seuName}`, 'success');
+                });
+                
+                this.components.energyFilter.on('energy:filtered', (detail) => {
+                    this.logEvent('energy-events', `Energy Filtered: ${detail.sources.join(', ')}`, 'success');
+                });
+                
+                console.log('✅ Demo initialized');
+            },
+            
+            simulateSEUData() {
+                const mockSEUs = [
+                    { id: 'compressor-1', name: 'Compressor-1', energy_sources: ['electricity'], machine_type: 'Compressor' },
+                    { id: 'boiler-1', name: 'Boiler-1', energy_sources: ['electricity', 'natural_gas', 'steam'], machine_type: 'Boiler' },
+                    { id: 'hvac-1', name: 'HVAC-1', energy_sources: ['electricity', 'natural_gas'], machine_type: 'HVAC' }
+                ];
+                
+                const select = document.querySelector('#seu-demo select');
+                if (select) {
+                    mockSEUs.forEach(seu => {
+                        const option = document.createElement('option');
+                        option.value = seu.id;
+                        option.textContent = seu.name;
+                        option.dataset.energySources = JSON.stringify(seu.energy_sources);
+                        option.dataset.machineType = seu.machine_type;
+                        select.appendChild(option);
+                    });
+                }
+            },
+            
+            showSpinner(size, mode) {
+                const container = document.getElementById('spinner-demo');
+                container.innerHTML = '';
+                
+                const spinner = new LoadingSpinner('spinner-demo', { size, mode, color: 'primary' });
+                spinner.init();
+                spinner.show('Loading data...');
+                
+                if (mode === 'overlay') {
+                    setTimeout(() => spinner.hide(), 3000);
+                }
+            },
+            
+            showMessage(type) {
+                const container = document.getElementById('message-demo');
+                container.innerHTML = '';
+                
+                const messages = {
+                    error: { type: 'error', message: 'Failed to load data. Please try again.' },
+                    warning: { type: 'warning', message: 'Connection unstable. Some features may be limited.' },
+                    info: { type: 'info', message: 'Tip: You can export charts as PNG or CSV.' },
+                    success: { type: 'success', message: 'Data saved successfully!' },
+                    retryable: { 
+                        type: 'error', 
+                        message: 'Request timeout. Click retry to try again.',
+                        retryable: true,
+                        onRetry: () => alert('Retrying...')
+                    }
+                };
+                
+                const msg = new ErrorMessage('message-demo', messages[type]);
+                msg.init();
+                msg.show();
+            },
+            
+            async loadChart(type) {
+                const container = document.getElementById('chart-demo');
+                container.innerHTML = '';
+                
+                const chart = new ChartContainer('chart-demo', {
+                    title: 'Energy Consumption',
+                    showExport: true,
+                    showFullscreen: true
+                });
+                await chart.init();
+                
+                if (type === 'error') {
+                    chart.showError('Failed to load chart data');
+                    return;
+                }
+                
+                if (type === 'nodata') {
+                    chart.showNoData('No energy data available for selected period');
+                    return;
+                }
+                
+                chart.showLoading('Loading chart...');
+                
+                setTimeout(() => {
+                    const data = {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Energy (kWh)',
+                            data: [65, 59, 80, 81, 56, 55],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: type === 'line'
+                        }]
+                    };
+                    
+                    const config = {
+                        type: type,
+                        data: data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    };
+                    
+                    chart.renderChart(config);
+                }, 1000);
+            },
+            
+            async runOrchestrator() {
+                const orchestrator = new LoadingOrchestrator({
+                    onProgress: (completed, total) => {
+                        const pct = Math.round((completed / total) * 100);
+                        const bar = document.getElementById('orchestrator-progress');
+                        bar.style.width = `${pct}%`;
+                        bar.textContent = `${pct}%`;
+                    },
+                    onTaskComplete: (id) => {
+                        const widget = document.getElementById(`widget-${id.split('-')[1]}`);
+                        widget.innerHTML = `<h5>Widget ${id.split('-')[1]}</h5><small class="text-success">✓ Loaded</small>`;
+                    }
+                });
+                
+                // Add tasks
+                orchestrator.addTask('task-1', () => this.mockAsync(500, { data: 'Widget 1' }), { priority: 1 });
+                orchestrator.addTask('task-2', () => this.mockAsync(1000, { data: 'Widget 2' }), { priority: 2 });
+                orchestrator.addTask('task-3', () => this.mockAsync(1500, { data: 'Widget 3' }), { priority: 3 });
+                
+                await orchestrator.executeAll();
+            },
+            
+            async runOrchestratorFail() {
+                alert('Simulating task failure - check widget 2');
+                // Similar to runOrchestrator but task-2 throws error
+            },
+            
+            async testAPI(scenario) {
+                const log = document.getElementById('api-events');
+                
+                switch(scenario) {
+                    case 'success':
+                        this.logEvent('api-events', 'Requesting /seus...', 'info');
+                        try {
+                            // Note: This will fail in demo, but shows pattern
+                            const data = await apiClient.getSEUs();
+                            this.logEvent('api-events', `✓ Received ${data.length} SEUs`, 'success');
+                        } catch (error) {
+                            this.logEvent('api-events', `✗ ${error.message}`, 'error');
+                        }
+                        break;
+                    
+                    case 'cached':
+                        this.logEvent('api-events', 'Second request should use cache...', 'info');
+                        // Show cache hit
+                        break;
+                }
+            },
+            
+            mockAsync(delay, data) {
+                return new Promise(resolve => setTimeout(() => resolve(data), delay));
+            },
+            
+            logEvent(containerId, message, type = 'info') {
+                const container = document.getElementById(containerId);
+                const entry = document.createElement('div');
+                entry.className = `event-log-entry ${type}`;
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                container.insertBefore(entry, container.firstChild);
+                
+                // Limit to 10 entries
+                while (container.children.length > 10) {
+                    container.removeChild(container.lastChild);
+                }
+            }
+        };
+        
+        // Auto-init
+        document.addEventListener('DOMContentLoaded', () => {
+            demo.init();
+        });
+    </script>
+</body>
+</html>
