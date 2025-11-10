@@ -91,7 +91,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND(AVG(enpi_value)::numeric, 3) as \"EnPI\"\nFROM seu_energy_performance\nWHERE period_start >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month'\n  AND enpi_value IS NOT NULL;",
+          "rawSql": "SELECT \n  ROUND((SUM(actual_consumption) / NULLIF(SUM(expected_consumption), 0))::numeric, 3) as \"EnPI\"\nFROM seu_energy_performance\nWHERE period_start >= '2025-09-01'::date;",
           "refId": "A"
         }
       ],
@@ -163,7 +163,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND(SUM(expected_consumption - actual_consumption)::numeric, 0) as \"Savings (kWh)\"\nFROM seu_energy_performance\nWHERE period_start >= DATE_TRUNC('month', NOW()) - INTERVAL '1 month';",
+          "rawSql": "SELECT \n  ROUND(SUM(expected_consumption - actual_consumption)::numeric, 0) as \"Savings (kWh)\"\nFROM seu_energy_performance\nWHERE period_start >= '2025-09-01'::date;",
           "refId": "A"
         }
       ],
@@ -237,7 +237,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND((COUNT(*) FILTER (WHERE compliance_status = 'compliant') * 100.0 / NULLIF(COUNT(*), 0))::numeric, 0) as \"Compliance Rate\"\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '6 months';",
+          "rawSql": "SELECT \n  ROUND((COUNT(*) FILTER (WHERE compliance_status = 'compliant') * 100.0 / NULLIF(COUNT(*), 0))::numeric, 0) as \"Compliance Rate\"\nFROM seu_energy_performance\nWHERE period_start >= '2025-05-01'::date;",
           "refId": "A"
         }
       ],
@@ -335,7 +335,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  period_start as time,\n  s.name as metric,\n  SUM(sep.cusum_deviation) OVER (PARTITION BY s.id ORDER BY sep.period_start) as value\nFROM seu_energy_performance sep\nJOIN seus s ON sep.seu_id = s.id\nWHERE sep.period_start >= NOW() - INTERVAL '6 months'\nORDER BY period_start, s.name;",
+          "rawSql": "SELECT \n  period_start as time,\n  s.name as metric,\n  SUM(sep.cusum_deviation) OVER (PARTITION BY s.id ORDER BY sep.period_start) as value\nFROM seu_energy_performance sep\nJOIN seus s ON sep.seu_id = s.id\nWHERE sep.period_start >= '2025-05-01'::date\nORDER BY period_start, s.name;",
           "refId": "A"
         }
       ],
@@ -448,7 +448,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  period_start as time,\n  'Actual' as metric,\n  SUM(actual_consumption) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '6 months'\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Expected' as metric,\n  SUM(expected_consumption) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '6 months'\nGROUP BY period_start\n\nORDER BY time, metric;",
+          "rawSql": "SELECT \n  period_start as time,\n  'Actual' as metric,\n  SUM(actual_consumption) as value\nFROM seu_energy_performance\nWHERE period_start >= '2025-05-01'::date\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Expected' as metric,\n  SUM(expected_consumption) as value\nFROM seu_energy_performance\nWHERE period_start >= '2025-05-01'::date\nGROUP BY period_start\n\nORDER BY time, metric;",
           "refId": "A"
         }
       ],
@@ -573,7 +573,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "WITH baseline AS (\n  SELECT AVG(enpi_value) as baseline_enpi\n  FROM seu_energy_performance\n  WHERE period_start >= DATE_TRUNC('year', NOW())\n    AND enpi_value IS NOT NULL\n)\nSELECT \n  sep.period_start as time,\n  'Current EnPI' as metric,\n  AVG(sep.enpi_value) as value\nFROM seu_energy_performance sep\nWHERE sep.period_start >= NOW() - INTERVAL '6 months'\n  AND sep.enpi_value IS NOT NULL\nGROUP BY sep.period_start\n\nUNION ALL\n\nSELECT \n  sep.period_start as time,\n  'Target (-5%)' as metric,\n  (SELECT baseline_enpi * 0.95 FROM baseline) as value\nFROM seu_energy_performance sep\nWHERE sep.period_start >= NOW() - INTERVAL '6 months'\n  AND sep.enpi_value IS NOT NULL\nGROUP BY sep.period_start\n\nORDER BY time, metric;",
+          "rawSql": "WITH baseline AS (\n  SELECT (SUM(actual_consumption) / NULLIF(SUM(expected_consumption), 0)) as baseline_enpi\n  FROM seu_energy_performance\n  WHERE period_start >= '2025-01-01'::date\n    AND period_start < '2025-05-01'::date\n)\nSELECT \n  sep.period_start as time,\n  'Current EnPI' as metric,\n  (SUM(sep.actual_consumption) / NULLIF(SUM(sep.expected_consumption), 0)) as value\nFROM seu_energy_performance sep\nWHERE sep.period_start >= '2025-05-01'::date\nGROUP BY sep.period_start\n\nUNION ALL\n\nSELECT \n  sep.period_start as time,\n  'Target (-5%)' as metric,\n  (SELECT baseline_enpi * 0.95 FROM baseline) as value\nFROM seu_energy_performance sep\nWHERE sep.period_start >= '2025-05-01'::date\nGROUP BY sep.period_start\n\nORDER BY time, metric;",
           "refId": "A"
         }
       ],
@@ -715,7 +715,7 @@
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT \n  period_start as time,\n  'Heating Degree-Days' as metric,\n  SUM(heating_degree_days) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '12 months'\n  AND heating_degree_days IS NOT NULL\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Cooling Degree-Days' as metric,\n  SUM(cooling_degree_days) as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '12 months'\n  AND cooling_degree_days IS NOT NULL\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Energy' as metric,\n  SUM(actual_consumption) / 1000 as value\nFROM seu_energy_performance\nWHERE period_start >= NOW() - INTERVAL '12 months'\nGROUP BY period_start\n\nORDER BY time, metric;",
+          "rawSql": "SELECT \n  period_start as time,\n  'Heating Degree-Days' as metric,\n  SUM(heating_degree_days) as value\nFROM seu_energy_performance\nWHERE period_start >= '2025-01-01'::date\n  AND heating_degree_days IS NOT NULL\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Cooling Degree-Days' as metric,\n  SUM(cooling_degree_days) as value\nFROM seu_energy_performance\nWHERE period_start >= '2025-01-01'::date\n  AND cooling_degree_days IS NOT NULL\nGROUP BY period_start\n\nUNION ALL\n\nSELECT \n  period_start as time,\n  'Energy' as metric,\n  SUM(actual_consumption) / 1000 as value\nFROM seu_energy_performance\nWHERE period_start >= '2025-01-01'::date\nGROUP BY period_start\n\nORDER BY time, metric;",
           "refId": "A"
         }
       ],
@@ -862,7 +862,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  s.name as \"SEU Name\",\n  s.description as \"Description\",\n  ROUND(SUM(sep.actual_consumption)::numeric, 0) as \"Total Energy (kWh)\",\n  ROUND(AVG(sep.deviation_percent)::numeric, 1) as \"Deviation %\",\n  ROUND(SUM(sep.expected_consumption - sep.actual_consumption)::numeric, 0) as \"Savings (kWh)\",\n  ROUND(AVG(sep.enpi_value)::numeric, 3) as \"EnPI\",\n  MAX(sep.compliance_status) as \"Compliance\",\n  TO_CHAR(MAX(sep.period_end), 'Mon DD') as \"Latest Period\"\nFROM seu_energy_performance sep\nJOIN seus s ON sep.seu_id = s.id\nWHERE sep.period_start >= NOW() - INTERVAL '3 months'\nGROUP BY s.name, s.description\nORDER BY SUM(sep.actual_consumption) DESC\nLIMIT 10;",
+          "rawSql": "SELECT \n  s.name as \"SEU Name\",\n  s.description as \"Description\",\n  ROUND(SUM(sep.actual_consumption)::numeric, 0) as \"Total Energy (kWh)\",\n  ROUND(AVG(sep.deviation_percent)::numeric, 1) as \"Deviation %\",\n  ROUND(SUM(sep.expected_consumption - sep.actual_consumption)::numeric, 0) as \"Savings (kWh)\",\n  ROUND((SUM(sep.actual_consumption) / NULLIF(SUM(sep.expected_consumption), 0))::numeric, 3) as \"EnPI\",\n  MAX(sep.compliance_status) as \"Compliance\",\n  TO_CHAR(MAX(sep.period_end), 'Mon DD') as \"Latest Period\"\nFROM seu_energy_performance sep\nJOIN seus s ON sep.seu_id = s.id\nWHERE sep.period_start >= '2025-07-01'::date\nGROUP BY s.name, s.description\nORDER BY SUM(sep.actual_consumption) DESC\nLIMIT 10;",
           "refId": "A"
         }
       ],
@@ -898,6 +898,6 @@
   "timezone": "",
   "title": "SOTA ISO 50001 EnPI",
   "uid": "sota-iso50001-enpi",
-  "version": 3,
+  "version": 7,
   "weekStart": ""
 }
