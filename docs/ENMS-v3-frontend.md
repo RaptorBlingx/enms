@@ -494,7 +494,9 @@ widgets.forEach(async (widget) => {
 
 **Testing:**
 - [ ] 6.1.12: Browser integration testing
-  - Open demo page: `http://localhost:8001/ui/components-demo`
+  - **Demo page URL:** `http://10.33.10.109:8080/analytics/ui/components-demo`
+    - Port 8080: Nginx gateway (routes to analytics service)
+    - Port 8001: Direct analytics service (internal only)
   - Test checklist:
     1. LoadingSpinner: All 3 sizes, inline + overlay modes
     2. ErrorMessage: All 4 types, retry button, auto-hide
