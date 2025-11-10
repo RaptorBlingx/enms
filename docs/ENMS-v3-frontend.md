@@ -393,7 +393,7 @@ widgets.forEach(async (widget) => {
 ### Milestone 6.1: Component Library (2 days)
 **Goal:** Build reusable UI components following DRY principle  
 **Status:** ✅ COMPLETE (November 10, 2025)  
-**Git Commit:** (pending - see below)
+**Git Commit:** 261294b
 
 **Deliverables:**
 - [x] `analytics/ui/static/js/components/base-component.js` (311 lines - foundation class)
@@ -492,20 +492,20 @@ widgets.forEach(async (widget) => {
 - ✅ JSDoc comments for all public methods
 - ✅ Demo page includes all components
 
-**Testing (PENDING - Task 6.1.12):**
-```bash
-# Open demo page
-open http://localhost:8001/ui/components-demo
-
-# Test checklist:
-1. LoadingSpinner: All 3 sizes, inline + overlay modes
-2. ErrorMessage: All 4 types, retry button, auto-hide
-3. SEUSelector: Dropdown loads, selection fires event, localStorage
-4. EnergySourceFilter: Auto-select (single), radio (multi), checkboxes (comparison)
-5. ChartContainer: Render chart, export PNG/CSV, fullscreen
-6. LoadingOrchestrator: Progressive loading, progress bar updates
-7. Mobile: All components responsive at 768px, 480px breakpoints
-```
+**Testing:**
+- [ ] 6.1.12: Browser integration testing
+  - Open demo page: `http://localhost:8001/ui/components-demo`
+  - Test checklist:
+    1. LoadingSpinner: All 3 sizes, inline + overlay modes
+    2. ErrorMessage: All 4 types, retry button, auto-hide
+    3. SEUSelector: Dropdown loads, selection fires event, localStorage
+    4. EnergySourceFilter: Auto-select (single), radio (multi), checkboxes (comparison)
+    5. ChartContainer: Render chart, export PNG/CSV, fullscreen
+    6. LoadingOrchestrator: Progressive loading, progress bar updates
+    7. Mobile: All components responsive at 768px, 480px breakpoints
+  - Verify no console errors
+  - Test event communication between components
+  - Validate API client retry/cache behavior
 
 ---
 
