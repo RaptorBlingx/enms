@@ -217,6 +217,28 @@ async def model_performance_ui(request: Request):
     return response
 
 
+@router.get("/components-demo", response_class=HTMLResponse, name="ui_components_demo")
+async def components_demo_ui(request: Request):
+    """
+    Component Library Demo Page (Phase 6 - Milestone 6.1)
+    
+    Interactive showcase for all v3 frontend components:
+    - LoadingSpinner (3 sizes, inline/overlay modes)
+    - ErrorMessage (4 types: error, warning, info, success)
+    - SEUSelector (single/multi-select modes)
+    - EnergySourceFilter (auto-select, radio, checkbox modes)
+    - ChartContainer (Chart.js integration, export PNG/CSV)
+    - LoadingOrchestrator (progressive loading demo)
+    - APIClient (retry logic, caching, error handling)
+    
+    ⚠️ FOR DEVELOPMENT AND TESTING ONLY
+    Access: http://10.33.10.109:8080/analytics/ui/components-demo
+    """
+    response = templates.TemplateResponse("components-demo.html", {"request": request})
+    response.headers.update(NO_CACHE_HEADERS)
+    return response
+
+
 # Health check for UI service
 @router.get("/health", response_class=HTMLResponse)
 async def ui_health(request: Request):
