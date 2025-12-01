@@ -10,8 +10,8 @@
     // Configuration
     const CONFIG = {
         backendUrl: '/api/chatbot',  // Proxied through nginx
-        welcomeMessage: 'Merhaba! Size nasıl yardımcı olabilirim?',
-        placeholder: 'Mesajınızı yazın...',
+        welcomeMessage: 'Hello! How can I help you with your Energy Management questions?',
+        placeholder: 'Type your message...',
         title: 'EnMS Assistant',
         sessionPrefix: 'enms_chat_'
     };
@@ -451,13 +451,14 @@
                     }
                 }
             } else {
-                addMessage('Üzgünüm, bir yanıt alamadım. Lütfen tekrar deneyin.', false, true);
+                // Rasa returned empty - provide helpful fallback
+                addMessage("I can help you with ISO 50001 Energy Management topics. Try asking about: energy baseline, EnPI, energy policy, energy planning, or say 'hello' to start.", false, false);
             }
 
         } catch (error) {
             hideTyping();
             console.error('Chatbot error:', error);
-            addMessage('Bağlantı hatası. Chatbot servisi çalışmıyor olabilir.', false, true);
+            addMessage('Connection error. The chatbot service may not be running.', false, true);
         }
 
         isLoading = false;
