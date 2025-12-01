@@ -21,6 +21,7 @@ services:
       - analytics
       - query-service
       - simulator
+      - chatbot
     networks:
       - enms-network
     restart: unless-stopped
@@ -40,7 +41,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      TIMESCALEDB_TELEMETRY: "off"
+      TIMESCALEDB_TELEMETRY: off
       # Optimize for 4GB RAM server
       POSTGRES_SHARED_BUFFERS: 1GB
       POSTGRES_EFFECTIVE_CACHE_SIZE: 3GB
@@ -282,6 +283,32 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ============================================================================
+  # CHATBOT - Rasa-powered conversational AI assistant
+  # NOTE: Rasa server must be running externally or as separate container
+  # ============================================================================
+  chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    container_name: enms-chatbot
+    environment:
+      NODE_ENV: production
+      BACKEND_PORT: 5006
+      RASA_HOST: ${RASA_HOST:-host.docker.internal}
+      RASA_PORT: ${RASA_PORT:-5005}
+    ports:
+      - "${CHATBOT_PORT:-5006}:5006"
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 # ============================================================================
 # NETWORKS
