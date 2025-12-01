@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Constants
-ENERGY_RATE = 0.15  # $/kWh
-CARBON_RATE = 0.45  # kg CO2/kWh
+# Removed hardcoded rates - using database functions instead
 
 
 @router.get("/factory/summary", tags=["Factory Analytics"])
@@ -54,8 +53,11 @@ async def get_factory_summary() -> Dict[str, Any]:
     """
     
     try:
-        now = datetime.now()
+        # Use UTC to match machines.py logic
+        now = datetime.utcnow()
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        # End of day (23:59:59) to ensure we capture all data for "today"
+        today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
         
         # Get all active machines
         machines = await get_machines()
@@ -93,8 +95,11 @@ async def get_factory_summary() -> Dict[str, Any]:
         if not active_machines:
             response["status"] = "no_machines"
             return response
+            
+        # ===== ENERGY & COST METRICS =====
+        # Calculate global summary by aggregating all machines
+        # This ensures we cover ALL factories, not just the first one found
         
-        # ===== ENERGY METRICS =====
         energy_query = """
             SELECT 
                 machine_id,
@@ -107,10 +112,14 @@ async def get_factory_summary() -> Dict[str, Any]:
         """
         
         async with db.pool.acquire() as conn:
-            energy_results = await conn.fetch(energy_query, today_start, now)
+            energy_results = await conn.fetch(energy_query, today_start, today_end)
         
-        total_energy = 0.0
+        logger.info(f"Factory Summary: Found {len(energy_results)} machines with energy data")
+        found_ids = [str(r['machine_id']) for r in energy_results]
+        logger.info(f"Factory Summary: Machine IDs: {found_ids}")
+
         total_avg_power = 0.0
+        total_energy_global = 0.0
         machine_energies = {}
         
         for row in energy_results:
@@ -118,17 +127,37 @@ async def get_factory_summary() -> Dict[str, Any]:
             energy = float(row['total_energy'] or 0)
             avg_power = float(row['avg_power'] or 0)
             
-            total_energy += energy
             total_avg_power += avg_power
+            total_energy_global += energy
+            
             machine_energies[machine_id] = {
                 'energy': energy,
                 'avg_power': avg_power,
                 'max_power': float(row['max_power'] or 0)
             }
         
-        response["energy"]["total_kwh_today"] = round(total_energy, 2)
         response["energy"]["avg_power_kw"] = round(total_avg_power, 2)
+        response["energy"]["total_kwh_today"] = round(total_energy_global, 2)
         
+        # Calculate global cost
+        # We need to calculate cost for each machine and sum it up
+        # Using calculate_energy_cost SQL function for accuracy
+        total_cost_global = 0.0
+        
+        async with db.pool.acquire() as conn:
+            # We can optimize this by calling it once per machine in parallel or loop
+            # For 8 machines, a loop is fine
+            for m in active_machines:
+                mid = m['id']
+                cost_row = await conn.fetchrow(
+                    "SELECT total_cost FROM calculate_energy_cost($1, $2, $3)", 
+                    mid, today_start, now
+                )
+                if cost_row and cost_row['total_cost']:
+                    total_cost_global += float(cost_row['total_cost'])
+                    
+        response["costs"]["total_usd_today"] = round(total_cost_global, 2)
+
         # Get current power
         current_power_query = """
             SELECT DISTINCT ON (machine_id)
@@ -146,9 +175,9 @@ async def get_factory_summary() -> Dict[str, Any]:
         current_total_power = sum(float(r['power_kw'] or 0) for r in current_readings)
         response["energy"]["current_power_kw"] = round(current_total_power, 2)
         
-        # ===== COST CALCULATIONS =====
-        total_cost_today = total_energy * ENERGY_RATE
-        response["costs"]["total_usd_today"] = round(total_cost_today, 2)
+        # ===== COST PROJECTION =====
+        # Use the cost from SQL function
+        total_cost_today = response["costs"]["total_usd_today"]
         
         days_in_month = 30
         day_of_month = now.day
@@ -211,13 +240,16 @@ async def get_factory_summary() -> Dict[str, Any]:
             
             top_machine = next((m for m in machines if str(m['id']) == top_machine_id), None)
             
-            if top_machine and total_energy > 0:
+            # Use the total from response
+            total_kwh = response["energy"]["total_kwh_today"]
+            
+            if top_machine and total_kwh > 0:
                 response["top_consumer"] = {
                     "machine_id": top_machine_id,
                     "machine_name": top_machine.get('name', 'Unknown'),
                     "machine_type": top_machine.get('type', 'unknown'),
                     "energy_kwh": round(top_energy, 2),
-                    "percent_of_total": round((top_energy / total_energy) * 100, 1)
+                    "percent_of_total": round((top_energy / total_kwh) * 100, 1)
                 }
         
         # ===== LATEST ANOMALY =====

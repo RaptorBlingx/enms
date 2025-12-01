@@ -14,7 +14,7 @@ from database import get_machines, get_machine_by_id, db
 router = APIRouter()
 
 # Constants
-ENERGY_RATE = 0.15  # $/kWh
+# Removed hardcoded rates - using database functions instead
 
 
 @router.get("/machines", tags=["Machines"])
@@ -393,13 +393,23 @@ async def get_machine_status_by_name(machine_name: str) -> Dict[str, Any]:
         
         # Calculate today's statistics
         total_energy = float(today_stats['total_energy']) if today_stats['total_energy'] else 0.0
-        total_cost = total_energy * ENERGY_RATE
         
-        # Calculate uptime (hours with readings > 0.5 kW)
-        reading_count = today_stats['reading_count'] if today_stats['reading_count'] else 0
-        hours_elapsed = (datetime.utcnow() - start_of_day).total_seconds() / 3600
-        uptime_hours = reading_count / 12 if reading_count > 0 else 0  # Assuming 5-min intervals
-        uptime_percent = (uptime_hours / hours_elapsed * 100) if hours_elapsed > 0 else 0.0
+        # Use SQL functions for cost and uptime to ensure consistency
+        async with db.pool.acquire() as conn:
+            # Calculate Cost
+            cost_row = await conn.fetchrow(
+                "SELECT total_cost FROM calculate_energy_cost($1, $2, $3)", 
+                machine_id, start_of_day, end_of_day
+            )
+            total_cost = float(cost_row['total_cost']) if cost_row and cost_row['total_cost'] else 0.0
+            
+            # Calculate Uptime
+            uptime_row = await conn.fetchrow(
+                "SELECT running_hours, utilization_percent FROM get_machine_operating_hours($1, $2, $3)", 
+                machine_id, start_of_day, end_of_day
+            )
+            uptime_hours = float(uptime_row['running_hours']) if uptime_row and uptime_row['running_hours'] else 0.0
+            uptime_percent = float(uptime_row['utilization_percent']) if uptime_row and uptime_row['utilization_percent'] else 0.0
         
         today_statistics = {
             "energy_kwh": round(total_energy, 2),

@@ -112,16 +112,16 @@ async def get_energy_timeseries(
     try:
         pool = db.pool
         
-        # Since energy_readings_1min is already aggregated to 1-minute buckets,
-        # we need to re-aggregate to the requested interval
+        # Use raw energy_readings table for maximum accuracy and consistency
+        # with the status endpoints. Aggregates might have slight lag.
         query = f"""
             SELECT 
-                time_bucket('{pg_interval}', bucket) AS time_bucket,
-                SUM(total_energy_kwh) AS total_energy
-            FROM energy_readings_1min
+                time_bucket('{pg_interval}', time) AS time_bucket,
+                SUM(energy_kwh) AS total_energy
+            FROM energy_readings
             WHERE 
                 machine_id = $1
-                AND bucket BETWEEN $2 AND $3
+                AND time >= $2 AND time < $3
             GROUP BY time_bucket
             ORDER BY time_bucket
         """
@@ -213,14 +213,15 @@ async def get_power_timeseries(
     try:
         pool = db.pool
         
+        # Use raw energy_readings table for consistency with energy endpoint
         query = f"""
             SELECT 
-                time_bucket('{pg_interval}', bucket) AS time_bucket,
-                AVG(avg_power_kw) AS avg_power
-            FROM energy_readings_1min
+                time_bucket('{pg_interval}', time) AS time_bucket,
+                AVG(power_kw) AS avg_power
+            FROM energy_readings
             WHERE 
                 machine_id = $1
-                AND bucket BETWEEN $2 AND $3
+                AND time >= $2 AND time < $3
             GROUP BY time_bucket
             ORDER BY time_bucket
         """
@@ -325,7 +326,7 @@ async def get_sec_timeseries(
                 AND e.bucket = p.bucket
             WHERE 
                 e.machine_id = $1
-                AND e.bucket BETWEEN $2 AND $3
+                AND e.bucket >= $2 AND e.bucket < $3
             GROUP BY time_bucket
             HAVING SUM(p.total_production_count) > 0
             ORDER BY time_bucket
@@ -428,12 +429,12 @@ async def get_multi_machine_energy(
         for machine_id in machine_list:
             query = f"""
                 SELECT 
-                    time_bucket('{pg_interval}', bucket) AS time_bucket,
-                    SUM(total_energy_kwh) AS total_energy
-                FROM energy_readings_1min
+                    time_bucket('{pg_interval}', time) AS time_bucket,
+                    SUM(energy_kwh) AS total_energy
+                FROM energy_readings
                 WHERE 
                     machine_id = $1
-                    AND bucket BETWEEN $2 AND $3
+                    AND time >= $2 AND time < $3
                 GROUP BY time_bucket
                 ORDER BY time_bucket
             """

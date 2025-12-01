@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 35,
+  "id": 38,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -654,6 +654,6 @@
   "timezone": "",
   "title": "SOTA Environmental Impact",
   "uid": "sota-environmental-impact",
-  "version": 6,
+  "version": 2,
   "weekStart": ""
 }

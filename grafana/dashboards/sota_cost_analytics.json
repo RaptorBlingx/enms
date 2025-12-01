@@ -918,6 +918,6 @@
   "timezone": "browser",
   "title": "SOTA Energy Cost Analytics",
   "uid": "sota_cost_analytics",
-  "version": 14,
+  "version": 16,
   "weekStart": ""
 }

@@ -44,7 +44,7 @@ BEGIN
             ELSE NULL
         END AS sec_kwh_per_unit,
         SUM(er.total_energy_kwh) AS total_energy_kwh,
-        SUM(pd.total_production_count) AS total_production_units,
+        COALESCE(SUM(pd.total_production_count), 0)::BIGINT AS total_production_units,
         EXTRACT(EPOCH FROM (p_end_time - p_start_time)) / 3600 AS time_period_hours
     FROM energy_readings_1hour er
     LEFT JOIN production_data_1hour pd 
@@ -162,9 +162,9 @@ DECLARE
 BEGIN
     -- Get factory_id if not provided
     IF p_factory_id IS NULL THEN
-        SELECT factory_id INTO v_factory_id
-        FROM machines
-        WHERE id = p_machine_id;
+        SELECT m.factory_id INTO v_factory_id
+        FROM machines m
+        WHERE m.id = p_machine_id;
     ELSE
         v_factory_id := p_factory_id;
     END IF;
@@ -172,13 +172,13 @@ BEGIN
     RETURN QUERY
     WITH hourly_energy AS (
         SELECT 
-            bucket,
-            total_energy_kwh,
-            EXTRACT(HOUR FROM bucket AT TIME ZONE 'UTC') AS hour_of_day,
-            EXTRACT(DOW FROM bucket AT TIME ZONE 'UTC') AS day_of_week
-        FROM energy_readings_1hour
-        WHERE machine_id = p_machine_id
-          AND bucket BETWEEN p_start_time AND p_end_time
+            er.bucket,
+            er.total_energy_kwh,
+            EXTRACT(HOUR FROM er.bucket AT TIME ZONE 'UTC') AS hour_of_day,
+            EXTRACT(DOW FROM er.bucket AT TIME ZONE 'UTC') AS day_of_week
+        FROM energy_readings_1hour er
+        WHERE er.machine_id = p_machine_id
+          AND er.bucket BETWEEN p_start_time AND p_end_time
     ),
     energy_with_rates AS (
         SELECT 
@@ -205,15 +205,15 @@ BEGIN
     )
     SELECT 
         p_machine_id,
-        ROUND(SUM(total_energy_kwh * rate), 2) AS total_cost,
-        SUM(total_energy_kwh) AS total_energy_kwh,
+        ROUND(SUM(ewr.total_energy_kwh * ewr.rate), 2) AS total_cost,
+        SUM(ewr.total_energy_kwh) AS total_energy_kwh,
         CASE 
-            WHEN SUM(total_energy_kwh) > 0 THEN
-                SUM(total_energy_kwh * rate) / SUM(total_energy_kwh)
+            WHEN SUM(ewr.total_energy_kwh) > 0 THEN
+                SUM(ewr.total_energy_kwh * ewr.rate) / SUM(ewr.total_energy_kwh)
             ELSE v_default_rate
         END AS avg_rate_per_kwh,
         v_currency AS currency
-    FROM energy_with_rates;
+    FROM energy_with_rates ewr;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -312,7 +312,29 @@ RETURNS TABLE (
     total_co2_kg DECIMAL(15, 3),
     co2_per_unit_kg DECIMAL(10, 6)
 ) AS $$
+DECLARE
+    v_rate DECIMAL(10, 6);
+    v_co2_factor DECIMAL(10, 6);
+    v_factory_id UUID;
 BEGIN
+    -- Get factory_id
+    SELECT factory_id INTO v_factory_id FROM machines WHERE id = p_machine_id;
+
+    -- Get average active rate (simplified for KPI summary)
+    SELECT AVG(rate_per_kwh) INTO v_rate 
+    FROM energy_tariffs 
+    WHERE factory_id = v_factory_id AND is_active = true;
+    
+    IF v_rate IS NULL THEN v_rate := 0.15; END IF;
+
+    -- Get CO2 factor
+    SELECT emission_factor_kg_co2_per_kwh INTO v_co2_factor 
+    FROM carbon_factors 
+    WHERE is_active = true 
+    ORDER BY valid_from DESC LIMIT 1;
+    
+    IF v_co2_factor IS NULL THEN v_co2_factor := 0.45; END IF;
+
     RETURN QUERY
     SELECT 
         m.id,
@@ -325,7 +347,7 @@ BEGIN
         COALESCE(MAX(er.peak_demand_kw), 0) AS peak_demand_kw,
         
         -- Production
-        COALESCE(SUM(pd.total_production_count), 0) AS total_production_units,
+        COALESCE(SUM(pd.total_production_count), 0)::BIGINT AS total_production_units,
         CASE 
             WHEN SUM(pd.total_production_count) > 0 THEN
                 SUM(er.total_energy_kwh) / SUM(pd.total_production_count)
@@ -344,19 +366,19 @@ BEGIN
             ELSE 0
         END AS load_factor_percent,
         
-        -- Cost (using default rate 0.15)
-        ROUND(COALESCE(SUM(er.total_energy_kwh), 0) * 0.15, 2) AS total_cost,
+        -- Cost
+        ROUND(COALESCE(SUM(er.total_energy_kwh), 0) * v_rate, 2) AS total_cost,
         CASE 
             WHEN SUM(pd.total_production_count) > 0 THEN
-                (SUM(er.total_energy_kwh) * 0.15) / SUM(pd.total_production_count)
+                (SUM(er.total_energy_kwh) * v_rate) / SUM(pd.total_production_count)
             ELSE NULL
         END AS cost_per_unit,
         
-        -- Carbon (using default factor 0.45)
-        COALESCE(SUM(er.total_energy_kwh), 0) * 0.45 AS total_co2_kg,
+        -- Carbon
+        COALESCE(SUM(er.total_energy_kwh), 0) * v_co2_factor AS total_co2_kg,
         CASE 
             WHEN SUM(pd.total_production_count) > 0 THEN
-                (SUM(er.total_energy_kwh) * 0.45) / SUM(pd.total_production_count)
+                (SUM(er.total_energy_kwh) * v_co2_factor) / SUM(pd.total_production_count)
             ELSE NULL
         END AS co2_per_unit_kg
         
@@ -401,18 +423,22 @@ BEGIN
     RETURN QUERY
     WITH hourly_status AS (
         SELECT 
-            bucket,
-            dominant_mode,
-            total_downtime_seconds
-        FROM production_data_1hour
-        WHERE machine_id = p_machine_id
-          AND bucket BETWEEN p_start_time AND p_end_time
+            pd.bucket,
+            CASE 
+                WHEN pd.total_production_count > 0 THEN 'running'
+                WHEN pd.total_downtime_seconds >= 3600 THEN 'stopped'
+                ELSE 'idle'
+            END as dominant_mode,
+            pd.total_downtime_seconds
+        FROM production_data_1hour pd
+        WHERE pd.machine_id = p_machine_id
+          AND pd.bucket BETWEEN p_start_time AND p_end_time
     )
     SELECT 
         p_machine_id,
         EXTRACT(EPOCH FROM (p_end_time - p_start_time)) / 3600 AS total_hours,
-        COUNT(*) FILTER (WHERE dominant_mode = 'running') AS running_hours,
-        COUNT(*) FILTER (WHERE dominant_mode = 'idle') AS idle_hours,
+        COUNT(*) FILTER (WHERE dominant_mode = 'running')::DECIMAL AS running_hours,
+        COUNT(*) FILTER (WHERE dominant_mode = 'idle')::DECIMAL AS idle_hours,
         SUM(total_downtime_seconds) / 3600.0 AS downtime_hours,
         CASE 
             WHEN EXTRACT(EPOCH FROM (p_end_time - p_start_time)) > 0 THEN
@@ -445,22 +471,40 @@ RETURNS TABLE (
     total_co2_kg DECIMAL(15, 3),
     avg_load_factor DECIMAL(5, 4)
 ) AS $$
+DECLARE
+    v_rate DECIMAL(10, 6);
+    v_co2_factor DECIMAL(10, 6);
 BEGIN
+    -- Get average active rate
+    SELECT AVG(et.rate_per_kwh) INTO v_rate 
+    FROM energy_tariffs et
+    WHERE et.factory_id = p_factory_id AND et.is_active = true;
+    
+    IF v_rate IS NULL THEN v_rate := 0.15; END IF;
+
+    -- Get CO2 factor
+    SELECT cf.emission_factor_kg_co2_per_kwh INTO v_co2_factor 
+    FROM carbon_factors cf
+    WHERE cf.is_active = true 
+    ORDER BY cf.valid_from DESC LIMIT 1;
+    
+    IF v_co2_factor IS NULL THEN v_co2_factor := 0.45; END IF;
+
     RETURN QUERY
     SELECT 
         f.id,
         f.name,
         COUNT(DISTINCT m.id) AS machine_count,
         COUNT(DISTINCT m.id) FILTER (WHERE m.is_active = TRUE) AS active_machines,
-        COALESCE(SUM(er.total_energy_kwh), 0) AS total_energy_kwh,
-        ROUND(COALESCE(SUM(er.total_energy_kwh), 0) * 0.15, 2) AS total_cost,
-        COALESCE(SUM(er.total_energy_kwh), 0) * 0.45 AS total_co2_kg,
-        AVG(er.avg_load_factor) AS avg_load_factor
+        COALESCE(SUM(er.energy_kwh), 0) AS total_energy_kwh,
+        ROUND(COALESCE(SUM(er.energy_kwh), 0) * v_rate, 2) AS total_cost,
+        COALESCE(SUM(er.energy_kwh), 0) * v_co2_factor AS total_co2_kg,
+        0.0::DECIMAL(5,4) AS avg_load_factor
     FROM factories f
     LEFT JOIN machines m ON f.id = m.factory_id
-    LEFT JOIN energy_readings_1hour er 
+    LEFT JOIN energy_readings er 
         ON m.id = er.machine_id 
-        AND er.bucket BETWEEN p_start_time AND p_end_time
+        AND er.time BETWEEN p_start_time AND p_end_time
     WHERE f.id = p_factory_id
     GROUP BY f.id, f.name;
 END;

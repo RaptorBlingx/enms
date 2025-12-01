@@ -2,8 +2,6 @@
 
 <div align="center">
 
-![EnMS Logo](docs/images/logo.png)
-
 **Production-ready, open-source Energy Management System for industrial facilities**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -81,13 +79,13 @@ EnMS is a comprehensive energy monitoring and analytics platform designed for **
 
 ```bash
 # Clone the repository
-git clone https://github.com/wasabi/enms.git
+git clone https://github.com/raptorblingx/enms.git
 cd enms
 
 # Copy environment template
 cp .env.example .env
 
-# Edit .env and set your passwords
+# Edit .env and set your passwords (or let setup.sh auto-generate them)
 nano .env
 
 # Run the setup script
@@ -337,13 +335,11 @@ BACKUP_RETENTION_DAYS=30
 
 ## 📚 Documentation
 
-- [Installation Guide](docs/installation.md)
-- [User Guide](docs/user-guide.md)
-- [API Reference](docs/api-reference.md)
-- [Architecture Overview](docs/architecture.md)
-- [OVOS Integration](docs/ovos-integration.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Contributing](CONTRIBUTING.md)
+- [GRAFANA-PERSISTENCE.md](docs/GRAFANA-PERSISTENCE.md) - Dashboard backup & persistence
+- [Project Knowledge Base](Project-Knowledge-Base.md) - Architecture & development guide
+- [API Documentation](docs/api-documentation/) - REST API reference
+- [ISO 50001 Guide](docs/ISO-50001-IMPLEMENTATION-GUIDE.md) - Energy management standards
+- [OVOS Integration](docs/README-OVOS-INTEGRATION.md) - Voice assistant integration
 
 ---
 
@@ -379,9 +375,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/wasabi/enms/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/wasabi/enms/discussions)
-- **Email**: support@wasabiproject.eu
+- **Issues**: [GitHub Issues](https://github.com/raptorblingx/enms/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/raptorblingx/enms/discussions)
 
 ---
 

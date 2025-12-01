@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 30,
+  "id": 37,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -853,6 +853,6 @@
   "timezone": "",
   "title": "SOTA ML Model Performance",
   "uid": "sota-ml-performance",
-  "version": 14,
+  "version": 2,
   "weekStart": ""
 }

@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 31,
+  "id": 41,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -692,6 +692,6 @@
   "timezone": "",
   "title": "SOTA Operational Efficiency",
   "uid": "sota-operational-efficiency",
-  "version": 8,
+  "version": 2,
   "weekStart": ""
 }

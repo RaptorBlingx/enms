@@ -79,11 +79,11 @@ async def get_top_energy_consumers(
             energy_query = """
                 SELECT 
                     machine_id,
-                    SUM(energy_kwh) as total_energy,
-                    AVG(power_kw) as avg_power,
-                    MAX(power_kw) as peak_power
-                FROM energy_readings
-                WHERE time >= $1 AND time <= $2 AND machine_id = ANY($3)
+                    SUM(total_energy_kwh) as total_energy,
+                    AVG(avg_power_kw) as avg_power,
+                    MAX(max_power_kw) as peak_power
+                FROM energy_readings_1min
+                WHERE bucket >= $1 AND bucket < $2 AND machine_id = ANY($3)
                 GROUP BY machine_id
                 ORDER BY total_energy DESC
             """

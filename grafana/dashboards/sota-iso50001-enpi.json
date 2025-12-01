@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 32,
+  "id": 40,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -898,6 +898,6 @@
   "timezone": "",
   "title": "SOTA ISO 50001 EnPI",
   "uid": "sota-iso50001-enpi",
-  "version": 7,
+  "version": 3,
   "weekStart": ""
 }
