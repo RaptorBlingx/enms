@@ -285,8 +285,27 @@ services:
       retries: 3
 
   # ============================================================================
-  # CHATBOT - Rasa-powered conversational AI assistant
-  # NOTE: Rasa server must be running externally or as separate container
+  # RASA - NLU/NLP Engine for chatbot
+  # ============================================================================
+  rasa:
+    build:
+      context: ./chatbot/rasa
+      dockerfile: Dockerfile
+    container_name: enms-rasa
+    ports:
+      - "${RASA_PORT:-5005}:5005"
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5005/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ============================================================================
+  # CHATBOT - Express backend proxying to Rasa
   # ============================================================================
   chatbot:
     build:
@@ -296,10 +315,13 @@ services:
     environment:
       NODE_ENV: production
       BACKEND_PORT: 5006
-      RASA_HOST: ${RASA_HOST:-host.docker.internal}
-      RASA_PORT: ${RASA_PORT:-5005}
+      RASA_HOST: rasa
+      RASA_PORT: 5005
     ports:
       - "${CHATBOT_PORT:-5006}:5006"
+    depends_on:
+      rasa:
+        condition: service_healthy
     networks:
       - enms-network
     restart: unless-stopped

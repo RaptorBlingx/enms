@@ -1,0 +1,1013 @@
+{
+  "domain": {
+    "version": "3.1",
+    "intents": [
+      "affirm",
+      "definition",
+      "deny",
+      "goodbye",
+      "greet",
+      "process",
+      "purpose",
+      "requirement",
+      "thank"
+    ],
+    "responses": {
+      "utter_greet": [
+        {
+          "text": "Hello! I'm here to help you with questions about the Energy Management System (EnMS) based on ISO 50001:2011. How can I assist you today?"
+        },
+        {
+          "text": "Hi! I can answer questions about Energy Management Systems. What would you like to know?"
+        },
+        {
+          "text": "Greetings! I'm your Energy Management System assistant. What can I help you with?"
+        }
+      ],
+      "utter_goodbye": [
+        {
+          "text": "Goodbye! Feel free to come back if you have more questions about Energy Management Systems."
+        },
+        {
+          "text": "See you later! Have a great day!"
+        },
+        {
+          "text": "Farewell! I'm here whenever you need help with EnMS questions."
+        }
+      ],
+      "utter_thank": [
+        {
+          "text": "You're welcome! Is there anything else you'd like to know?"
+        },
+        {
+          "text": "Happy to help! Do you have any other questions?"
+        },
+        {
+          "text": "My pleasure! Feel free to ask if you need more information."
+        }
+      ],
+      "utter_affirm": [
+        {
+          "text": "Great! How can I help you further?"
+        },
+        {
+          "text": "Understood! What would you like to know?"
+        },
+        {
+          "text": "Perfect! Is there anything else you need?"
+        }
+      ],
+      "utter_deny": [
+        {
+          "text": "No problem! Is there something else I can help you with?"
+        },
+        {
+          "text": "Understood. How else can I assist you?"
+        },
+        {
+          "text": "That's fine. What would you like to know?"
+        }
+      ],
+      "utter_ask_management_responsibility": [
+        {
+          "text": "Top management must demonstrate its commitment to support the EnMS and to continually improve its effectiveness. This involves defining, establishing, implementing, and maintaining an energy policy, and ensuring that appropriate energy objectives and targets are established. Top management must provide necessary resources including human resources, specialized skills, technology, and financial resources."
+        },
+        {
+          "text": "Management responsibility includes: demonstrating commitment to EnMS, providing necessary resources (human, skills, technology, financial), ensuring energy performance is considered in long-term planning, communicating the importance of energy management, and appointing a management representative with appropriate skills and competence."
+        }
+      ],
+      "utter_ask_energy_policy": [
+        {
+          "text": "The energy policy must state the organization's commitment to achieving continual improvement in energy performance. It must include a commitment to ensure the availability of necessary resources and information needed to achieve established objectives and targets. Finally, it must include a commitment to comply with applicable legal requirements and any other requirements related to energy use, consumption, and efficiency. The policy must be documented and communicated at all levels within the organization."
+        },
+        {
+          "text": "The energy policy provides the essential framework for setting and reviewing energy objectives and targets. It must support the purchase of energy-efficient products and services, and promote design practices that aim for energy performance improvement. The policy must be regularly reviewed by top management and updated as necessary."
+        }
+      ],
+      "utter_ask_energy_planning": [
+        {
+          "text": "The organization must conduct and document an energy planning process that is consistent with its energy policy. The overall goal is that this process shall lead to activities that continually improve energy performance. This planning process results in the creation of key outputs, including the Energy Baseline, EnPIs, Objectives, Targets, and Action Plans."
+        },
+        {
+          "text": "Energy planning involves: identifying and maintaining access to applicable legal requirements, conducting an energy review to analyze energy use and consumption, identifying significant energy uses, establishing energy baselines, identifying EnPIs, and setting objectives and targets with action plans."
+        }
+      ],
+      "utter_ask_energy_baseline": [
+        {
+          "text": "The energy baseline serves as a quantitative reference or set of references that provides a basis for comparing and measuring energy performance. This baseline reflects a specified period of time and may be adjusted or normalized using variables that affect energy consumption, such as the production level or outdoor temperature (degree days)."
+        },
+        {
+          "text": "The organization shall establish one or more energy baselines using the information derived from the initial energy review. A suitable data period for the baseline means that the organization must account for regulatory requirements or variables that affect energy use and consumption. Adjustments to the energy baseline(s) must be made if EnPIs no longer reflect organizational energy use and consumption, or if there have been major changes to the process, operational patterns, or energy systems."
+        }
+      ],
+      "utter_ask_enpi": [
+        {
+          "text": "EnPIs (Energy Performance Indicators) are identified to be appropriate for monitoring and measuring the organization's energy performance. They can range from a simple parameter or ratio to a complex model, such as energy consumption per unit of production. The organization must record and regularly review the methodology used for determining and updating the EnPIs."
+        },
+        {
+          "text": "Energy Performance Indicators (EnPIs) are quantitative values or measures of energy performance. EnPIs can be expressed as a simple metric, a ratio, or a more complex model. The methodology for determining and updating the EnPIs shall be recorded and regularly reviewed."
+        }
+      ],
+      "utter_ask_objectives_targets": [
+        {
+          "text": "The established energy objectives and targets must be consistent with the organization's energy policy. When establishing and reviewing objectives and targets, the organization must consider legal requirements and other subscribed requirements, the identified significant energy uses, and the opportunities to improve energy performance revealed in the energy review. Additionally, it must consider its financial, operational, and business conditions, the available technological options, and the views of interested parties."
+        },
+        {
+          "text": "Energy objectives are specified outcomes set to meet the organization's energy policy related to improved energy performance. Energy targets are detailed and quantifiable energy performance requirements that arise from the energy objective and must be met to achieve that objective. Both must be consistent with the energy policy."
+        }
+      ],
+      "utter_ask_action_plans": [
+        {
+          "text": "The action plans established to achieve the objectives and targets must be documented and include four essential elements: designation of responsibility, the means and time frame by which individual targets are to be achieved, a statement of the method by which an improvement in energy performance shall be verified, and a statement of the method of verifying the results."
+        },
+        {
+          "text": "Action plans must include: designation of responsibility, the means and time frame by which individual targets are to be achieved, a statement of the method by which an improvement in energy performance shall be verified, and a statement of the method of verifying the results. Action plans shall be documented and updated at defined intervals."
+        }
+      ],
+      "utter_ask_implementation": [
+        {
+          "text": "The organization must ensure that any person working for or on its behalf, especially concerning significant energy uses, is competent based on an appropriate combination of education, training, skills, or experience. Personnel must be aware of the importance of conformity with the energy policy, procedures, and the requirements of the EnMS. The organization must establish and implement a process that allows any person working for or on its behalf to make comments or suggest improvements to the EnMS."
+        },
+        {
+          "text": "Implementation and operation involves: ensuring personnel competence, awareness, and training; establishing internal and external communication processes; creating and maintaining EnMS documentation; establishing operational controls for significant energy uses; considering energy performance in design; and establishing procurement criteria for energy-using products."
+        }
+      ],
+      "utter_ask_checking": [
+        {
+          "text": "At a minimum, the key characteristics that must be monitored, measured, and analyzed are: the significant energy uses and other outputs of the energy review, the relevant variables related to significant energy uses, the Energy Performance Indicators (EnPIs), the effectiveness of the action plans in achieving objectives and targets, and the evaluation of actual versus expected energy consumption."
+        },
+        {
+          "text": "The organization must ensure that the equipment used in monitoring and measurement provides data that are accurate and repeatable. Records of calibration and other means used to establish this accuracy and repeatability must be maintained. When significant deviations in energy performance are identified, the organization must investigate and respond to these deviations."
+        }
+      ],
+      "utter_ask_internal_audit": [
+        {
+          "text": "The internal audit, conducted at planned intervals, must ensure that the EnMS conforms to the planned arrangements for energy management, including the requirements of this International Standard. It must also confirm that the system conforms with the established energy objectives and targets, and that it is effectively implemented and maintained, leading to improved energy performance."
+        },
+        {
+          "text": "Internal audits can be performed either by personnel from within the organization or by external persons selected by the organization. The auditors must be competent and in a position to perform the audit impartially and objectively. Records of the audit results shall be maintained and reported to top management."
+        }
+      ],
+      "utter_ask_corrective_preventive_action": [
+        {
+          "text": "When addressing nonconformities, the organization must perform six actions: reviewing nonconformities or potential nonconformities; determining their causes; evaluating the need for action to ensure the nonconformities do not occur or recur; determining and implementing the appropriate needed action; maintaining records of these actions; and finally, reviewing the effectiveness of the corrective or preventive action taken."
+        },
+        {
+          "text": "Corrective actions and preventive actions must be appropriate to the magnitude of the actual or potential problems encountered and the resulting energy performance consequences. The organization must ensure that any necessary changes are made to the Energy Management System following the determination and implementation of corrective or preventive actions."
+        }
+      ],
+      "utter_ask_management_review": [
+        {
+          "text": "Top management shall review the organization's EnMS at planned intervals. The primary purpose is to ensure the system's continuing suitability, adequacy, and effectiveness. The inputs must include: follow-up actions from previous management reviews, the status of corrective actions and preventive actions, EnMS audit results, a review of energy performance and related EnPIs, the extent to which energy objectives and targets have been met, and projected energy performance for the following period."
+        },
+        {
+          "text": "The outputs from the management review must include any decisions or actions related to: changes to the energy policy, changes to the allocation of resources, changes in the energy performance of the organization, changes to the EnPIs, and changes to objectives, targets, or other elements of the EnMS, ensuring consistency with the organization's commitment to continual improvement."
+        }
+      ],
+      "utter_ask_definitions": [
+        {
+          "text": "Continual improvement is a recurring process that results in the enhancement of both the energy performance and the overall Energy Management System (EnMS). Energy refers to various media such as electricity, fuels, steam, heat, and compressed air. Energy efficiency is defined as a ratio or other quantitative relationship between an output and an input of energy. Energy performance refers to measurable results related to energy efficiency, energy use, and energy consumption."
+        },
+        {
+          "text": "A significant energy use is an energy use that accounts for substantial energy consumption or offers a considerable potential for improving energy performance. The energy baseline is a quantitative reference providing a basis for comparing and measuring energy performance. An energy objective is a specified outcome set to meet the organization's energy policy, while an energy target is a detailed and quantifiable energy performance requirement."
+        }
+      ],
+      "utter_ask_scope": [
+        {
+          "text": "The primary objective of this International Standard is to specify the requirements for establishing, implementing, maintaining, and improving an energy management system, which is intended to enable an organization to follow a systematic approach in achieving continual improvement of energy performance. This International Standard is applicable to all variables affecting energy performance that the organization can monitor and influence."
+        },
+        {
+          "text": "An organization can use this International Standard for the certification, registration, and self-declaration of its Energy Management System (EnMS). The application of this International Standard is intended to be applicable to all types and sizes of organizations, irrespective of geographical, cultural, or social conditions."
+        }
+      ],
+      "utter_ask_pdca": [
+        {
+          "text": "The International Standard is fundamentally based on the Plan - Do - Check - Act (PDCA) framework for continual improvement. Plan involves conducting the energy review, establishing the energy baseline, EnPIs, objectives, targets, and action plans. Do involves implementing the energy management action plans. Check requires monitoring and measuring processes and key operational characteristics against the policy and objectives. Act requires taking actions to continually improve both energy performance and the EnMS."
+        },
+        {
+          "text": "The EnMS model is based on the Plan – Do – Check – Act (PDCA) continual improvement framework. Plan: energy review, baseline, EnPIs, objectives, targets, action plans. Do: implement action plans. Check: monitor, measure, analyze. Act: continual improvement of energy performance and EnMS."
+        }
+      ],
+      "utter_ask_terms_definitions": [
+        {
+          "text": "Boundaries are the physical or site limits and/or organizational limits as defined by the organization. Continual improvement is a recurring process which results in enhancement of energy performance and the energy management system. Correction is the action to eliminate a detected nonconformity. Corrective action is taken to eliminate the cause of a detected nonconformity, whereas preventive action is taken to eliminate the cause of a potential nonconformity."
+        },
+        {
+          "text": "Energy consumption is the quantity of energy applied. Energy efficiency is a ratio or other quantitative relationship between an output of performance, service, goods or energy, and an input of energy. Energy use is the manner or kind of application of energy, such as ventilation, lighting, heating, cooling, transportation, processes, and production lines."
+        }
+      ],
+      "utter_ask_energy_review": [
+        {
+          "text": "The energy review is the determination of the organization's energy performance based on data and other information, which ultimately leads to the identification of opportunities for improvement. The energy review must analyze energy use and consumption based on measurement and other data. This analysis must include identifying the current energy sources used and evaluating both past and present energy use and consumption."
+        },
+        {
+          "text": "The organization must develop, record, and maintain an energy review. Based on the analysis, the organization must identify the areas of significant energy use, identify other relevant variables affecting significant energy uses, determine current energy performance, estimate future energy use and consumption, and identify, prioritize, and record opportunities for improving energy performance. The energy review must be updated at defined intervals and in response to major changes."
+        }
+      ],
+      "utter_ask_significant_energy_use": [
+        {
+          "text": "A significant energy use is defined as an energy use that accounts for substantial energy consumption or offers a considerable potential for improving energy performance. The specific criteria used to determine what qualifies as 'significant' must be determined by the organization itself. The organization must identify the facilities, equipment, systems, processes, and personnel working for or on behalf of the organization that significantly affect energy use and consumption."
+        },
+        {
+          "text": "Significant energy use (SEU) is an energy use accounting for substantial energy consumption and/or offering considerable potential for energy performance improvement. The significance criteria are determined by the organization. The organization must identify areas of significant energy use based on the analysis of energy use and consumption."
+        }
+      ],
+      "utter_ask_legal_requirements": [
+        {
+          "text": "The organization shall identify, implement, and maintain access to the applicable legal requirements and other requirements related to its energy use, consumption, and efficiency. It must determine how these requirements apply and ensure they are considered when establishing, implementing, and maintaining the EnMS. These requirements must be reviewed at defined intervals."
+        },
+        {
+          "text": "The organization must identify, implement, and have access to applicable legal requirements and other requirements related to its energy use, consumption and efficiency. The organization shall ensure that these requirements are considered in establishing, implementing and maintaining the EnMS. Legal requirements and other requirements shall be reviewed at defined intervals."
+        }
+      ],
+      "utter_ask_procurement": [
+        {
+          "text": "When procuring services, products, and equipment that have, or can have, an impact on significant energy use, the organization must inform suppliers that the procurement is partially evaluated on the basis of energy performance. The organization must establish and implement specific criteria for assessing energy use, consumption, and efficiency over the planned or expected operating lifetime when procuring energy-using products, equipment, and services."
+        },
+        {
+          "text": "Procurement is considered an opportunity to improve energy performance through the use of more efficient products and services. Energy purchasing specification elements could potentially include specifications for energy quality, availability, cost structure, environmental impact, and the potential use of renewable sources."
+        }
+      ],
+      "utter_ask_documentation": [
+        {
+          "text": "The EnMS documentation must include the scope and boundaries of the EnMS, the energy policy, the energy objectives, targets, and action plans. It must also include all documents, including records, that are explicitly required by this International Standard, as well as any other documents the organization determines to be necessary. Documentation can be maintained in paper, electronic or any other medium."
+        },
+        {
+          "text": "The required degree of documentation can vary among organizations due to several factors: the scale of the organization and the type of activities performed, the complexity of the processes and their interactions, and the competence of the personnel involved. The organization must establish procedures to approve documents for adequacy prior to issue and periodically review and update them."
+        }
+      ],
+      "utter_ask_records": [
+        {
+          "text": "The organization shall establish and maintain records as necessary to demonstrate conformity to the requirements of its EnMS and of this International Standard. Records are also necessary to demonstrate the energy performance results achieved. The organization must define and implement controls for the identification, retrieval, and retention of records. Records must be and shall remain legible, identifiable, and traceable to the relevant activity."
+        },
+        {
+          "text": "A record is a document that either states the results achieved or provides evidence of activities performed. Records are used to provide evidence of verification, traceability, preventive action, and corrective action. Records shall be and shall remain legible, identifiable and traceable to the relevant activity."
+        }
+      ],
+      "utter_ask_competence_training": [
+        {
+          "text": "The organization must ensure that any person working for or on its behalf, especially concerning significant energy uses, is competent based on an appropriate combination of education, training, skills, or experience. The organization must maintain appropriate records of training and other actions taken to meet the identified training needs."
+        },
+        {
+          "text": "Personnel must be aware of the importance of conformity with the energy policy, procedures, and the requirements of the EnMS. They must understand their roles, responsibilities, and authorities in achieving EnMS requirements. They must be aware of the benefits of improved energy performance and the actual or potential impact of their activities on energy use and consumption."
+        }
+      ],
+      "utter_ask_communication": [
+        {
+          "text": "The organization must communicate internally regarding its energy performance and EnMS, scaling the communication appropriately to the organization's size. Furthermore, the organization is required to establish and implement a process that allows any person working for or on its behalf to make comments or suggest improvements to the EnMS."
+        },
+        {
+          "text": "The organization must decide whether to communicate externally about its energy policy, EnMS, and energy performance, and this decision must be documented. If the organization decides to communicate externally, it must establish and implement a defined method for this external communication."
+        }
+      ],
+      "utter_ask_operational_control": [
+        {
+          "text": "The primary objective of operational control is to ensure that operations and maintenance activities related to significant energy uses are carried out under specified conditions and are consistent with the energy policy, objectives, targets, and action plans. This is achieved by establishing and setting criteria for the effective operation and maintenance of significant energy uses."
+        },
+        {
+          "text": "Criteria for the effective operation and maintenance of significant energy uses must be established where their absence could lead to a significant deviation from effective energy performance. The organization must operate and maintain facilities, processes, systems, and equipment in accordance with these operational criteria."
+        }
+      ],
+      "utter_ask_design": [
+        {
+          "text": "The organization must consider energy performance improvement opportunities and operational control when designing new, modified, or renovated facilities, equipment, systems, and processes that have the potential to significantly impact its energy performance. The results of the energy performance evaluation must be incorporated, where appropriate, into the specification, design, and procurement activities of the relevant projects."
+        },
+        {
+          "text": "The organization shall consider energy performance improvement opportunities and operational control in the design of new facilities and equipment. The results of the design activity shall be recorded. The results of the energy performance evaluation shall be incorporated where appropriate into the specification, design and procurement activities."
+        }
+      ],
+      "utter_ask_monitoring_measurement": [
+        {
+          "text": "At a minimum, the key characteristics that must be monitored, measured, and analyzed are: the significant energy uses and other outputs of the energy review, the relevant variables related to significant energy uses, the Energy Performance Indicators (EnPIs), the effectiveness of the action plans in achieving objectives and targets, and the evaluation of actual versus expected energy consumption."
+        },
+        {
+          "text": "An energy measurement plan, appropriate to the size and complexity of the organization, shall be defined and implemented. The equipment must provide data which are accurate and repeatable. Records of calibration and other means of establishing accuracy and repeatability shall be maintained."
+        }
+      ],
+      "utter_ask_compliance": [
+        {
+          "text": "The organization shall evaluate compliance with legal requirements and other requirements to which it subscribes, related to energy use and consumption, at planned intervals. The organization must maintain records of the results of these evaluations of compliance."
+        },
+        {
+          "text": "The organization shall evaluate compliance at planned intervals. Records of the results of the evaluations of compliance shall be maintained. The inputs to the management review must include a review of the results of the evaluation of compliance with legal requirements."
+        }
+      ],
+      "utter_ask_benchmarking": [
+        {
+          "text": "Benchmarking is defined as the process of collecting, analyzing, and relating energy performance data of comparable activities to evaluate and compare performance either between or within entities. Provided that relevant and accurate data are available, benchmarking offers a valuable input to the objective energy review and the subsequent setting of energy objectives and targets."
+        },
+        {
+          "text": "Different types of benchmarking exist, including internal benchmarking, which aims to highlight good practices within the organization. External benchmarking aims to establish the 'best in industry/sector' performance for an installation, facility, product, or service within the same field or sector."
+        }
+      ],
+      "utter_ask_iso_standards": [
+        {
+          "text": "This International Standard is based on the common elements of ISO management system standards. This foundational approach ensures a high level of compatibility, notably with standards such as ISO 9001 and ISO 14001. It can also be aligned or integrated with other management systems, including those related to quality, the environment, and occupational health and safety."
+        },
+        {
+          "text": "The standard, ISO 50001:2011, was published as the First edition on June fifteenth, two thousand eleven. The relationship and correspondence between ISO 50001:2011 and ISO 9001:2008, ISO 14001:2004, and ISO 22000:2005 are explicitly shown in Annex B."
+        }
+      ],
+      "utter_ask_general_info": [
+        {
+          "text": "The concept of energy performance includes three key aspects: energy use, energy efficiency, and energy consumption. This allows the organization a wide range of activities through which to demonstrate performance improvement. For instance, an organization could focus on reducing peak demand, utilizing surplus or waste energy, or improving the operations of its systems, processes, or equipment."
+        },
+        {
+          "text": "The organization determines the rate, extent, and timescale of the continual improvement process. The organization has the flexibility to take into account economic and other considerations when making these determinations. The worldwide application of this International Standard is intended to contribute to the more efficient use of available energy sources, leading to enhanced competitiveness for organizations."
+        }
+      ]
+    },
+    "actions": [
+      "action_retrieve_answer"
+    ],
+    "session_config": {
+      "session_expiration_time": 60,
+      "carry_over_slots_to_new_session": true
+    }
+  },
+  "trained_at": "2025-11-26T06:07:38.537192",
+  "model_id": "158437b33cd94e2b91f6efbb62ad8227",
+  "assistant_id": "20251124-072443-piercing-range",
+  "rasa_open_source_version": "3.6.21",
+  "train_schema": {
+    "nodes": {
+      "schema_validator": {
+        "needs": {
+          "importer": "__importer__"
+        },
+        "uses": "rasa.graph_components.validators.default_recipe_validator.DefaultV1RecipeValidator",
+        "constructor_name": "create",
+        "fn": "validate",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "finetuning_validator": {
+        "needs": {
+          "importer": "schema_validator"
+        },
+        "uses": "rasa.graph_components.validators.finetuning_validator.FinetuningValidator",
+        "constructor_name": "create",
+        "fn": "validate",
+        "config": {
+          "validate_core": true,
+          "validate_nlu": true
+        },
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "nlu_training_data_provider": {
+        "needs": {
+          "importer": "finetuning_validator"
+        },
+        "uses": "rasa.graph_components.providers.nlu_training_data_provider.NLUTrainingDataProvider",
+        "constructor_name": "create",
+        "fn": "provide",
+        "config": {
+          "language": "en",
+          "persist": false
+        },
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "run_WhitespaceTokenizer0": {
+        "needs": {
+          "training_data": "nlu_training_data_provider"
+        },
+        "uses": "rasa.nlu.tokenizers.whitespace_tokenizer.WhitespaceTokenizer",
+        "constructor_name": "load",
+        "fn": "process_training_data",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "train_RegexFeaturizer1": {
+        "needs": {
+          "training_data": "run_WhitespaceTokenizer0"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.regex_featurizer.RegexFeaturizer",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "run_RegexFeaturizer1": {
+        "needs": {
+          "training_data": "run_WhitespaceTokenizer0",
+          "resource": "train_RegexFeaturizer1"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.regex_featurizer.RegexFeaturizer",
+        "constructor_name": "load",
+        "fn": "process_training_data",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "train_LexicalSyntacticFeaturizer2": {
+        "needs": {
+          "training_data": "run_RegexFeaturizer1"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.lexical_syntactic_featurizer.LexicalSyntacticFeaturizer",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "run_LexicalSyntacticFeaturizer2": {
+        "needs": {
+          "training_data": "run_RegexFeaturizer1",
+          "resource": "train_LexicalSyntacticFeaturizer2"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.lexical_syntactic_featurizer.LexicalSyntacticFeaturizer",
+        "constructor_name": "load",
+        "fn": "process_training_data",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "train_CountVectorsFeaturizer3": {
+        "needs": {
+          "training_data": "run_LexicalSyntacticFeaturizer2"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "run_CountVectorsFeaturizer3": {
+        "needs": {
+          "training_data": "run_LexicalSyntacticFeaturizer2",
+          "resource": "train_CountVectorsFeaturizer3"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer",
+        "constructor_name": "load",
+        "fn": "process_training_data",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "train_CountVectorsFeaturizer4": {
+        "needs": {
+          "training_data": "run_CountVectorsFeaturizer3"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {
+          "analyzer": "char_wb",
+          "min_ngram": 1,
+          "max_ngram": 4
+        },
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "run_CountVectorsFeaturizer4": {
+        "needs": {
+          "training_data": "run_CountVectorsFeaturizer3",
+          "resource": "train_CountVectorsFeaturizer4"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer",
+        "constructor_name": "load",
+        "fn": "process_training_data",
+        "config": {
+          "analyzer": "char_wb",
+          "min_ngram": 1,
+          "max_ngram": 4
+        },
+        "eager": false,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "train_DIETClassifier5": {
+        "needs": {
+          "training_data": "run_CountVectorsFeaturizer4"
+        },
+        "uses": "rasa.nlu.classifiers.diet_classifier.DIETClassifier",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {
+          "epochs": 50,
+          "constrain_similarities": true
+        },
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "train_EntitySynonymMapper6": {
+        "needs": {
+          "training_data": "run_CountVectorsFeaturizer4"
+        },
+        "uses": "rasa.nlu.extractors.entity_synonyms.EntitySynonymMapper",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "train_ResponseSelector7": {
+        "needs": {
+          "training_data": "run_CountVectorsFeaturizer4"
+        },
+        "uses": "rasa.nlu.selectors.response_selector.ResponseSelector",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {
+          "epochs": 30
+        },
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "domain_provider": {
+        "needs": {
+          "importer": "finetuning_validator"
+        },
+        "uses": "rasa.graph_components.providers.domain_provider.DomainProvider",
+        "constructor_name": "create",
+        "fn": "provide_train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": true,
+        "resource": null
+      },
+      "domain_for_core_training_provider": {
+        "needs": {
+          "domain": "domain_provider"
+        },
+        "uses": "rasa.graph_components.providers.domain_for_core_training_provider.DomainForCoreTrainingProvider",
+        "constructor_name": "create",
+        "fn": "provide",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "forms_provider": {
+        "needs": {
+          "domain": "domain_provider"
+        },
+        "uses": "rasa.graph_components.providers.forms_provider.FormsProvider",
+        "constructor_name": "create",
+        "fn": "provide",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "responses_provider": {
+        "needs": {
+          "domain": "domain_provider"
+        },
+        "uses": "rasa.graph_components.providers.responses_provider.ResponsesProvider",
+        "constructor_name": "create",
+        "fn": "provide",
+        "config": {},
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "story_graph_provider": {
+        "needs": {
+          "importer": "finetuning_validator"
+        },
+        "uses": "rasa.graph_components.providers.story_graph_provider.StoryGraphProvider",
+        "constructor_name": "create",
+        "fn": "provide",
+        "config": {
+          "exclusion_percentage": null
+        },
+        "eager": false,
+        "is_target": false,
+        "is_input": true,
+        "resource": null
+      },
+      "training_tracker_provider": {
+        "needs": {
+          "story_graph": "story_graph_provider",
+          "domain": "domain_for_core_training_provider"
+        },
+        "uses": "rasa.graph_components.providers.training_tracker_provider.TrainingTrackerProvider",
+        "constructor_name": "create",
+        "fn": "provide",
+        "config": {
+          "debug_plots": false,
+          "augmentation_factor": 50
+        },
+        "eager": false,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "train_MemoizationPolicy0": {
+        "needs": {
+          "training_trackers": "training_tracker_provider",
+          "domain": "domain_for_core_training_provider"
+        },
+        "uses": "rasa.core.policies.memoization.MemoizationPolicy",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "train_RulePolicy1": {
+        "needs": {
+          "training_trackers": "training_tracker_provider",
+          "domain": "domain_for_core_training_provider"
+        },
+        "uses": "rasa.core.policies.rule_policy.RulePolicy",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {},
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "train_UnexpecTEDIntentPolicy2": {
+        "needs": {
+          "training_trackers": "training_tracker_provider",
+          "domain": "domain_for_core_training_provider"
+        },
+        "uses": "rasa.core.policies.unexpected_intent_policy.UnexpecTEDIntentPolicy",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {
+          "max_history": 5,
+          "epochs": 30
+        },
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      },
+      "train_TEDPolicy3": {
+        "needs": {
+          "training_trackers": "training_tracker_provider",
+          "domain": "domain_for_core_training_provider"
+        },
+        "uses": "rasa.core.policies.ted_policy.TEDPolicy",
+        "constructor_name": "create",
+        "fn": "train",
+        "config": {
+          "max_history": 5,
+          "epochs": 30,
+          "constrain_similarities": true
+        },
+        "eager": false,
+        "is_target": true,
+        "is_input": false,
+        "resource": null
+      }
+    }
+  },
+  "predict_schema": {
+    "nodes": {
+      "nlu_message_converter": {
+        "needs": {
+          "messages": "__message__"
+        },
+        "uses": "rasa.graph_components.converters.nlu_message_converter.NLUMessageConverter",
+        "constructor_name": "load",
+        "fn": "convert_user_message",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "run_WhitespaceTokenizer0": {
+        "needs": {
+          "messages": "nlu_message_converter"
+        },
+        "uses": "rasa.nlu.tokenizers.whitespace_tokenizer.WhitespaceTokenizer",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "run_RegexFeaturizer1": {
+        "needs": {
+          "messages": "run_WhitespaceTokenizer0"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.regex_featurizer.RegexFeaturizer",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_RegexFeaturizer1",
+          "output_fingerprint": "66f3eb08510147e193da36aecf1419d7"
+        }
+      },
+      "run_LexicalSyntacticFeaturizer2": {
+        "needs": {
+          "messages": "run_RegexFeaturizer1"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.lexical_syntactic_featurizer.LexicalSyntacticFeaturizer",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_LexicalSyntacticFeaturizer2",
+          "output_fingerprint": "c92cf89dfdd349ae96af125160918982"
+        }
+      },
+      "run_CountVectorsFeaturizer3": {
+        "needs": {
+          "messages": "run_LexicalSyntacticFeaturizer2"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_CountVectorsFeaturizer3",
+          "output_fingerprint": "1aad35ff8bbf44408e886bbe7d3e1433"
+        }
+      },
+      "run_CountVectorsFeaturizer4": {
+        "needs": {
+          "messages": "run_CountVectorsFeaturizer3"
+        },
+        "uses": "rasa.nlu.featurizers.sparse_featurizer.count_vectors_featurizer.CountVectorsFeaturizer",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {
+          "analyzer": "char_wb",
+          "min_ngram": 1,
+          "max_ngram": 4
+        },
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_CountVectorsFeaturizer4",
+          "output_fingerprint": "674a32f1766149cfa3db5cadcb270111"
+        }
+      },
+      "run_DIETClassifier5": {
+        "needs": {
+          "messages": "run_CountVectorsFeaturizer4"
+        },
+        "uses": "rasa.nlu.classifiers.diet_classifier.DIETClassifier",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {
+          "epochs": 50,
+          "constrain_similarities": true
+        },
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_DIETClassifier5",
+          "output_fingerprint": "c6d7872aaaf9423fa6c15d7a6aed379b"
+        }
+      },
+      "run_EntitySynonymMapper6": {
+        "needs": {
+          "messages": "run_DIETClassifier5"
+        },
+        "uses": "rasa.nlu.extractors.entity_synonyms.EntitySynonymMapper",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_EntitySynonymMapper6",
+          "output_fingerprint": "63daa44576474659bd672a2ba2cba43a"
+        }
+      },
+      "run_ResponseSelector7": {
+        "needs": {
+          "messages": "run_EntitySynonymMapper6"
+        },
+        "uses": "rasa.nlu.selectors.response_selector.ResponseSelector",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {
+          "epochs": 30
+        },
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_ResponseSelector7",
+          "output_fingerprint": "62d5a33fdf6a4cfc9babcf02016b5fa5"
+        }
+      },
+      "run_FallbackClassifier8": {
+        "needs": {
+          "messages": "run_ResponseSelector7"
+        },
+        "uses": "rasa.nlu.classifiers.fallback_classifier.FallbackClassifier",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {
+          "threshold": 0.25,
+          "ambiguity_threshold": 0.05
+        },
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "run_RegexMessageHandler": {
+        "needs": {
+          "messages": "run_FallbackClassifier8",
+          "domain": "domain_provider"
+        },
+        "uses": "rasa.nlu.classifiers.regex_message_handler.RegexMessageHandler",
+        "constructor_name": "load",
+        "fn": "process",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      },
+      "domain_provider": {
+        "needs": {},
+        "uses": "rasa.graph_components.providers.domain_provider.DomainProvider",
+        "constructor_name": "load",
+        "fn": "provide_inference",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "domain_provider",
+          "output_fingerprint": "21c7a7b8d6fd460da572457bfd511007"
+        }
+      },
+      "run_MemoizationPolicy0": {
+        "needs": {
+          "domain": "domain_provider",
+          "rule_only_data": "rule_only_data_provider",
+          "tracker": "__tracker__"
+        },
+        "uses": "rasa.core.policies.memoization.MemoizationPolicy",
+        "constructor_name": "load",
+        "fn": "predict_action_probabilities",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_MemoizationPolicy0",
+          "output_fingerprint": "4e56e7505bf5430bb3fc11a55d6b3aff"
+        }
+      },
+      "run_RulePolicy1": {
+        "needs": {
+          "domain": "domain_provider",
+          "rule_only_data": "rule_only_data_provider",
+          "tracker": "__tracker__"
+        },
+        "uses": "rasa.core.policies.rule_policy.RulePolicy",
+        "constructor_name": "load",
+        "fn": "predict_action_probabilities",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_RulePolicy1",
+          "output_fingerprint": "df950a1cf38b4507ac2edb0ba3af1aba"
+        }
+      },
+      "run_UnexpecTEDIntentPolicy2": {
+        "needs": {
+          "domain": "domain_provider",
+          "rule_only_data": "rule_only_data_provider",
+          "tracker": "__tracker__"
+        },
+        "uses": "rasa.core.policies.unexpected_intent_policy.UnexpecTEDIntentPolicy",
+        "constructor_name": "load",
+        "fn": "predict_action_probabilities",
+        "config": {
+          "max_history": 5,
+          "epochs": 30
+        },
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_UnexpecTEDIntentPolicy2",
+          "output_fingerprint": "5f2ff5429a074dcb9a31500e975dd8d3"
+        }
+      },
+      "run_TEDPolicy3": {
+        "needs": {
+          "domain": "domain_provider",
+          "rule_only_data": "rule_only_data_provider",
+          "tracker": "__tracker__"
+        },
+        "uses": "rasa.core.policies.ted_policy.TEDPolicy",
+        "constructor_name": "load",
+        "fn": "predict_action_probabilities",
+        "config": {
+          "max_history": 5,
+          "epochs": 30,
+          "constrain_similarities": true
+        },
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_TEDPolicy3",
+          "output_fingerprint": "209fc46864494fc399a5cdd00d55a0ef"
+        }
+      },
+      "rule_only_data_provider": {
+        "needs": {},
+        "uses": "rasa.graph_components.providers.rule_only_provider.RuleOnlyDataProvider",
+        "constructor_name": "load",
+        "fn": "provide",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": {
+          "name": "train_RulePolicy1",
+          "output_fingerprint": "9d3de74e4e3845fbab2bab9bd8c89882"
+        }
+      },
+      "select_prediction": {
+        "needs": {
+          "policy0": "run_MemoizationPolicy0",
+          "policy1": "run_RulePolicy1",
+          "policy2": "run_UnexpecTEDIntentPolicy2",
+          "policy3": "run_TEDPolicy3",
+          "domain": "domain_provider",
+          "tracker": "__tracker__"
+        },
+        "uses": "rasa.core.policies.ensemble.DefaultPolicyPredictionEnsemble",
+        "constructor_name": "load",
+        "fn": "combine_predictions_from_kwargs",
+        "config": {},
+        "eager": true,
+        "is_target": false,
+        "is_input": false,
+        "resource": null
+      }
+    }
+  },
+  "training_type": 3,
+  "project_fingerprint": null,
+  "core_target": "select_prediction",
+  "nlu_target": "run_RegexMessageHandler",
+  "language": "en",
+  "spaces": null
+}
