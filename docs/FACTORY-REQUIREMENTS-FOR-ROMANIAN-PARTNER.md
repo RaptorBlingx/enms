@@ -367,39 +367,41 @@ The OVOS skill supports natural language energy queries:
 
 ## 8. INSTALLATION PHASE REQUIREMENTS
 
-### 8.1 Pre-Installation (Factory Responsibility)
+### 8.1 Pre-Installation (Factory Responsibility) - 2 Weeks Before
 
-| Task | Timeline | Owner |
-|------|----------|-------|
-| Confirm all SEUs identified | 2 weeks before | Factory |
-| Install/verify energy meters on all SEUs | 2 weeks before | Factory |
-| Ensure meters are network-accessible | 1 week before | Factory |
-| Provide network access credentials | 1 week before | Factory IT |
-| Prepare server (hardware or VM) | 1 week before | Factory IT |
-| Install Ubuntu 22.04 LTS on server | 1 week before | Factory IT |
-| Configure firewall rules | 1 week before | Factory IT |
-| Provide factory floor map/layout | 1 week before | Factory |
+| Task | Description | Owner | Verification |
+|------|-------------|-------|--------------|
+| **Identify SEUs** | List all Significant Energy Users with rated power | Factory + Energy Manager | Machine list with kW ratings |
+| **Install energy meters** | Digital meters on all SEUs (Modbus/MQTT) | Factory Electrician | Meter commissioning reports |
+| **Verify meter network** | Meters accessible via Modbus TCP or MQTT | Factory IT | ping/telnet test to meter IPs |
+| **Prepare server** | Physical or VM with Ubuntu 22.04 | Factory IT | SSH access confirmed |
+| **Configure network** | Server on same network as meters, internet access | Factory IT | Network diagram |
+| **Open firewall ports** | Outbound: 443 (HTTPS), 1883 (MQTT optional) | Factory IT | Port test results |
+| **Provide credentials** | SSH access, network credentials | Factory IT | Secure handoff |
+| **Factory floor map** | Layout showing machine locations | Factory | PDF or CAD file |
 
-### 8.2 Installation Phase (Joint Responsibility)
+### 8.2 Installation Phase (Joint Responsibility) - Day 1-2
 
-| Task | Duration | Team |
-|------|----------|------|
-| Deploy Docker stack | 2 hours | WASABI + Factory IT |
-| Configure MQTT broker | 1 hour | WASABI |
-| Connect meters to Node-RED | 4-8 hours | WASABI + Factory |
-| Verify data flow | 2 hours | WASABI |
-| Configure machine metadata in database | 2 hours | WASABI |
-| Deploy Grafana dashboards | 1 hour | WASABI |
-| Initial data verification | 4 hours | WASABI |
+| Task | Duration | Team | Details |
+|------|----------|------|---------|
+| **Server setup** | 1 hour | Factory IT + WASABI | Docker, Docker Compose installation |
+| **Deploy EnMS stack** | 2 hours | WASABI | `docker-compose up -d` (11 containers) |
+| **Configure MQTT** | 1 hour | WASABI | Connect to factory broker or deploy Mosquitto |
+| **Node-RED flows** | 4-8 hours | WASABI + Factory | Create flows for each meter type |
+| **Machine registration** | 2 hours | WASABI | Add machines to database with metadata |
+| **Verify data flow** | 2 hours | WASABI + Factory | Confirm readings in Grafana |
+| **Dashboard configuration** | 2 hours | WASABI | Configure Grafana variables, alerts |
+| **Initial training** | 2 hours | WASABI + Factory | Basic portal navigation, Grafana usage |
 
-### 8.3 Post-Installation (Factory Responsibility)
+### 8.3 Post-Installation Validation (Week 1)
 
-| Task | Timeline | Owner |
-|------|----------|-------|
-| Run system for 7 days | Week 1 | Factory |
-| Report any data gaps or issues | Ongoing | Factory |
-| Provide production data access | Week 1 | Factory |
-| Identify key users for training | Week 1 | Factory |
+| Task | Owner | Success Criteria |
+|------|-------|------------------|
+| **Data gap check** | Factory + WASABI | <1% missing readings over 24 hours |
+| **Value sanity check** | WASABI | Power values within rated ranges |
+| **Grafana dashboard review** | Factory | All machines visible, no "No data" panels |
+| **Node-RED flow stability** | WASABI | No flow crashes in 24 hours |
+| **User access test** | Factory | All designated users can log in |
 
 ---
 
@@ -407,32 +409,47 @@ The OVOS skill supports natural language energy queries:
 
 ### 9.1 Baseline Training Phase (30-90 days)
 
-| Requirement | Description |
-|-------------|-------------|
-| **Data Collection** | Minimum 30 days of continuous data (90 days recommended) |
-| **Normal Operations** | Factory should operate normally during baseline period |
-| **Production Records** | Daily/shift production counts must be recorded |
-| **Environmental Data** | Outdoor temperature data required (weather station or API) |
+**Why 30-90 Days?**
+The ML baseline models require sufficient data to capture:
+- Weekly production patterns (weekday vs weekend)
+- Shift variations (3 shifts standard)
+- Temperature correlation (seasonal if possible)
+- Normal operational variance
 
-### 9.2 Training Requirements
+| Requirement | Description | Impact on Model |
+|-------------|-------------|-----------------|
+| **Minimum Data** | 30 days continuous | R² = 70-85% (acceptable) |
+| **Recommended Data** | 90 days continuous | R² = 85-99% (optimal) |
+| **Normal Operations** | Factory operates as usual | Captures real patterns |
+| **Production Records** | Daily/shift counts available | SEC calculation possible |
+| **Temperature Data** | Outdoor temp accessible | HVAC normalization works |
 
-| Training | Audience | Duration |
-|----------|----------|----------|
-| **System Overview** | Management | 2 hours |
-| **Dashboard Usage** | Operators, Supervisors | 4 hours |
-| **Chatbot/Voice Commands** | All users | 2 hours |
-| **API Documentation** | IT team | 4 hours |
-| **Maintenance & Troubleshooting** | IT team | 4 hours |
+**Auto-Training Schedule:**
+- Models auto-retrain weekly (Sunday 2 AM)
+- Configurable via `SCHEDULER_ENABLED=true` in `.env`
+
+### 9.2 Training Requirements (User Education)
+
+| Training | Audience | Duration | Topics |
+|----------|----------|----------|--------|
+| **Executive Overview** | Management | 1 hour | KPIs, ISO 50001, business value |
+| **Dashboard Usage** | Operators, Supervisors | 4 hours | Grafana navigation, alerts, machine drilldown |
+| **Energy Analysis** | Energy Manager | 4 hours | Baseline interpretation, anomaly investigation |
+| **Chatbot/Voice** | All users | 1 hour | Voice commands, chatbot queries |
+| **API Integration** | IT team | 4 hours | REST API, MQTT topics, Node-RED customization |
+| **Administration** | IT team | 4 hours | Docker, backups, troubleshooting, logs |
 
 ### 9.3 Ongoing Maintenance
 
-| Task | Frequency | Owner |
-|------|-----------|-------|
-| Verify data integrity | Weekly | Factory |
-| Backup database | Daily (automated) | System |
-| Update Docker images | Monthly | Factory IT + WASABI |
-| Re-train ML models | Quarterly | System (automated) |
-| Review anomaly alerts | Daily | Factory |
+| Task | Frequency | Owner | Details |
+|------|-----------|-------|---------|
+| **Data integrity check** | Weekly | Factory | Review data gaps in Grafana |
+| **Database backup** | Daily (automated) | System | Cron job runs at 3 AM |
+| **Grafana backup** | Every 10 min (automated) | System | Dashboards exported to git |
+| **Docker image updates** | Monthly | Factory IT + WASABI | Security patches |
+| **ML model retraining** | Weekly (automated) | System | APScheduler job |
+| **Anomaly review** | Daily | Factory Energy Manager | Review critical alerts |
+| **Performance report** | Quarterly | Factory + WASABI | ISO 50001 EnPI review |
 
 ---
 
@@ -463,7 +480,62 @@ The OVOS skill supports natural language energy queries:
 
 ---
 
-## 11. SUMMARY CHECKLIST
+## 11. WHAT THE FACTORY WILL RECEIVE
+
+### 11.1 Deployed System Components (Docker Stack)
+
+| Container | Purpose | Technology |
+|-----------|---------|------------|
+| `enms-nginx` | API Gateway & Web Portal | Nginx 1.25 |
+| `enms-postgres` | Time-series database | TimescaleDB (PostgreSQL 16) |
+| `enms-redis` | Caching & real-time events | Redis 7 |
+| `enms-nodered` | Data ingestion (ETL) | Node-RED |
+| `enms-grafana` | Dashboards & visualization | Grafana 10.2 |
+| `enms-analytics` | ML models & KPIs | FastAPI (Python) |
+| `enms-query-service` | Voice/NLP API | FastAPI (Python) |
+| `enms-simulator` | Data generator (dev only) | FastAPI (Python) |
+| `enms-rasa` | Chatbot NLU engine | Rasa 3.x |
+| `enms-chatbot` | Chat backend | Express.js |
+
+### 11.2 Pre-Built Grafana Dashboards
+
+| Dashboard | Purpose |
+|-----------|---------|
+| **Energy Overview** | Factory-wide energy consumption, trends, costs |
+| **Machine Monitoring** | Individual SEU status, real-time power |
+| **Production Analysis** | SEC, OEE correlation, shift comparisons |
+| **HVAC Performance** | COP tracking, temperature vs. power |
+| **ISO 50001 EnPI** | Baseline deviation, compliance status |
+| **Anomaly Dashboard** | Active alerts, historical anomalies |
+| **Comparison** | Machine vs machine, period vs period |
+
+### 11.3 ML Capabilities (Out of the Box)
+
+| Capability | Algorithm | Purpose |
+|------------|-----------|---------|
+| **Energy Baseline** | Multiple Linear Regression | ISO 50001 EnB, deviation detection |
+| **Anomaly Detection** | Isolation Forest | Real-time fault detection |
+| **Demand Forecast** | Prophet + ARIMA | Short/medium-term prediction |
+| **KPI Calculation** | SQL Functions | SEC, Load Factor, Peak Demand |
+| **Model Explainer** | Feature importance | "What drives energy consumption?" |
+
+### 11.4 API Endpoints (40+ Available)
+
+**Categories:**
+- Machine management (`/api/v1/machines/*`)
+- Energy data (`/api/v1/energy/*`)
+- Baseline models (`/api/v1/baseline/*`)
+- Anomaly detection (`/api/v1/anomaly/*`)
+- Forecasting (`/api/v1/forecast/*`)
+- KPIs (`/api/v1/kpi/*`)
+- SEU management (`/api/v1/seus/*`)
+- Performance engine (`/api/v1/performance/*`)
+
+**Documentation:** Swagger UI at `http://{server}:8001/docs`
+
+---
+
+## 12. SUMMARY CHECKLIST
 
 ### Minimum Requirements ✅
 
@@ -496,7 +568,7 @@ The OVOS skill supports natural language energy queries:
 
 ---
 
-## 12. CONTACT & SUPPORT
+## 13. CONTACT & SUPPORT
 
 **For Technical Questions:**
 - [Technical Contact Email]
