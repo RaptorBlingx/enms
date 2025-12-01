@@ -285,6 +285,26 @@ services:
       retries: 3
 
   # ============================================================================
+  # RASA ACTION SERVER - Custom actions for RAG/retrieval
+  # ============================================================================
+  rasa-actions:
+    build:
+      context: ./chatbot/rasa
+      dockerfile: Dockerfile.actions
+    container_name: enms-rasa-actions
+    ports:
+      - "5055:5055"
+    networks:
+      - enms-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5055/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================================================
   # RASA - NLU/NLP Engine for chatbot
   # ============================================================================
   rasa:
@@ -294,6 +314,9 @@ services:
     container_name: enms-rasa
     ports:
       - "${RASA_PORT:-5005}:5005"
+    depends_on:
+      rasa-actions:
+        condition: service_healthy
     networks:
       - enms-network
     restart: unless-stopped
