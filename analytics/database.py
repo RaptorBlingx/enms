@@ -317,7 +317,19 @@ async def get_machine_data_combined(
             ed.avg_outdoor_temp_c,
             ed.avg_indoor_temp_c,
             ed.avg_machine_temp_c,
-            ed.avg_pressure_bar
+            ed.avg_pressure_bar,
+            ed.avg_outdoor_humidity,
+            ed.avg_indoor_humidity,
+            ed.avg_flow_rate_m3h,
+            EXTRACT(HOUR FROM er.bucket) as hour_of_day,
+            EXTRACT(DOW FROM er.bucket) as day_of_week,
+            CASE WHEN EXTRACT(DOW FROM er.bucket) IN (0, 6) THEN 1 ELSE 0 END as is_weekend,
+            GREATEST(0, ed.avg_outdoor_temp_c - 18) as cooling_degree_hours,
+            GREATEST(0, 18 - ed.avg_outdoor_temp_c) as heating_degree_hours,
+            ABS(ed.avg_outdoor_temp_c - ed.avg_indoor_temp_c) as temp_difference,
+            ed.avg_outdoor_temp_c * er.avg_load_factor as temp_load_interaction,
+            POWER(ed.avg_outdoor_temp_c, 2) as outdoor_temp_squared,
+            POWER(er.avg_load_factor, 2) as load_factor_squared
         FROM energy_readings_1hour er
         LEFT JOIN production_data_1hour pd 
             ON er.machine_id = pd.machine_id 

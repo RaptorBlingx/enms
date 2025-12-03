@@ -366,6 +366,7 @@ async def predict_energy(request: PredictEnergyRequest):
         # Step 3: Add voice-friendly message if requested
         if request.include_message:
             predicted_value = result.get('predicted_energy_kwh', 0)
+            warnings = result.get('warnings', [])
             
             # Build natural language message
             if seu_name_for_message:
@@ -375,6 +376,10 @@ async def predict_energy(request: PredictEnergyRequest):
                 )
             else:
                 message = f"Predicted energy consumption: {predicted_value:.1f} {energy_unit}"
+            
+            # Add warning suffix if inputs are out of range
+            if warnings:
+                message += f". Warning: {len(warnings)} input(s) outside training range"
             
             result['message'] = message
             result['energy_unit'] = energy_unit

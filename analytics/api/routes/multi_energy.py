@@ -63,7 +63,7 @@ async def get_machine_energy_types(
             ),
             energy_summary AS (
                 SELECT 
-                    metadata->>'energy_type' as energy_type,
+                    COALESCE(energy_type, 'electricity') as energy_type,
                     COUNT(*) as reading_count,
                     ROUND(AVG(power_kw)::numeric, 2) as avg_power_kw,
                     MIN(time) as first_reading,
@@ -71,8 +71,7 @@ async def get_machine_energy_types(
                 FROM energy_readings 
                 WHERE machine_id = $1::uuid
                     AND time > NOW() - INTERVAL '1 hour' * $2
-                    AND metadata->>'energy_type' IS NOT NULL
-                GROUP BY metadata->>'energy_type'
+                GROUP BY energy_type
                 ORDER BY energy_type
             )
             SELECT 

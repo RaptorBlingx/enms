@@ -59,6 +59,7 @@ class BaselineModel:
         self.training_start_date: Optional[datetime] = None
         self.training_end_date: Optional[datetime] = None
         self.is_trained: bool = False
+        self.feature_ranges: Dict[str, Dict[str, float]] = {}  # NEW: Store min/max for validation
     
     def prepare_data(
         self,
@@ -124,8 +125,9 @@ class BaselineModel:
             )
         
         # Extract features (X) and target (y)
-        X = df_clean[available_features].values
-        y = df_clean[target_column].values
+        # Convert to float to handle Decimal types from database
+        X = df_clean[available_features].astype(float).values
+        y = df_clean[target_column].astype(float).values
         
         logger.info(
             f"Prepared data: {len(df_clean)} samples, "
@@ -188,6 +190,18 @@ class BaselineModel:
             for name, coef in zip(feature_names, self.model.coef_)
         }
         
+        # NEW: Store feature ranges for validation
+        df_features = pd.DataFrame(X, columns=feature_names)
+        self.feature_ranges = {
+            name: {
+                'min': float(df_features[name].min()),
+                'max': float(df_features[name].max()),
+                'mean': float(df_features[name].mean()),
+                'std': float(df_features[name].std())
+            }
+            for name in feature_names
+        }
+        
         self.is_trained = True
         
         # Validate model quality
@@ -216,6 +230,38 @@ class BaselineModel:
         
         return results
     
+    def validate_inputs(self, features: Dict[str, float]) -> List[str]:
+        """
+        Validate input features against training data ranges.
+        
+        Args:
+            features: Dictionary of feature values to validate
+            
+        Returns:
+            List of warning messages for out-of-range inputs
+        """
+        warnings = []
+        
+        # Skip validation if ranges not available (old models)
+        if not hasattr(self, 'feature_ranges') or not self.feature_ranges:
+            return warnings
+        
+        for feature_name, value in features.items():
+            if feature_name not in self.feature_ranges:
+                continue
+            
+            ranges = self.feature_ranges[feature_name]
+            min_val = ranges['min']
+            max_val = ranges['max']
+            
+            if value < min_val or value > max_val:
+                warnings.append(
+                    f"{feature_name}={value:.2f} is outside training range "
+                    f"[{min_val:.2f}, {max_val:.2f}]. Prediction may be inaccurate."
+                )
+        
+        return warnings
+    
     def predict(self, features: Dict[str, float]) -> float:
         """
         Predict energy consumption for given features.
@@ -234,6 +280,9 @@ class BaselineModel:
         
         # Predict
         prediction = self.model.predict(X)[0]
+        
+        # NEW: Apply physical constraint - energy cannot be negative
+        prediction = max(0.0, prediction)
         
         return float(prediction)
     

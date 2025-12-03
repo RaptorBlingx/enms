@@ -362,8 +362,8 @@ async def add_deprecation_warnings(request: Request, call_next):
         if len(parts) >= 6:
             machine_name = parts[5]
             new_endpoint = f"/api/v1/machines/status/{machine_name}"
-    # Generic /ovos/* catch-all
-    elif "/ovos/" in request_path:
+    # Generic /ovos/* catch-all (EXCLUDE /ovos/voice/* which is the new OVOS bridge)
+    elif "/ovos/" in request_path and "/ovos/voice/" not in request_path:
         is_deprecated = True
         # Try to suggest new endpoint
         new_endpoint = request_path.replace("/ovos/", "/").replace("/api/v1/", "/api/v1/")
@@ -522,6 +522,10 @@ app.include_router(websocket_router, prefix=settings.API_PREFIX)  # Phase 4 Sess
 app.include_router(seu_router, prefix=settings.API_PREFIX)  # ISO 50001 EnPI
 app.include_router(energy_sources_router, prefix=settings.API_PREFIX)  # Energy Sources & Features API
 app.include_router(multi_energy_router, prefix=settings.API_PREFIX)  # Multi-Energy Machine Support (Oct 27, 2025)
+
+# OVOS Voice Assistant Integration (Dec 1, 2025)
+from api.routes.ovos_voice import router as ovos_voice_router
+app.include_router(ovos_voice_router, prefix=settings.API_PREFIX)  # /ovos/voice/* endpoints
 
 
 # ============================================================================

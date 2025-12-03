@@ -309,14 +309,60 @@ class BaselineService:
                      f"/baseline_{machine_id}_v{model_record['model_version']}.joblib"
         model = BaselineModel.load(model_path)
         
+        # CRITICAL FIX: Apply smart defaults for missing features
+        warnings = []
+        for feature_name in model.feature_names:
+            if feature_name not in features:
+                # Use feature range mean as default, or fallback values
+                if feature_name in model.feature_ranges:
+                    default_value = model.feature_ranges[feature_name]['mean']
+                    features[feature_name] = default_value
+                    warnings.append(f"Using default {feature_name}={default_value:.2f} (not provided)")
+                    logger.info(f"Applied default for {feature_name}: {default_value:.2f}")
+                elif 'throughput' in feature_name.lower() and ('production_count' in features or 'total_production_count' in features):
+                    # Throughput ≈ production rate
+                    default_value = features.get('total_production_count', features.get('production_count', 0.0))
+                    features[feature_name] = default_value
+                    warnings.append(f"Using {feature_name}={default_value:.2f} (estimated from production)")
+                    logger.info(f"Applied throughput default: {default_value:.2f}")
+                elif 'temp' in feature_name.lower():
+                    # Default machine temp to 50°C (typical operating temp)
+                    default_value = 50.0
+                    features[feature_name] = default_value
+                    warnings.append(f"Using default {feature_name}={default_value:.2f} (typical operating value)")
+                    logger.info(f"Applied temperature default: {default_value:.2f}")
+                else:
+                    # Fallback to 0 (will log warning)
+                    features[feature_name] = 0.0
+                    warnings.append(f"Missing {feature_name}, using 0.0 (may affect accuracy)")
+                    logger.warning(f"No default available for {feature_name}, using 0.0")
+        
+        # Validate inputs against training ranges
+        range_warnings = model.validate_inputs(features)
+        warnings.extend(range_warnings)
+        
         # Make prediction
         predicted_energy = model.predict(features)
+        
+        logger.info(f"Raw prediction before constraint: {predicted_energy:.2f} kWh")
+        
+        # CRITICAL FIX: Apply physical constraint (energy cannot be negative)
+        # This is done here (not in model) to work with old saved models
+        if predicted_energy < 0:
+            logger.warning(
+                f"Negative prediction ({predicted_energy:.2f} kWh) clipped to 0. "
+                f"Model may need retraining with better feature ranges."
+            )
+            predicted_energy = 0.0
+        
+        logger.info(f"Final prediction after constraint: {predicted_energy:.2f} kWh")
         
         return {
             'machine_id': str(machine_id),
             'model_version': model_record['model_version'],
             'features': features,
-            'predicted_energy_kwh': round(predicted_energy, 2)
+            'predicted_energy_kwh': round(predicted_energy, 2),
+            'warnings': warnings  # NEW: Include validation warnings
         }
     
     @staticmethod
