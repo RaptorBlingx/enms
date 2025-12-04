@@ -692,6 +692,13 @@
                 if (audioEnabled && data.audio_base64) {
                     playAudio(data.audio_base64, data.audio_format || 'wav');
                 }
+                
+                // Trigger PDF download if present (for report generation queries)
+                console.log('📄 PDF check:', { pdf_base64: !!data.pdf_base64, pdf_filename: data.pdf_filename });
+                if (data.pdf_base64 && data.pdf_filename) {
+                    console.log('📥 Triggering PDF download:', data.pdf_filename);
+                    downloadPDF(data.pdf_base64, data.pdf_filename);
+                }
             } else if (data.error) {
                 addMessage(data.error, false, true);
             } else {
@@ -731,6 +738,40 @@
             });
         } catch (err) {
             console.error('Failed to create audio:', err);
+        }
+    }
+
+    /**
+     * Download PDF from base64 data
+     * Called automatically when OVOS returns a report
+     */
+    function downloadPDF(base64Data, filename) {
+        try {
+            // Decode base64 to binary
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            // Create blob and trigger download
+            const blob = new Blob([bytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log(`✅ PDF downloaded: ${filename}`);
+        } catch (err) {
+            console.error('Failed to download PDF:', err);
+            addMessage(`PDF download failed: ${err.message}`, false, true);
         }
     }
 

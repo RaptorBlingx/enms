@@ -527,6 +527,10 @@ app.include_router(multi_energy_router, prefix=settings.API_PREFIX)  # Multi-Ene
 from api.routes.ovos_voice import router as ovos_voice_router
 app.include_router(ovos_voice_router, prefix=settings.API_PREFIX)  # /ovos/voice/* endpoints
 
+# ISO 50001 Reports (Dec 3, 2025)
+from api.routes.reports import router as reports_router
+app.include_router(reports_router, prefix=f"{settings.API_PREFIX}/reports", tags=["Reports"])
+
 
 # ============================================================================
 # Root Endpoints

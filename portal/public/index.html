@@ -27,6 +27,7 @@
                 <ul class="industrial-nav-links">
                     <li><a href="/" class="industrial-nav-link active">Dashboard</a></li>
                     <li><a href="/api/analytics/ui/" class="industrial-nav-link">Analytics</a></li>
+                    <li><a href="/reports.html" class="industrial-nav-link">Reports</a></li>
                     <li><a href="/grafana/" class="industrial-nav-link">Grafana</a></li>
                     <li><a href="/nodered/" class="industrial-nav-link">Node-RED</a></li>
                     <li><a href="/api/simulator/docs" class="industrial-nav-link" target="_blank">Simulator</a></li>
@@ -47,25 +48,38 @@
                                       radial-gradient(circle at 80% 80%, rgba(0, 168, 232, 0.1) 0%, transparent 50%);
                     pointer-events: none;"></div>
         
-        <div class="container text-center" style="position: relative; z-index: 1;">
-            <div style="max-width: 800px; margin: 0 auto;">
-                <h1 style="font-size: 56px; 
-                           font-weight: 700; 
-                           margin-bottom: 24px; 
-                           line-height: 1.2;
-                           letter-spacing: -0.02em;
-                           color: #FFFFFF;
-                           text-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);">
-                    Energy Management System
-                </h1>
-                <p style="font-size: 22px; 
-                         color: #FFFFFF; 
-                         margin-bottom: 0;
-                         line-height: 1.6;
-                         font-weight: 400;
-                         text-shadow: 0 1px 4px rgba(0,0,0,0.3);">
-                    Real-time Industrial Intelligence for Manufacturing Excellence
-                </p>
+        <div class="container" style="position: relative; z-index: 1; max-width: 1400px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 40px;">
+                <!-- Left Logo: APlus -->
+                <div style="flex: 0 0 auto; opacity: 0.95;">
+                    <img src="/images/aplus-logo.png?v=2" alt="APlus Engineering" style="height: 140px; width: auto;">
+                </div>
+                
+                <!-- Center Content -->
+                <div style="flex: 1; text-align: center;">
+                    <h1 style="font-size: 56px; 
+                               font-weight: 700; 
+                               margin-bottom: 24px; 
+                               line-height: 1.2;
+                               letter-spacing: -0.02em;
+                               color: #FFFFFF;
+                               text-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);">
+                        Energy Management System
+                    </h1>
+                    <p style="font-size: 22px; 
+                             color: #FFFFFF; 
+                             margin-bottom: 0;
+                             line-height: 1.6;
+                             font-weight: 400;
+                             text-shadow: 0 1px 4px rgba(0,0,0,0.3);">
+                        Real-time Industrial Intelligence for Manufacturing Excellence
+                    </p>
+                </div>
+                
+                <!-- Right Logo: WASABI -->
+                <div style="flex: 0 0 auto; opacity: 0.95;">
+                    <img src="/images/wasabi-logo.png?v=2" alt="WASABI Project" style="height: 80px; width: auto;">
+                </div>
             </div>
         </div>
     </section>
@@ -420,6 +434,16 @@
                    text-align: center; 
                    margin-top: 80px;">
         <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Logo Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; max-width: 900px; margin-left: auto; margin-right: auto;">
+                <div style="flex: 1; text-align: left;">
+                    <img src="/images/aplus-logo.png?v=2" alt="APlus Engineering" style="height: 140px; width: auto; opacity: 0.9;">
+                </div>
+                <div style="flex: 1; text-align: right;">
+                    <img src="/images/wasabi-logo.png?v=2" alt="WASABI Project" style="height: 60px; width: auto; filter: brightness(0) invert(1); opacity: 0.9;">
+                </div>
+            </div>
+            
             <p style="font-size: 1rem; margin-bottom: 1rem; font-weight: 500;">
                 Built with ❤️ for Industrial Energy Management
             </p>
