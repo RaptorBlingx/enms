@@ -27,6 +27,7 @@ CREATE TYPE machine_type AS ENUM (
     'pump',
     'injection_molding',
     'conveyor',
+    'boiler',
     'other'
 );
 
