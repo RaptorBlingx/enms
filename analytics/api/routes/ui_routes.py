@@ -232,7 +232,7 @@ async def components_demo_ui(request: Request):
     - APIClient (retry logic, caching, error handling)
     
     ⚠️ FOR DEVELOPMENT AND TESTING ONLY
-    Access: http://10.33.10.109:8080/analytics/ui/components-demo
+    Access: http://<SERVER_IP>:8080/analytics/ui/components-demo
     """
     response = templates.TemplateResponse("components-demo.html", {"request": request})
     response.headers.update(NO_CACHE_HEADERS)
