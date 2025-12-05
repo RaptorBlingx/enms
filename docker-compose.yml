@@ -65,24 +65,24 @@ services:
       retries: 5
 
   # ============================================================================
-  # MQTT BROKER - Eclipse Mosquitto
+  # MQTT BROKER - Eclipse Mosquitto (Zero-touch with built-in credentials)
   # ============================================================================
   mqtt:
-    image: eclipse-mosquitto:2.0
+    build:
+      context: ./mqtt
+      dockerfile: Dockerfile
     container_name: enms-mqtt
     ports:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - ./mqtt/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./mqtt/config/passwd:/mosquitto/config/passwd:ro
       - mqtt-data:/mosquitto/data
       - mqtt-logs:/mosquitto/log
     networks:
       - enms-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      test: ["CMD", "mosquitto_sub", "-h", "localhost", "-p", "1883", "-u", "raptorblingx", "-P", "raptorblingx", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
       interval: 30s
       timeout: 10s
       retries: 3
