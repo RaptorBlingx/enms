@@ -167,34 +167,35 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW energy_readings_15min
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('15 minutes', bucket) AS bucket,
+    time_bucket('15 minutes', time) AS bucket,
     machine_id,
     
-    -- Power statistics (from 1min aggregate)
-    AVG(avg_power_kw) AS avg_power_kw,
-    MIN(min_power_kw) AS min_power_kw,
-    MAX(max_power_kw) AS max_power_kw,
+    -- Power statistics
+    AVG(power_kw) AS avg_power_kw,
+    MIN(power_kw) AS min_power_kw,
+    MAX(power_kw) AS max_power_kw,
     
     -- Peak demand (important for utility billing)
-    MAX(max_power_kw) AS peak_demand_kw,
+    MAX(power_kw) AS peak_demand_kw,
     
     -- Energy
-    SUM(total_energy_kwh) AS total_energy_kwh,
+    SUM(energy_kwh) AS total_energy_kwh,
     
     -- Electrical parameters
-    AVG(avg_voltage_v) AS avg_voltage_v,
-    AVG(avg_current_a) AS avg_current_a,
-    AVG(avg_power_factor) AS avg_power_factor,
+    AVG(voltage_v) AS avg_voltage_v,
+    AVG(current_a) AS avg_current_a,
+    AVG(power_factor) AS avg_power_factor,
+    AVG(frequency_hz) AS avg_frequency_hz,
     
     -- Load factor: avg_power / peak_power
     CASE 
-        WHEN MAX(max_power_kw) > 0 THEN AVG(avg_power_kw) / MAX(max_power_kw)
+        WHEN MAX(power_kw) > 0 THEN AVG(power_kw) / MAX(power_kw)
         ELSE 0
     END AS load_factor,
     
-    SUM(reading_count) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM energy_readings_1min
+FROM energy_readings
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -203,21 +204,21 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW production_data_15min
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('15 minutes', bucket) AS bucket,
+    time_bucket('15 minutes', time) AS bucket,
     machine_id,
     
-    SUM(total_production_count) AS total_production_count,
-    SUM(total_production_good) AS total_production_good,
-    SUM(total_production_bad) AS total_production_bad,
+    SUM(production_count) AS total_production_count,
+    SUM(production_count_good) AS total_production_good,
+    SUM(production_count_bad) AS total_production_bad,
     
-    AVG(avg_throughput) AS avg_throughput,
-    AVG(avg_speed_percent) AS avg_speed_percent,
+    AVG(throughput_units_per_hour) AS avg_throughput,
+    AVG(speed_percent) AS avg_speed_percent,
     
-    SUM(total_downtime_seconds) AS total_downtime_seconds,
+    SUM(downtime_seconds) AS total_downtime_seconds,
     
-    SUM(reading_count) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM production_data_1min
+FROM production_data
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -227,23 +228,23 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW environmental_data_15min
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('15 minutes', bucket) AS bucket,
+    time_bucket('15 minutes', time) AS bucket,
     machine_id,
     
-    AVG(avg_outdoor_temp_c) AS avg_outdoor_temp_c,
-    AVG(avg_indoor_temp_c) AS avg_indoor_temp_c,
-    AVG(avg_machine_temp_c) AS avg_machine_temp_c,
-    AVG(avg_outdoor_humidity) AS avg_outdoor_humidity,
-    AVG(avg_indoor_humidity) AS avg_indoor_humidity,
-    AVG(avg_pressure_bar) AS avg_pressure_bar,
-    MIN(min_pressure_bar) AS min_pressure_bar,
-    MAX(max_pressure_bar) AS max_pressure_bar,
-    AVG(avg_flow_rate_m3h) AS avg_flow_rate_m3h,
-    AVG(avg_vibration_mm_s) AS avg_vibration_mm_s,
+    AVG(outdoor_temp_c) AS avg_outdoor_temp_c,
+    AVG(indoor_temp_c) AS avg_indoor_temp_c,
+    AVG(machine_temp_c) AS avg_machine_temp_c,
+    AVG(outdoor_humidity_percent) AS avg_outdoor_humidity,
+    AVG(indoor_humidity_percent) AS avg_indoor_humidity,
+    AVG(pressure_bar) AS avg_pressure_bar,
+    MIN(pressure_bar) AS min_pressure_bar,
+    MAX(pressure_bar) AS max_pressure_bar,
+    AVG(flow_rate_m3h) AS avg_flow_rate_m3h,
+    AVG(vibration_mm_s) AS avg_vibration_mm_s,
     
-    SUM(reading_count) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM environmental_data_1min
+FROM environmental_data
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -258,25 +259,28 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW energy_readings_1hour
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('1 hour', bucket) AS bucket,
+    time_bucket('1 hour', time) AS bucket,
     machine_id,
     
-    AVG(avg_power_kw) AS avg_power_kw,
-    MIN(min_power_kw) AS min_power_kw,
-    MAX(max_power_kw) AS max_power_kw,
-    MAX(peak_demand_kw) AS peak_demand_kw,
+    AVG(power_kw) AS avg_power_kw,
+    MIN(power_kw) AS min_power_kw,
+    MAX(power_kw) AS max_power_kw,
+    MAX(power_kw) AS peak_demand_kw,
     
-    SUM(total_energy_kwh) AS total_energy_kwh,
+    SUM(energy_kwh) AS total_energy_kwh,
     
-    AVG(avg_voltage_v) AS avg_voltage_v,
-    AVG(avg_current_a) AS avg_current_a,
-    AVG(avg_power_factor) AS avg_power_factor,
+    AVG(voltage_v) AS avg_voltage_v,
+    AVG(current_a) AS avg_current_a,
+    AVG(power_factor) AS avg_power_factor,
     
-    AVG(load_factor) AS avg_load_factor,
+    CASE 
+        WHEN MAX(power_kw) > 0 THEN AVG(power_kw) / MAX(power_kw)
+        ELSE 0
+    END AS avg_load_factor,
     
-    SUM(total_readings) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM energy_readings_15min
+FROM energy_readings
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -285,35 +289,35 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW production_data_1hour
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('1 hour', bucket) AS bucket,
+    time_bucket('1 hour', time) AS bucket,
     machine_id,
     
-    SUM(total_production_count) AS total_production_count,
-    SUM(total_production_good) AS total_production_good,
-    SUM(total_production_bad) AS total_production_bad,
+    SUM(production_count) AS total_production_count,
+    SUM(production_count_good) AS total_production_good,
+    SUM(production_count_bad) AS total_production_bad,
     
     -- Quality percentage
     CASE 
-        WHEN SUM(total_production_count) > 0 THEN 
-            (SUM(total_production_good)::DECIMAL / SUM(total_production_count)) * 100
+        WHEN SUM(production_count) > 0 THEN 
+            (SUM(production_count_good)::DECIMAL / SUM(production_count)) * 100
         ELSE 0
     END AS quality_percent,
     
-    AVG(avg_throughput) AS avg_throughput,
-    AVG(avg_speed_percent) AS avg_speed_percent,
+    AVG(throughput_units_per_hour) AS avg_throughput,
+    AVG(speed_percent) AS avg_speed_percent,
     
-    SUM(total_downtime_seconds) AS total_downtime_seconds,
+    SUM(downtime_seconds) AS total_downtime_seconds,
     
     -- Availability calculation
     CASE 
-        WHEN (3600 - SUM(total_downtime_seconds)) > 0 THEN
-            ((3600 - SUM(total_downtime_seconds))::DECIMAL / 3600) * 100
+        WHEN (3600 - SUM(downtime_seconds)) > 0 THEN
+            ((3600 - SUM(downtime_seconds))::DECIMAL / 3600) * 100
         ELSE 0
     END AS availability_percent,
     
-    SUM(total_readings) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM production_data_15min
+FROM production_data
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -323,21 +327,21 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW environmental_data_1hour
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('1 hour', bucket) AS bucket,
+    time_bucket('1 hour', time) AS bucket,
     machine_id,
     
-    AVG(avg_outdoor_temp_c) AS avg_outdoor_temp_c,
-    AVG(avg_indoor_temp_c) AS avg_indoor_temp_c,
-    AVG(avg_machine_temp_c) AS avg_machine_temp_c,
-    AVG(avg_outdoor_humidity) AS avg_outdoor_humidity,
-    AVG(avg_indoor_humidity) AS avg_indoor_humidity,
-    AVG(avg_pressure_bar) AS avg_pressure_bar,
-    AVG(avg_flow_rate_m3h) AS avg_flow_rate_m3h,
-    AVG(avg_vibration_mm_s) AS avg_vibration_mm_s,
+    AVG(outdoor_temp_c) AS avg_outdoor_temp_c,
+    AVG(indoor_temp_c) AS avg_indoor_temp_c,
+    AVG(machine_temp_c) AS avg_machine_temp_c,
+    AVG(outdoor_humidity_percent) AS avg_outdoor_humidity,
+    AVG(indoor_humidity_percent) AS avg_indoor_humidity,
+    AVG(pressure_bar) AS avg_pressure_bar,
+    AVG(flow_rate_m3h) AS avg_flow_rate_m3h,
+    AVG(vibration_mm_s) AS avg_vibration_mm_s,
     
-    SUM(total_readings) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM environmental_data_15min
+FROM environmental_data
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -352,24 +356,27 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW energy_readings_1day
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('1 day', bucket) AS bucket,
+    time_bucket('1 day', time) AS bucket,
     machine_id,
     
-    AVG(avg_power_kw) AS avg_power_kw,
-    MIN(min_power_kw) AS min_power_kw,
-    MAX(max_power_kw) AS max_power_kw,
-    MAX(peak_demand_kw) AS peak_demand_kw,
+    AVG(power_kw) AS avg_power_kw,
+    MIN(power_kw) AS min_power_kw,
+    MAX(power_kw) AS max_power_kw,
+    MAX(power_kw) AS peak_demand_kw,
     
-    SUM(total_energy_kwh) AS total_energy_kwh,
+    SUM(energy_kwh) AS total_energy_kwh,
     
-    AVG(avg_voltage_v) AS avg_voltage_v,
-    AVG(avg_power_factor) AS avg_power_factor,
+    AVG(voltage_v) AS avg_voltage_v,
+    AVG(power_factor) AS avg_power_factor,
     
-    AVG(avg_load_factor) AS avg_load_factor,
+    CASE 
+        WHEN MAX(power_kw) > 0 THEN AVG(power_kw) / MAX(power_kw)
+        ELSE 0
+    END AS avg_load_factor,
     
-    SUM(total_readings) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM energy_readings_1hour
+FROM energy_readings
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
@@ -378,22 +385,30 @@ WITH NO DATA;
 CREATE MATERIALIZED VIEW production_data_1day
 WITH (timescaledb.continuous) AS
 SELECT 
-    time_bucket('1 day', bucket) AS bucket,
+    time_bucket('1 day', time) AS bucket,
     machine_id,
     
-    SUM(total_production_count) AS total_production_count,
-    SUM(total_production_good) AS total_production_good,
-    SUM(total_production_bad) AS total_production_bad,
+    SUM(production_count) AS total_production_count,
+    SUM(production_count_good) AS total_production_good,
+    SUM(production_count_bad) AS total_production_bad,
     
-    AVG(quality_percent) AS avg_quality_percent,
-    AVG(avg_throughput) AS avg_throughput,
+    CASE 
+        WHEN SUM(production_count) > 0 THEN 
+            (SUM(production_count_good)::DECIMAL / SUM(production_count)) * 100
+        ELSE 0
+    END AS quality_percent,
+    AVG(throughput_units_per_hour) AS avg_throughput,
     
-    SUM(total_downtime_seconds) AS total_downtime_seconds,
-    AVG(availability_percent) AS avg_availability_percent,
+    SUM(downtime_seconds) AS total_downtime_seconds,
+    CASE 
+        WHEN (86400 - SUM(downtime_seconds)) > 0 THEN
+            ((86400 - SUM(downtime_seconds))::DECIMAL / 86400) * 100
+        ELSE 0
+    END AS availability_percent,
     
-    SUM(total_readings) AS total_readings
+    COUNT(*) AS total_readings
     
-FROM production_data_1hour
+FROM production_data
 GROUP BY bucket, machine_id
 WITH NO DATA;
 
