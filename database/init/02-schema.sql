@@ -205,6 +205,7 @@ CREATE TABLE production_data (
 );
 
 CREATE INDEX idx_production_data_machine_time ON production_data(machine_id, time DESC);
+CREATE UNIQUE INDEX production_data_machine_time_unique ON production_data(machine_id, time);
 
 \echo '✓ production_data table created'
 
@@ -244,6 +245,7 @@ CREATE TABLE environmental_data (
 );
 
 CREATE INDEX idx_environmental_data_machine_time ON environmental_data(machine_id, time DESC);
+CREATE UNIQUE INDEX environmental_data_machine_time_unique ON environmental_data(machine_id, time);
 
 \echo '✓ environmental_data table created'
 
