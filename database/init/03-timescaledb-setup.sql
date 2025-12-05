@@ -223,6 +223,32 @@ WITH NO DATA;
 
 \echo '✓ production_data_15min created'
 
+-- Environmental data aggregated to 15 minutes
+CREATE MATERIALIZED VIEW environmental_data_15min
+WITH (timescaledb.continuous) AS
+SELECT 
+    time_bucket('15 minutes', bucket) AS bucket,
+    machine_id,
+    
+    AVG(avg_outdoor_temp_c) AS avg_outdoor_temp_c,
+    AVG(avg_indoor_temp_c) AS avg_indoor_temp_c,
+    AVG(avg_machine_temp_c) AS avg_machine_temp_c,
+    AVG(avg_outdoor_humidity) AS avg_outdoor_humidity,
+    AVG(avg_indoor_humidity) AS avg_indoor_humidity,
+    AVG(avg_pressure_bar) AS avg_pressure_bar,
+    MIN(min_pressure_bar) AS min_pressure_bar,
+    MAX(max_pressure_bar) AS max_pressure_bar,
+    AVG(avg_flow_rate_m3h) AS avg_flow_rate_m3h,
+    AVG(avg_vibration_mm_s) AS avg_vibration_mm_s,
+    
+    SUM(reading_count) AS total_readings
+    
+FROM environmental_data_1min
+GROUP BY bucket, machine_id
+WITH NO DATA;
+
+\echo '✓ environmental_data_15min created'
+
 -- ============================================================================
 -- CONTINUOUS AGGREGATES - 1 HOUR
 -- ============================================================================
@@ -293,6 +319,30 @@ WITH NO DATA;
 
 \echo '✓ production_data_1hour created'
 
+-- Environmental data aggregated to 1 hour
+CREATE MATERIALIZED VIEW environmental_data_1hour
+WITH (timescaledb.continuous) AS
+SELECT 
+    time_bucket('1 hour', bucket) AS bucket,
+    machine_id,
+    
+    AVG(avg_outdoor_temp_c) AS avg_outdoor_temp_c,
+    AVG(avg_indoor_temp_c) AS avg_indoor_temp_c,
+    AVG(avg_machine_temp_c) AS avg_machine_temp_c,
+    AVG(avg_outdoor_humidity) AS avg_outdoor_humidity,
+    AVG(avg_indoor_humidity) AS avg_indoor_humidity,
+    AVG(avg_pressure_bar) AS avg_pressure_bar,
+    AVG(avg_flow_rate_m3h) AS avg_flow_rate_m3h,
+    AVG(avg_vibration_mm_s) AS avg_vibration_mm_s,
+    
+    SUM(total_readings) AS total_readings
+    
+FROM environmental_data_15min
+GROUP BY bucket, machine_id
+WITH NO DATA;
+
+\echo '✓ environmental_data_1hour created'
+
 -- ============================================================================
 -- CONTINUOUS AGGREGATES - 1 DAY
 -- ============================================================================
@@ -349,6 +399,35 @@ WITH NO DATA;
 
 \echo '✓ production_data_1day created'
 
+-- Environmental degree days aggregated daily (for HVAC energy analysis)
+CREATE MATERIALIZED VIEW environmental_degree_days_daily
+WITH (timescaledb.continuous) AS
+SELECT 
+    time_bucket('1 day', time) AS day,
+    machine_id,
+    
+    AVG(outdoor_temp_c) AS avg_outdoor_temp_c,
+    
+    -- Heating degree days (base 18°C - common European standard)
+    SUM(GREATEST(0, 18.0 - outdoor_temp_c)) AS heating_degree_days_18c,
+    -- Cooling degree days (base 18°C)
+    SUM(GREATEST(0, outdoor_temp_c - 18.0)) AS cooling_degree_days_18c,
+    
+    -- Heating degree days (base 15.5°C - UK standard)
+    SUM(GREATEST(0, 15.5 - outdoor_temp_c)) AS heating_degree_days_15c,
+    -- Cooling degree days (base 15.5°C)
+    SUM(GREATEST(0, outdoor_temp_c - 15.5)) AS cooling_degree_days_15c,
+    
+    COUNT(*) AS readings_count,
+    MIN(outdoor_temp_c) AS min_outdoor_temp_c,
+    MAX(outdoor_temp_c) AS max_outdoor_temp_c
+    
+FROM environmental_data
+GROUP BY day, machine_id
+WITH NO DATA;
+
+\echo '✓ environmental_degree_days_daily created'
+
 -- ============================================================================
 -- REFRESH POLICIES FOR CONTINUOUS AGGREGATES
 -- ============================================================================
@@ -384,6 +463,11 @@ SELECT add_continuous_aggregate_policy('production_data_15min',
     end_offset => INTERVAL '15 minutes',
     schedule_interval => INTERVAL '5 minutes');
 
+SELECT add_continuous_aggregate_policy('environmental_data_15min',
+    start_offset => INTERVAL '6 hours',
+    end_offset => INTERVAL '15 minutes',
+    schedule_interval => INTERVAL '5 minutes');
+
 \echo '✓ 15-minute refresh policies set'
 
 -- 1-hour aggregates: refresh every 15 minutes
@@ -397,6 +481,11 @@ SELECT add_continuous_aggregate_policy('production_data_1hour',
     end_offset => INTERVAL '1 hour',
     schedule_interval => INTERVAL '15 minutes');
 
+SELECT add_continuous_aggregate_policy('environmental_data_1hour',
+    start_offset => INTERVAL '1 day',
+    end_offset => INTERVAL '1 hour',
+    schedule_interval => INTERVAL '15 minutes');
+
 \echo '✓ 1-hour refresh policies set'
 
 -- 1-day aggregates: refresh every hour
@@ -406,6 +495,11 @@ SELECT add_continuous_aggregate_policy('energy_readings_1day',
     schedule_interval => INTERVAL '1 hour');
 
 SELECT add_continuous_aggregate_policy('production_data_1day',
+    start_offset => INTERVAL '7 days',
+    end_offset => INTERVAL '1 day',
+    schedule_interval => INTERVAL '1 hour');
+
+SELECT add_continuous_aggregate_policy('environmental_degree_days_daily',
     start_offset => INTERVAL '7 days',
     end_offset => INTERVAL '1 day',
     schedule_interval => INTERVAL '1 hour');
