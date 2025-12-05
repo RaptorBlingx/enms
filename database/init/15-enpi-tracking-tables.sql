@@ -40,9 +40,9 @@ CREATE TABLE IF NOT EXISTS enpi_baselines (
 );
 
 -- Indexes for EnPI baselines
-CREATE INDEX idx_enpi_baselines_seu ON enpi_baselines(seu_id);
-CREATE INDEX idx_enpi_baselines_year ON enpi_baselines(baseline_year);
-CREATE INDEX idx_enpi_baselines_active ON enpi_baselines(is_active);
+CREATE INDEX IF NOT EXISTS idx_enpi_baselines_seu ON enpi_baselines(seu_id);
+CREATE INDEX IF NOT EXISTS idx_enpi_baselines_year ON enpi_baselines(baseline_year);
+CREATE INDEX IF NOT EXISTS idx_enpi_baselines_active ON enpi_baselines(is_active);
 
 -- ============================================================================
 -- EnPI Performance Tracking
@@ -89,10 +89,10 @@ CREATE TABLE IF NOT EXISTS enpi_performance (
 );
 
 -- Indexes for EnPI performance
-CREATE INDEX idx_enpi_performance_seu ON enpi_performance(seu_id);
-CREATE INDEX idx_enpi_performance_baseline ON enpi_performance(baseline_id);
-CREATE INDEX idx_enpi_performance_period ON enpi_performance(period_start, period_end);
-CREATE INDEX idx_enpi_performance_status ON enpi_performance(iso_status);
+CREATE INDEX IF NOT EXISTS idx_enpi_performance_seu ON enpi_performance(seu_id);
+CREATE INDEX IF NOT EXISTS idx_enpi_performance_baseline ON enpi_performance(baseline_id);
+CREATE INDEX IF NOT EXISTS idx_enpi_performance_period ON enpi_performance(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_enpi_performance_status ON enpi_performance(iso_status);
 
 -- ============================================================================
 -- Energy Reduction Targets (ISO 50001 requirement)
@@ -140,10 +140,10 @@ CREATE TABLE IF NOT EXISTS energy_targets (
 );
 
 -- Indexes for energy targets
-CREATE INDEX idx_energy_targets_seu ON energy_targets(seu_id);
-CREATE INDEX idx_energy_targets_factory ON energy_targets(factory_id);
-CREATE INDEX idx_energy_targets_year ON energy_targets(target_year);
-CREATE INDEX idx_energy_targets_status ON energy_targets(status);
+CREATE INDEX IF NOT EXISTS idx_energy_targets_seu ON energy_targets(seu_id);
+CREATE INDEX IF NOT EXISTS idx_energy_targets_factory ON energy_targets(factory_id);
+CREATE INDEX IF NOT EXISTS idx_energy_targets_year ON energy_targets(target_year);
+CREATE INDEX IF NOT EXISTS idx_energy_targets_status ON energy_targets(status);
 
 -- ============================================================================
 -- Triggers for updated_at timestamps

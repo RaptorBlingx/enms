@@ -88,7 +88,7 @@ ALTER TABLE energy_baselines
 
 DROP INDEX IF EXISTS idx_energy_baselines_active;
 
-CREATE INDEX idx_energy_baselines_active 
+CREATE INDEX IF NOT EXISTS idx_energy_baselines_active 
     ON energy_baselines(machine_id, energy_source_id, is_active) 
     WHERE is_active = TRUE;
 

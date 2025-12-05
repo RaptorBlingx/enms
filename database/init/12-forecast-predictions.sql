@@ -11,22 +11,30 @@
 \echo '=========================================='
 
 -- Create forecast model type enum
-CREATE TYPE forecast_model_type AS ENUM (
-    'ARIMA',
-    'Prophet',
-    'LSTM',
-    'Other'
-);
+DO $$ BEGIN
+    CREATE TYPE forecast_model_type AS ENUM (
+        'ARIMA',
+        'Prophet',
+        'LSTM',
+        'Other'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create forecast horizon enum
-CREATE TYPE forecast_horizon AS ENUM (
-    'short',    -- 1-4 hours
-    'medium',   -- 24 hours
-    'long'      -- 7 days
-);
+DO $$ BEGIN
+    CREATE TYPE forecast_horizon AS ENUM (
+        'short',    -- 1-4 hours
+        'medium',   -- 24 hours
+        'long'      -- 7 days
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Forecast predictions table (hypertable for time-series)
-CREATE TABLE energy_forecasts (
+CREATE TABLE IF NOT EXISTS energy_forecasts (
     id BIGSERIAL,
     machine_id UUID NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
     

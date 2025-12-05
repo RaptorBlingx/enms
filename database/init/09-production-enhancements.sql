@@ -117,9 +117,9 @@ CREATE TABLE IF NOT EXISTS baseline_adjustments (
     CONSTRAINT chk_adjustment_factor CHECK (adjustment_factor > 0 AND adjustment_factor < 10)
 );
 
-CREATE INDEX idx_baseline_adj_seu ON baseline_adjustments(seu_id, adjustment_date DESC);
-CREATE INDEX idx_baseline_adj_date ON baseline_adjustments(adjustment_date DESC);
-CREATE INDEX idx_baseline_adj_type ON baseline_adjustments(adjustment_type);
+CREATE INDEX IF NOT EXISTS idx_baseline_adj_seu ON baseline_adjustments(seu_id, adjustment_date DESC);
+CREATE INDEX IF NOT EXISTS idx_baseline_adj_date ON baseline_adjustments(adjustment_date DESC);
+CREATE INDEX IF NOT EXISTS idx_baseline_adj_type ON baseline_adjustments(adjustment_type);
 
 COMMENT ON TABLE baseline_adjustments IS 'ISO 50001 Clause 6.6 requires documented baseline adjustments for significant changes. Examples: equipment upgrades, process changes, operating schedule changes. Auditors WILL ask for this documentation.';
 
@@ -154,9 +154,9 @@ CREATE TABLE IF NOT EXISTS data_quality_log (
     CONSTRAINT chk_overall_score CHECK (overall_score IS NULL OR (overall_score >= 0 AND overall_score <= 1))
 );
 
-CREATE INDEX idx_data_quality_date ON data_quality_log(check_date DESC);
-CREATE INDEX idx_data_quality_machine ON data_quality_log(machine_id, check_date);
-CREATE INDEX idx_data_quality_score ON data_quality_log(overall_score) WHERE overall_score < 0.90;
+CREATE INDEX IF NOT EXISTS idx_data_quality_date ON data_quality_log(check_date DESC);
+CREATE INDEX IF NOT EXISTS idx_data_quality_machine ON data_quality_log(machine_id, check_date);
+CREATE INDEX IF NOT EXISTS idx_data_quality_score ON data_quality_log(overall_score) WHERE overall_score < 0.90;
 
 COMMENT ON TABLE data_quality_log IS 'Daily data quality checks for each machine. Real factories have bad data: sensor failures, communication gaps, outliers. ISO 50001 auditors check data quality procedures.';
 

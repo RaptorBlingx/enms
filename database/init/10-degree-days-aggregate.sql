@@ -39,7 +39,7 @@ SELECT add_continuous_aggregate_policy('environmental_degree_days_daily',
     schedule_interval => INTERVAL '1 hour');
 
 -- Create index for faster queries
-CREATE INDEX idx_env_dd_daily_machine_day 
+CREATE INDEX IF NOT EXISTS idx_env_dd_daily_machine_day 
     ON environmental_degree_days_daily (machine_id, day DESC);
 
 -- Add comment

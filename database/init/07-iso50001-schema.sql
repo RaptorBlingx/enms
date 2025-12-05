@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS energy_sources (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_energy_sources_active ON energy_sources(is_active);
+CREATE INDEX IF NOT EXISTS idx_energy_sources_active ON energy_sources(is_active);
 
 \echo '✓ energy_sources table created'
 
@@ -83,9 +83,9 @@ CREATE TABLE IF NOT EXISTS seus (
     CONSTRAINT seus_machine_ids_not_empty CHECK (array_length(machine_ids, 1) > 0)
 );
 
-CREATE INDEX idx_seus_energy_source ON seus(energy_source_id);
-CREATE INDEX idx_seus_active ON seus(is_active);
-CREATE INDEX idx_seus_baseline_year ON seus(baseline_year);
+CREATE INDEX IF NOT EXISTS idx_seus_energy_source ON seus(energy_source_id);
+CREATE INDEX IF NOT EXISTS idx_seus_active ON seus(is_active);
+CREATE INDEX IF NOT EXISTS idx_seus_baseline_year ON seus(baseline_year);
 
 \echo '✓ seus table created'
 
@@ -130,9 +130,9 @@ CREATE TABLE IF NOT EXISTS seu_energy_performance (
         CHECK (compliance_status IN ('compliant', 'warning', 'critical', NULL))
 );
 
-CREATE INDEX idx_seu_performance_period ON seu_energy_performance(seu_id, period_start, period_end);
-CREATE INDEX idx_seu_performance_baseline ON seu_energy_performance(baseline_year);
-CREATE INDEX idx_seu_performance_compliance ON seu_energy_performance(compliance_status);
+CREATE INDEX IF NOT EXISTS idx_seu_performance_period ON seu_energy_performance(seu_id, period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_seu_performance_baseline ON seu_energy_performance(baseline_year);
+CREATE INDEX IF NOT EXISTS idx_seu_performance_compliance ON seu_energy_performance(compliance_status);
 
 \echo '✓ seu_energy_performance table created'
 

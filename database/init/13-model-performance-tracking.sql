@@ -68,10 +68,10 @@ CREATE TABLE IF NOT EXISTS model_performance_metrics (
     metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_model_perf_model_id ON model_performance_metrics(model_id);
-CREATE INDEX idx_model_perf_machine_type ON model_performance_metrics(machine_id, model_type);
-CREATE INDEX idx_model_perf_eval_date ON model_performance_metrics(evaluation_date DESC);
-CREATE INDEX idx_model_perf_drift ON model_performance_metrics(drift_detected) WHERE drift_detected = TRUE;
+CREATE INDEX IF NOT EXISTS idx_model_perf_model_id ON model_performance_metrics(model_id);
+CREATE INDEX IF NOT EXISTS idx_model_perf_machine_type ON model_performance_metrics(machine_id, model_type);
+CREATE INDEX IF NOT EXISTS idx_model_perf_eval_date ON model_performance_metrics(evaluation_date DESC);
+CREATE INDEX IF NOT EXISTS idx_model_perf_drift ON model_performance_metrics(drift_detected) WHERE drift_detected = TRUE;
 
 \echo '✓ model_performance_metrics table created'
 
@@ -129,10 +129,10 @@ CREATE TABLE IF NOT EXISTS model_training_history (
     metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_training_history_machine_type ON model_training_history(machine_id, model_type);
-CREATE INDEX idx_training_history_status ON model_training_history(training_status);
-CREATE INDEX idx_training_history_date ON model_training_history(training_start DESC);
-CREATE INDEX idx_training_history_trigger ON model_training_history(trigger_type);
+CREATE INDEX IF NOT EXISTS idx_training_history_machine_type ON model_training_history(machine_id, model_type);
+CREATE INDEX IF NOT EXISTS idx_training_history_status ON model_training_history(training_status);
+CREATE INDEX IF NOT EXISTS idx_training_history_date ON model_training_history(training_start DESC);
+CREATE INDEX IF NOT EXISTS idx_training_history_trigger ON model_training_history(trigger_type);
 
 \echo '✓ model_training_history table created'
 
@@ -189,9 +189,9 @@ CREATE TABLE IF NOT EXISTS model_ab_tests (
     metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_ab_tests_machine_type ON model_ab_tests(machine_id, model_type);
-CREATE INDEX idx_ab_tests_status ON model_ab_tests(test_status);
-CREATE INDEX idx_ab_tests_active ON model_ab_tests(test_start, test_end) WHERE test_status = 'running';
+CREATE INDEX IF NOT EXISTS idx_ab_tests_machine_type ON model_ab_tests(machine_id, model_type);
+CREATE INDEX IF NOT EXISTS idx_ab_tests_status ON model_ab_tests(test_status);
+CREATE INDEX IF NOT EXISTS idx_ab_tests_active ON model_ab_tests(test_start, test_end) WHERE test_status = 'running';
 
 \echo '✓ model_ab_tests table created'
 
@@ -243,11 +243,11 @@ CREATE TABLE IF NOT EXISTS model_alerts (
     metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_model_alerts_machine_type ON model_alerts(machine_id, model_type);
-CREATE INDEX idx_model_alerts_severity ON model_alerts(severity);
-CREATE INDEX idx_model_alerts_unresolved ON model_alerts(machine_id) WHERE is_resolved = FALSE;
-CREATE INDEX idx_model_alerts_timestamp ON model_alerts(alert_timestamp DESC);
-CREATE INDEX idx_model_alerts_type ON model_alerts(alert_type);
+CREATE INDEX IF NOT EXISTS idx_model_alerts_machine_type ON model_alerts(machine_id, model_type);
+CREATE INDEX IF NOT EXISTS idx_model_alerts_severity ON model_alerts(severity);
+CREATE INDEX IF NOT EXISTS idx_model_alerts_unresolved ON model_alerts(machine_id) WHERE is_resolved = FALSE;
+CREATE INDEX IF NOT EXISTS idx_model_alerts_timestamp ON model_alerts(alert_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_model_alerts_type ON model_alerts(alert_type);
 
 \echo '✓ model_alerts table created'
 

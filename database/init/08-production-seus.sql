@@ -75,7 +75,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000001'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: Compressor-1 (Electricity)';
     
     -- ========================================================================
@@ -97,7 +97,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000006'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: Compressor-EU-1 (Electricity)';
     
     -- ========================================================================
@@ -119,7 +119,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000002'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: HVAC-Main (Electricity)';
     
     -- ========================================================================
@@ -141,7 +141,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000007'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: HVAC-EU-North (Electricity)';
     
     -- ========================================================================
@@ -163,7 +163,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000003'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: Conveyor-A (Electricity)';
     
     -- ========================================================================
@@ -185,7 +185,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000004'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: Hydraulic-Pump-1 (Electricity)';
     
     -- ========================================================================
@@ -207,7 +207,7 @@ BEGIN
         ARRAY['c0000000-0000-0000-0000-000000000005'::uuid],
         true,
         NOW()
-    );
+    ) ON CONFLICT (id) DO NOTHING;
     RAISE NOTICE '✓ Created SEU: Injection-Molding-1 (Electricity)';
     
 END $$;

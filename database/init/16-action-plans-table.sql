@@ -65,12 +65,12 @@ CREATE TABLE IF NOT EXISTS action_plans (
 -- Indexes
 -- ============================================================================
 
-CREATE INDEX idx_action_plans_seu ON action_plans(seu_id);
-CREATE INDEX idx_action_plans_factory ON action_plans(factory_id);
-CREATE INDEX idx_action_plans_status ON action_plans(status);
-CREATE INDEX idx_action_plans_priority ON action_plans(priority);
-CREATE INDEX idx_action_plans_target_date ON action_plans(target_date);
-CREATE INDEX idx_action_plans_responsible ON action_plans(responsible_person);
+CREATE INDEX IF NOT EXISTS idx_action_plans_seu ON action_plans(seu_id);
+CREATE INDEX IF NOT EXISTS idx_action_plans_factory ON action_plans(factory_id);
+CREATE INDEX IF NOT EXISTS idx_action_plans_status ON action_plans(status);
+CREATE INDEX IF NOT EXISTS idx_action_plans_priority ON action_plans(priority);
+CREATE INDEX IF NOT EXISTS idx_action_plans_target_date ON action_plans(target_date);
+CREATE INDEX IF NOT EXISTS idx_action_plans_responsible ON action_plans(responsible_person);
 
 -- ============================================================================
 -- Triggers

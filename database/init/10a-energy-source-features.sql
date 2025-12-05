@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS energy_source_features (
     UNIQUE(energy_source_id, feature_name)
 );
 
-CREATE INDEX idx_esf_energy_source ON energy_source_features(energy_source_id);
-CREATE INDEX idx_esf_source_table ON energy_source_features(source_table);
-CREATE INDEX idx_esf_regression ON energy_source_features(is_regression_feature) WHERE is_regression_feature = true;
+CREATE INDEX IF NOT EXISTS IF NOT EXISTS idx_esf_energy_source ON energy_source_features(energy_source_id);
+CREATE INDEX IF NOT EXISTS IF NOT EXISTS idx_esf_source_table ON energy_source_features(source_table);
+CREATE INDEX IF NOT EXISTS IF NOT EXISTS idx_esf_regression ON energy_source_features(is_regression_feature) WHERE is_regression_feature = true;
 
 COMMENT ON TABLE energy_source_features IS 'Dynamic feature discovery for multi-energy baselines. Enables zero-hardcoding architecture per Mr. Umut requirements.';
 COMMENT ON COLUMN energy_source_features.feature_name IS 'User-friendly name shown in API/UI';
