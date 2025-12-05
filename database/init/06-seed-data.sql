@@ -165,7 +165,31 @@ INSERT INTO machines (
     TRUE, TRUE
 );
 
-\echo '✓ 5 machines created for Demo Manufacturing Plant'
+-- Machine 6: Boiler (30-second intervals)
+INSERT INTO machines (
+    id, factory_id, name, description, type,
+    manufacturer, model, serial_number, installation_date,
+    rated_power_kw, rated_voltage_v, rated_current_a, rated_frequency_hz,
+    location_in_factory, data_interval_seconds, mqtt_topic,
+    is_active, is_critical
+) VALUES (
+    'c0000000-0000-0000-0000-000000000008',
+    '11111111-1111-1111-1111-111111111111',
+    'Boiler-1',
+    'Industrial steam boiler for heating',
+    'boiler',
+    'Viessmann',
+    'Vitomax 200-LW',
+    'VIE2024-BOI-001',
+    '2024-01-10',
+    45.0, 400.0, 64.9, 50.0,
+    'Boiler Room - East Wing',
+    30,  -- 30-second intervals
+    'factory/DemoPlant/Boiler-1',
+    TRUE, FALSE
+);
+
+\echo '✓ 6 machines created for Demo Manufacturing Plant'
 
 -- Factory 2: European Production Facility
 -- Additional machines for multi-factory demonstration
@@ -344,7 +368,7 @@ INSERT INTO audit_log (
     'seed_data_completed',
     jsonb_build_object(
         'factories_created', 2,
-        'machines_created', 7,
+        'machines_created', 8,
         'timestamp', NOW()
     )
 );
@@ -362,23 +386,25 @@ INSERT INTO audit_log (
 \echo ''
 \echo 'Summary:'
 \echo '  - 2 Factories created'
-\echo '  - 7 Machines (SEUs) created'
+\echo '  - 8 Machines (SEUs) created'
 \echo '    ├─ 2 Compressors (1s interval)'
 \echo '    ├─ 2 HVAC Systems (10s interval)'
 \echo '    ├─ 1 Conveyor Motor (10s interval)'
 \echo '    ├─ 1 Hydraulic Pump (30s interval)'
-\echo '    └─ 1 Injection Molding (30s interval)'
+\echo '    ├─ 1 Injection Molding (30s interval)'
+\echo '    └─ 1 Boiler (30s interval)'
 \echo '  - Machine status initialized'
 \echo '  - Energy tariffs configured'
 \echo '  - Carbon factors added'
 \echo ''
 \echo 'Demo Factory: Demo Manufacturing Plant'
 \echo '  Machine IDs:'
-\echo '    - Compressor-1:       c0000000-0000-0000-0000-000000000001'
-\echo '    - HVAC-Main:          c0000000-0000-0000-0000-000000000002'
-\echo '    - Conveyor-A:         c0000000-0000-0000-0000-000000000003'
-\echo '    - Hydraulic-Pump-1:   c0000000-0000-0000-0000-000000000004'
+\echo '    - Compressor-1:        c0000000-0000-0000-0000-000000000001'
+\echo '    - HVAC-Main:           c0000000-0000-0000-0000-000000000002'
+\echo '    - Conveyor-A:          c0000000-0000-0000-0000-000000000003'
+\echo '    - Hydraulic-Pump-1:    c0000000-0000-0000-0000-000000000004'
 \echo '    - Injection-Molding-1: c0000000-0000-0000-0000-000000000005'
+\echo '    - Boiler-1:            c0000000-0000-0000-0000-000000000008'
 \echo ''
 \echo 'European Facility: European Production Facility'
 \echo '  Machine IDs:'
