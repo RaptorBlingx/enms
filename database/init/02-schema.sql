@@ -131,6 +131,7 @@ CREATE INDEX idx_machines_mqtt_topic ON machines(mqtt_topic);
 CREATE TABLE energy_readings (
     time TIMESTAMPTZ NOT NULL,
     machine_id UUID NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
+    energy_type VARCHAR(50) NOT NULL DEFAULT 'electrical',
     
     -- Power metrics
     power_kw DECIMAL(10, 3) NOT NULL,
@@ -165,6 +166,7 @@ CREATE TABLE energy_readings (
 
 -- Note: Will be converted to hypertable in 03-timescaledb-setup.sql
 CREATE INDEX idx_energy_readings_machine_time ON energy_readings(machine_id, time DESC);
+CREATE UNIQUE INDEX energy_readings_machine_time_type_unique ON energy_readings(machine_id, time, energy_type);
 
 \echo '✓ energy_readings table created'
 
