@@ -66,12 +66,15 @@ services:
 
   # ============================================================================
   # MQTT BROKER - Eclipse Mosquitto (Zero-touch with built-in credentials)
+  # Use containerized mqtt on production, host broker (172.18.0.1) on dev
   # ============================================================================
   mqtt:
     build:
       context: ./mqtt
       dockerfile: Dockerfile
     container_name: enms-mqtt
+    profiles:
+      - mqtt-container  # Only start with: docker compose --profile mqtt-container up
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -116,7 +119,7 @@ services:
       dockerfile: Dockerfile
     container_name: enms-simulator
     environment:
-      MQTT_HOST: mqtt
+      MQTT_HOST: ${MQTT_HOST:-172.18.0.1}
       MQTT_PORT: 1883
       MQTT_USERNAME: ${MQTT_USERNAME}
       MQTT_PASSWORD: ${MQTT_PASSWORD}
@@ -128,8 +131,6 @@ services:
       LOG_LEVEL: INFO
     depends_on:
       postgres:
-        condition: service_healthy
-      mqtt:
         condition: service_healthy
     networks:
       - enms-network
@@ -159,7 +160,7 @@ services:
         - NODE_RED_CREDENTIAL_SECRET=${NODE_RED_CREDENTIAL_SECRET:-enms-node-red-secret}
         - NODE_RED_USERNAME=${NODE_RED_USERNAME:-admin}
         - NODE_RED_PASSWORD_HASH=${NODE_RED_PASSWORD_HASH:-$$2b$$08$$wKXiKXKZ4v0g.iBZ6Y5B1.VJCHZqJV8XvPLXsNxMHjWKGqT0uLM4S}
-        - MQTT_HOST=mqtt
+        - MQTT_HOST=${MQTT_HOST:-172.18.0.1}
         - MQTT_PORT=1883
         - MQTT_USERNAME=${MQTT_USERNAME:-raptorblingx}
         - MQTT_PASSWORD=${MQTT_PASSWORD:-raptorblingx}
@@ -172,8 +173,6 @@ services:
         - enms-network
       depends_on:
         postgres:
-          condition: service_healthy
-        mqtt:
           condition: service_healthy
       healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:1880/"]
