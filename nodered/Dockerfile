@@ -39,6 +39,14 @@ RUN npm config set registry https://registry.npmjs.org/ && \
     (sleep 30 && npm install --no-audit --no-fund --verbose) || \
     (sleep 60 && npm install --no-audit --no-fund --verbose)
 
+# Install Node-RED contrib packages globally to ensure they're available
+WORKDIR /usr/src/node-red
+RUN npm install --save \
+    node-red-contrib-postgresql@0.15.4 \
+    node-red-dashboard@3.6.0 \
+    node-red-node-email@1.18.4 \
+    --no-audit --no-fund
+
 # Fix permissions (following your pattern)
 USER root
 RUN chown -R node-red:node-red /data
