@@ -339,13 +339,32 @@
             
             const forecast = response.data;
             
+            // Calculate average
+            const avg = forecast.predictions.reduce((a,b) => a+b) / forecast.predictions.length;
+            
+            // Use confidence bounds if available, otherwise use prediction min/max
+            let rangeMin, rangeMax;
+            if (forecast.confidence_intervals && forecast.confidence_intervals.lower) {
+                // ARIMA model returns nested confidence_intervals
+                rangeMin = Math.min(...forecast.confidence_intervals.lower);
+                rangeMax = Math.max(...forecast.confidence_intervals.upper);
+            } else if (forecast.lower_bound && forecast.upper_bound && forecast.lower_bound.length > 0) {
+                // Prophet model returns lower_bound/upper_bound directly
+                rangeMin = Math.min(...forecast.lower_bound);
+                rangeMax = Math.max(...forecast.upper_bound);
+            } else {
+                // Fallback: estimate ±5% range around average
+                rangeMin = avg * 0.95;
+                rangeMax = avg * 1.05;
+            }
+            
             resultDiv.innerHTML = `
                 <div class="alert alert-success">
                     <strong>✓ Forecast Generated!</strong><br>
                     Model: ${forecast.model_type}<br>
                     Periods: ${forecast.periods}<br>
-                    Average: ${(forecast.predictions.reduce((a,b) => a+b) / forecast.predictions.length).toFixed(2)} kW<br>
-                    Range: ${Math.min(...forecast.predictions).toFixed(2)} - ${Math.max(...forecast.predictions).toFixed(2)} kW
+                    Average: ${avg.toFixed(2)} kW<br>
+                    Range: ${rangeMin.toFixed(2)} - ${rangeMax.toFixed(2)} kW
                 </div>
             `;
             

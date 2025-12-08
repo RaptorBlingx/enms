@@ -154,7 +154,7 @@
             /* Floating Enable Voice Button */
             .ovos-enable-voice {
                 position: fixed;
-                top: 20px;
+                bottom: 100px;
                 right: 20px;
                 z-index: 10000;
                 display: flex;

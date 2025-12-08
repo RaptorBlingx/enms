@@ -266,9 +266,62 @@
         #btn-spinner {
             margin-left: 0.5rem;
         }
+        /* Navigation Bar */
+        .viz-nav {
+            background: linear-gradient(90deg, #1a365d 0%, #2d3748 100%);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .viz-nav-brand {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .viz-nav-brand:hover { color: #a0aec0; }
+        .viz-nav-links {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .viz-nav-link {
+            color: #e2e8f0;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .viz-nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
+        .viz-nav-link.active { background: #667eea; color: white; }
+        .viz-nav-divider { color: #4a5568; margin: 0 0.25rem; }
     </style>
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="viz-nav">
+        <a href="/api/analytics/ui/" class="viz-nav-brand">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            EnMS Analytics
+        </a>
+        <div class="viz-nav-links">
+            <a href="/api/analytics/ui/" class="viz-nav-link">Dashboard</a>
+            <span class="viz-nav-divider">|</span>
+            <a href="/api/analytics/ui/sankey" class="viz-nav-link">Sankey</a>
+            <a href="/api/analytics/ui/heatmap" class="viz-nav-link">Heatmap</a>
+            <a href="/api/analytics/ui/comparison" class="viz-nav-link active">Comparison</a>
+            <a href="/api/analytics/ui/model-performance" class="viz-nav-link">Model Perf</a>
+        </div>
+    </nav>
+
     <div class="main-container">
         <!-- Header -->
         <div class="header">
