@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISO 50001 - HUMANERGY</title>
+    
+    <!-- Google Fonts - Inter (Professional) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Sidebar CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #00A8E8 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(10, 36, 99, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-bottom: 2px solid rgba(0, 168, 232, 0.3);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .content-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 3rem;
+        }
+
+        h1 {
+            color: #0A2463;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            color: #1E3A8A;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        h3 {
+            color: #0A2463;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        p {
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+        }
+
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .compliance-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-top: 4px solid #667eea;
+        }
+
+        .compliance-card h3 {
+            margin-top: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            border-top: 2px solid rgba(0, 168, 232, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .content-box {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Simplified Header with Logo and Hamburger Only -->
+    <header>
+        <nav>
+            <div class="logo-section">
+                <button onclick="toggleSidebar()" class="hamburger-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="logo-container">
+                    <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 35px; width: auto;">
+                </div>
+                <a href="/" class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    HUMANERGY
+                </a>
+                <div class="logo-container">
+                    <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 28px; width: auto;">
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="content-box">
+            <h1>📋 ISO 50001 Compliance</h1>
+            
+            <p>
+                HUMANERGY is designed from the ground up to support full compliance with ISO 50001:2018 - 
+                the international standard for Energy Management Systems.
+            </p>
+
+            <div class="highlight-box">
+                <h3>✓ ISO 50001 Certified-Ready</h3>
+                <p>
+                    Our platform provides all the tools, documentation, and processes needed to establish, 
+                    implement, maintain, and improve your energy management system in accordance with ISO 50001 requirements.
+                </p>
+            </div>
+
+            <h2>🎯 Key ISO 50001 Requirements Coverage</h2>
+
+            <div class="compliance-grid">
+                <div class="compliance-card">
+                    <h3>📊 Energy Review</h3>
+                    <p>Comprehensive energy data collection, analysis, and identification of Significant Energy Uses (SEUs)</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>📈 Energy Baseline</h3>
+                    <p>Automated baseline establishment using ML models and historical data analysis</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>🎯 Performance Indicators</h3>
+                    <p>Real-time EnPIs (Energy Performance Indicators) tracking and visualization</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>🎯 Objectives & Targets</h3>
+                    <p>Energy objective setting, tracking, and progress monitoring</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>📋 Action Plans</h3>
+                    <p>Energy action plan management with task tracking and resource allocation</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>📊 Monitoring & Measurement</h3>
+                    <p>Continuous monitoring of energy consumption, EnPIs, and action plan effectiveness</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>🔍 Internal Audit</h3>
+                    <p>Audit trail, compliance reports, and documentation for management reviews</p>
+                </div>
+
+                <div class="compliance-card">
+                    <h3>📈 Continual Improvement</h3>
+                    <p>Anomaly detection, opportunity identification, and improvement tracking</p>
+                </div>
+            </div>
+
+            <h2>📑 ISO 50001 Clauses Supported</h2>
+
+            <h3><span class="badge">4</span> Context of the Organization</h3>
+            <ul>
+                <li>Energy data collection covering all significant areas</li>
+                <li>Stakeholder identification and requirements tracking</li>
+                <li>Scope definition and boundary management</li>
+            </ul>
+
+            <h3><span class="badge">5</span> Leadership</h3>
+            <ul>
+                <li>Management dashboard with energy policy tracking</li>
+                <li>Role and responsibility assignment features</li>
+                <li>Resource allocation monitoring</li>
+            </ul>
+
+            <h3><span class="badge">6</span> Planning</h3>
+            <ul>
+                <li>Risk and opportunity assessment tools</li>
+                <li>Energy review automation and SEU identification</li>
+                <li>Energy baseline calculation (EnB) with statistical models</li>
+                <li>EnPI definition, calculation, and monitoring</li>
+                <li>Energy objectives and targets management</li>
+            </ul>
+
+            <h3><span class="badge">7</span> Support</h3>
+            <ul>
+                <li>Competence tracking for energy team members</li>
+                <li>Communication tools and notification system</li>
+                <li>Documented information management and version control</li>
+            </ul>
+
+            <h3><span class="badge">8</span> Operation</h3>
+            <ul>
+                <li>Operational planning and control systems</li>
+                <li>Design and procurement energy efficiency tracking</li>
+                <li>Real-time operational monitoring and alerts</li>
+            </ul>
+
+            <h3><span class="badge">9</span> Performance Evaluation</h3>
+            <ul>
+                <li>Automated monitoring, measurement, and analysis</li>
+                <li>Internal audit checklists and compliance verification</li>
+                <li>Management review reports with KPI dashboards</li>
+            </ul>
+
+            <h3><span class="badge">10</span> Improvement</h3>
+            <ul>
+                <li>Nonconformity tracking and corrective actions</li>
+                <li>Continual improvement opportunity identification</li>
+                <li>Performance trend analysis and forecasting</li>
+            </ul>
+
+            <h2>🏆 Benefits of ISO 50001 Compliance</h2>
+
+            <ul>
+                <li><strong>Cost Reduction:</strong> 10-20% energy cost savings through systematic management</li>
+                <li><strong>Competitive Advantage:</strong> Demonstrate commitment to sustainability</li>
+                <li><strong>Regulatory Compliance:</strong> Meet legal and regulatory requirements</li>
+                <li><strong>Risk Management:</strong> Identify and mitigate energy-related risks</li>
+                <li><strong>Continual Improvement:</strong> Structured approach to ongoing optimization</li>
+                <li><strong>Carbon Reduction:</strong> Track and reduce greenhouse gas emissions</li>
+                <li><strong>Stakeholder Confidence:</strong> Build trust with customers, investors, regulators</li>
+            </ul>
+
+            <h2>📈 Implementation Roadmap</h2>
+
+            <div class="highlight-box">
+                <h3>Phase 1: Energy Review (Months 1-2)</h3>
+                <p>Data collection, SEU identification, baseline establishment</p>
+                
+                <h3>Phase 2: Planning (Month 3)</h3>
+                <p>Set energy objectives, targets, and action plans</p>
+                
+                <h3>Phase 3: Implementation (Months 4-6)</h3>
+                <p>Deploy systems, train team, establish processes</p>
+                
+                <h3>Phase 4: Measurement (Months 7-10)</h3>
+                <p>Monitor EnPIs, track progress, internal audits</p>
+                
+                <h3>Phase 5: Certification (Months 11-12)</h3>
+                <p>Management review, external audit, ISO 50001 certification</p>
+            </div>
+
+            <h2>🚀 Get Started</h2>
+            <p>
+                Ready to achieve ISO 50001 certification? <a href="/auth.html" style="color: #667eea; font-weight: bold;">Sign up</a> 
+                for ENMS Platform today and let us guide you through every step of the certification process.
+            </p>
+
+            <p style="margin-top: 2rem;">
+                <a href="/contact.html" style="color: #667eea; font-weight: bold;">Contact our compliance team</a> 
+                for a detailed consultation on your ISO 50001 journey.
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 HUMANERGY - Powered by APlus Engineering • Funded by WASABI Project. All rights reserved.</p>
+    </footer>
+    
+    <!-- Sidebar Script -->
+    <script src="/js/sidebar.js"></script>
+</body>
+</html>

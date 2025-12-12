@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUMANERGY - Login & Registration</title>
+    
+    <!-- Google Fonts - Inter (Professional) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #00A8E8 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Navigation */
+        header {
+            background: rgba(10, 36, 99, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-bottom: 2px solid rgba(0, 168, 232, 0.3);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        /* Main Container */
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .auth-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .auth-box.login-mode {
+            max-width: 450px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #0A2463;
+            border-bottom-color: #00A8E8;
+            background: white;
+        }
+
+        .form-container {
+            padding: 2.5rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00A8E8;
+            box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.1);
+        }
+
+        .password-strength {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #00A8E8 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 168, 232, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+
+        .forgot-password a {
+            color: #00A8E8;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+            color: #0A2463;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            border-top: 2px solid rgba(0, 168, 232, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header>
+        <nav>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 70px; width: auto;">
+                <div class="logo">⚡ HUMANERGY</div>
+                <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 35px; width: auto;">
+            </div>
+            <ul class="nav-links">
+                <li><a href="/auth.html">Authentication</a></li>
+                <li><a href="/about.html">About</a></li>
+                <li><a href="/iso50001.html">ISO 50001</a></li>
+                <li><a href="/contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="auth-box">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('login')">Login</div>
+                <div class="tab" onclick="switchTab('register')">Register</div>
+            </div>
+
+            <div class="form-container">
+                <!-- Login Form -->
+                <div id="login-form" class="tab-content active">
+                    <h2>Welcome Back!</h2>
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="login-email">Email Address</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <div class="forgot-password">
+                            <a href="/forgot-password.html">Forgot Password?</a>
+                        </div>
+                        <div id="login-message" class="message"></div>
+                        <button type="submit" class="btn" id="login-btn">
+                            🔓 Sign In
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Registration Form -->
+                <div id="register-form" class="tab-content">
+                    <h2>Create Account</h2>
+                    <form onsubmit="handleRegister(event)">
+                        <!-- Row 1: Organization full width -->
+                        <div class="form-group">
+                            <label for="reg-organization">Organization Name *</label>
+                            <input type="text" id="reg-organization" placeholder="Your Company Name" required>
+                        </div>
+                        
+                        <!-- Row 2: Full Name & Position -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg-full-name">Full Name *</label>
+                                <input type="text" id="reg-full-name" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-position">Position *</label>
+                                <input type="text" id="reg-position" placeholder="Your Role" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 3: Email full width -->
+                        <div class="form-group">
+                            <label for="reg-email">Email Address *</label>
+                            <input type="email" id="reg-email" placeholder="your.email@company.com" required>
+                            <small style="color: #666; font-size: 0.85rem;">We'll send a verification link to this email</small>
+                        </div>
+                        
+                        <!-- Row 4: Mobile & Country -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg-mobile">Mobile Number *</label>
+                                <input type="tel" id="reg-mobile" placeholder="+1 234 567 8900" required>
+                                <small style="color: #666; font-size: 0.8rem;">Use international format: +1 234 567 8900</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-country">Country *</label>
+                                <select id="reg-country" required>
+                                    <option value="">Type to search countries...</option>
+                                    <option value="Turkey">Turkey</option>
+                                    <option value="Germany">Germany</option>
+                                    <option value="USA">United States</option>
+                                    <option value="UK">United Kingdom</option>
+                                    <option value="France">France</option>
+                                    <option value="Spain">Spain</option>
+                                    <option value="Italy">Italy</option>
+                                    <option value="Netherlands">Netherlands</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 5: Password & Confirm Password -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="reg-password">Password *</label>
+                                <input type="password" id="reg-password" placeholder="Create a strong password" required minlength="8" 
+                                       oninput="checkPasswordStrength(this.value)">
+                                <small style="color: #666; font-size: 0.8rem;">Minimum 8 characters</small>
+                                <div class="password-strength">
+                                    <div id="password-strength-bar" class="password-strength-bar"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-confirm-password">Confirm Password *</label>
+                                <input type="password" id="reg-confirm-password" placeholder="Re-enter your password" required minlength="8">
+                            </div>
+                        </div>
+                        
+                        <!-- Message at bottom -->
+                        <div id="message" class="message"></div>
+                        
+                        <button type="submit" class="btn" id="register-btn">
+                            🔐 Create Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 HUMANERGY - Powered by APlus Engineering &bull; Funded by WASABI Project. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const API_BASE = '/api/auth';
+
+        // Switch between login and register tabs
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            const authBox = document.querySelector('.auth-box');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                document.getElementById('login-form').classList.add('active');
+                authBox.classList.add('login-mode');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('register-form').classList.add('active');
+                authBox.classList.remove('login-mode');
+            }
+            
+            hideMessage();
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            // Determine which form is active
+            const isLoginActive = document.getElementById('login-form').classList.contains('active');
+            const messageEl = isLoginActive ? document.getElementById('login-message') : document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} show`;
+        }
+
+        // Hide message
+        function hideMessage() {
+            document.getElementById('message')?.classList.remove('show');
+            document.getElementById('login-message')?.classList.remove('show');
+        }
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            const bar = document.getElementById('password-strength-bar');
+            let strength = 0;
+            
+            if (password.length >= 8) strength += 25;
+            if (password.match(/[a-z]+/)) strength += 25;
+            if (password.match(/[A-Z]+/)) strength += 25;
+            if (password.match(/[0-9]+/)) strength += 25;
+            
+            bar.style.width = strength + '%';
+            
+            if (strength < 50) {
+                bar.style.background = '#e74c3c';
+            } else if (strength < 75) {
+                bar.style.background = '#f39c12';
+            } else {
+                bar.style.background = '#27ae60';
+            }
+        }
+
+        // Handle Login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            
+            btn.disabled = true;
+            btn.innerHTML = 'Signing In... <span class="spinner"></span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, password})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('auth_token', data.token);
+                    localStorage.setItem('user_data', JSON.stringify(data.user));
+                    
+                    showMessage('Login successful! Redirecting...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 1500);
+                } else {
+                    showMessage(data.error || 'Login failed', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        }
+
+        // Handle Registration
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+            
+            // Validate password match
+            if (password !== confirmPassword) {
+                showMessage('❌ Passwords do not match. Please try again.', 'error');
+                return;
+            }
+            
+            const formData = {
+                full_name: document.getElementById('reg-full-name').value,
+                email: document.getElementById('reg-email').value,
+                password: password,
+                organization: document.getElementById('reg-organization').value,
+                position: document.getElementById('reg-position').value,
+                mobile: document.getElementById('reg-mobile').value,
+                country: document.getElementById('reg-country').value
+            };
+            
+            const btn = document.getElementById('register-btn');
+            btn.disabled = true;
+            btn.innerHTML = 'Creating Account... <span class="spinner"></span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ ' + data.message, 'success');
+                    
+                    // Reset form
+                    event.target.reset();
+                    
+                    // Switch to login after 3 seconds
+                    setTimeout(() => {
+                        switchTab('login');
+                    }, 3000);
+                } else {
+                    showMessage(data.error || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                // Verify token validity
+                fetch(`${API_BASE}/verify-token`, {
+                    method: 'POST',
+                    headers: {'Authorization': `Bearer ${token}`}
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.valid) {
+                        window.location.href = '/index.html';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

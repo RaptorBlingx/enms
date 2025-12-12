@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - HUMANERGY</title>
+    
+    <!-- Google Fonts - Inter (Professional) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Sidebar CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #00A8E8 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(10, 36, 99, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-bottom: 2px solid rgba(0, 168, 232, 0.3);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .content-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 3rem;
+        }
+
+        h1 {
+            color: #0A2463;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            color: #1E3A8A;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        p {
+            color: #333;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .contact-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            border-top: 4px solid #667eea;
+        }
+
+        .contact-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .contact-card a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .contact-card a:hover {
+            color: #667eea;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .location-section {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+            border-top: 2px solid rgba(0, 168, 232, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .content-box {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Simplified Header with Logo and Hamburger Only -->
+    <header>
+        <nav>
+            <div class="logo-section">
+                <button onclick="toggleSidebar()" class="hamburger-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="logo-container">
+                    <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 35px; width: auto;">
+                </div>
+                <a href="/" class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    HUMANERGY
+                </a>
+                <div class="logo-container">
+                    <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 28px; width: auto;">
+                </div>
+            </div>
+        </nav>
+    </header>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="content-box">
+            <h1>📞 Contact Us</h1>
+            
+            <p>
+                Have questions about ENMS Platform? Need technical support or want to schedule a demo? 
+                We're here to help! Reach out to us using any of the methods below.
+            </p>
+
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <div class="icon">📧</div>
+                    <h3>Email</h3>
+                    <a href="mailto:swe.mohamad.jarad@gmail.com">swe.mohamad.jarad@gmail.com</a>
+                    <br><br>
+                    <a href="mailto:umut.ogur@aartimuhendislik.com">umut.ogur@aartimuhendislik.com</a>
+                </div>
+
+                <div class="contact-card">
+                    <div class="icon">🌐</div>
+                    <h3>Website</h3>
+                    <a href="https://humanergy.intel50001.com" target="_blank">humanergy.intel50001.com</a>
+                </div>
+
+                <div class="contact-card">
+                    <div class="icon">💼</div>
+                    <h3>Business Hours</h3>
+                    <p style="color: #666; margin: 0;">Monday - Friday<br>9:00 AM - 6:00 PM (GMT+3)</p>
+                </div>
+            </div>
+
+            <h2>📝 Send Us a Message</h2>
+            <div class="form-section">
+                <div id="message" class="message"></div>
+                
+                <form id="contact-form" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="organization">Organization</label>
+                        <input type="text" id="organization">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject *</label>
+                        <select id="subject" required>
+                            <option value="">Select a subject</option>
+                            <option value="demo">Request a Demo</option>
+                            <option value="support">Technical Support</option>
+                            <option value="sales">Sales Inquiry</option>
+                            <option value="partnership">Partnership Opportunity</option>
+                            <option value="iso50001">ISO 50001 Consultation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message-text">Message *</label>
+                        <textarea id="message-text" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn" id="submit-btn">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+
+            <div class="location-section">
+                <h3>🏢 Project Information</h3>
+                <p><strong>ENMS Platform</strong> is part of the WASABI Project, focusing on intelligent energy management 
+                and ISO 50001 compliance for industrial facilities.</p>
+                <p style="margin-top: 1rem;">
+                    <strong>Collaboration:</strong> This project is developed in collaboration with AARTI Mühendislik 
+                    and supported by EU Horizon 2020 research framework.
+                </p>
+            </div>
+
+            <h2>🚀 Quick Links</h2>
+            <p>
+                <a href="/auth.html" style="color: #667eea; font-weight: bold; margin-right: 1.5rem;">Sign Up</a>
+                <a href="/about.html" style="color: #667eea; font-weight: bold; margin-right: 1.5rem;">Learn More</a>
+                <a href="/iso50001.html" style="color: #667eea; font-weight: bold;">ISO 50001 Compliance</a>
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 ENMS Platform. All rights reserved. | Part of WASABI Project</p>
+    </footer>
+
+    <script>
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type} show`;
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            // Get form data
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                organization: document.getElementById('organization').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message-text').value
+            };
+            
+            // Simulate form submission (in production, this would send to a backend API)
+            setTimeout(() => {
+                showMessage('Thank you for contacting us! We will get back to you within 24 hours.', 'success');
+                document.getElementById('contact-form').reset();
+                btn.disabled = false;
+                btn.textContent = 'Send Message';
+                
+                // In production, you would send this to your backend:
+                // fetch('/api/contact', {
+                //     method: 'POST',
+                //     headers: {'Content-Type': 'application/json'},
+                //     body: JSON.stringify(formData)
+                // });
+                
+                console.log('Contact form submitted:', formData);
+            }, 1000);
+        }
+    </script>
+    
+    <!-- Sidebar Script -->
+    <script src="/js/sidebar.js"></script>
+</body>
+</html>
