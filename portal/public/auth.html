@@ -29,7 +29,7 @@
         header {
             background: rgba(10, 36, 99, 0.95);
             backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
+            padding: 1rem 2rem 1rem 0;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             border-bottom: 2px solid rgba(0, 168, 232, 0.3);
         }
@@ -295,22 +295,24 @@
             }
         }
     </style>
+    
+    <!-- Sidebar CSS -->
+    <link rel="stylesheet" href="/css/sidebar.css">
 </head>
 <body>
-    <!-- Header Navigation -->
+    <!-- Simplified Header with Logo and Hamburger Only -->
     <header>
-        <nav>
-            <div style="display: flex; align-items: center; gap: 1.5rem;">
-                <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 70px; width: auto;">
-                <div class="logo">⚡ HUMANERGY</div>
-                <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 35px; width: auto;">
+        <nav style="padding: 0;">
+            <div style="display: flex; align-items: center; gap: 1rem; padding-left: 5px;">
+                <button onclick="toggleSidebar()" class="hamburger-btn" style="margin: 0; margin-right: 0.5rem;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="logo" style="margin-left: 0;">⚡ HUMANERGY</div>
             </div>
-            <ul class="nav-links">
-                <li><a href="/auth.html">Authentication</a></li>
-                <li><a href="/about.html">About</a></li>
-                <li><a href="/iso50001.html">ISO 50001</a></li>
-                <li><a href="/contact.html">Contact</a></li>
-            </ul>
         </nav>
     </header>
 
@@ -429,6 +431,14 @@
 
     <!-- Footer -->
     <footer>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; max-width: 900px; margin-left: auto; margin-right: auto;">
+            <div style="flex: 1; text-align: left;">
+                <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 120px; width: auto; filter: brightness(0) invert(1); opacity: 0.9;">
+            </div>
+            <div style="flex: 1; text-align: right;">
+                <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 50px; width: auto; filter: brightness(0) invert(1); opacity: 0.9;">
+            </div>
+        </div>
         <p>&copy; 2025 HUMANERGY - Powered by APlus Engineering &bull; Funded by WASABI Project. All rights reserved.</p>
     </footer>
 
@@ -609,5 +619,8 @@
             }
         });
     </script>
+    
+    <!-- Sidebar Script -->
+    <script src="/js/sidebar.js?v=1765871462"></script>
 </body>
 </html>

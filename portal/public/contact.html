@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Sidebar CSS -->
-    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/sidebar.css?v=1765871462">
     
     <style>
         * {
@@ -31,7 +31,7 @@
         header {
             background: rgba(10, 36, 99, 0.95);
             backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
+            padding: 1rem 2rem 1rem 0;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             border-bottom: 2px solid rgba(0, 168, 232, 0.3);
         }
@@ -248,6 +248,11 @@
             font-size: 0.9rem;
             border-top: 2px solid rgba(0, 168, 232, 0.3);
         }
+        
+        footer p {
+            color: white;
+            margin: 0;
+        }
 
         @media (max-width: 768px) {
             .content-box {
@@ -264,30 +269,25 @@
     <!-- Simplified Header with Logo and Hamburger Only -->
     <header>
         <nav>
-            <div class="logo-section">
-                <button onclick="toggleSidebar()" class="hamburger-btn">
+            <div class="logo-section" style="padding: 0; padding-left: 5px;">
+                <button onclick="toggleSidebar()" class="hamburger-btn" style="margin: 0; margin-right: 0.5rem;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="3" y1="6" x2="21" y2="6"></line>
                         <line x1="3" y1="12" x2="21" y2="12"></line>
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <div class="logo-container">
-                    <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 35px; width: auto;">
-                </div>
                 <a href="/" class="logo">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                     </svg>
                     HUMANERGY
                 </a>
-                <div class="logo-container">
-                    <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 28px; width: auto;">
-                </div>
             </div>
         </nav>
     </header>
-            </ul>
+
+    <!-- Main Content -->
         </nav>
     </header>
 
@@ -386,7 +386,15 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 ENMS Platform. All rights reserved. | Part of WASABI Project</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; max-width: 900px; margin-left: auto; margin-right: auto;">
+            <div style="flex: 1; text-align: left;">
+                <img src="/images/aplus-logo.png" alt="APlus Engineering" style="height: 120px; width: auto; filter: brightness(0) invert(1); opacity: 0.9;">
+            </div>
+            <div style="flex: 1; text-align: right;">
+                <img src="/images/wasabi-logo.png" alt="WASABI Project" style="height: 50px; width: auto; filter: brightness(0) invert(1); opacity: 0.9;">
+            </div>
+        </div>
+        <p>&copy; 2025 HUMANERGY - Powered by APlus Engineering &bull; Funded by WASABI Project. All rights reserved.</p>
     </footer>
 
     <script>
@@ -432,6 +440,6 @@
     </script>
     
     <!-- Sidebar Script -->
-    <script src="/js/sidebar.js"></script>
+    <script src="/js/sidebar.js?v=1765871462"></script>
 </body>
 </html>

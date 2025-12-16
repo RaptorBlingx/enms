@@ -8,6 +8,9 @@
     <!-- Professional Industrial Design System -->
     <link rel="stylesheet" href="/css/enms-industrial.css">
     
+    <!-- Sidebar Component -->
+    <link rel="stylesheet" href="/css/sidebar.css?v=1765871462">
+    
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -155,25 +158,35 @@
 <body>
     <!-- Professional Navigation Header -->
     <header class="industrial-header">
-        <div class="container">
-            <nav class="industrial-nav">
-                <div class="industrial-logo">
+        <div class="container" style="padding-left: 0; padding-right: 0;">
+            <nav class="industrial-nav" style="justify-content: space-between; padding: 0; padding-right: 1rem;">
+                <div class="industrial-logo" style="display: flex; align-items: center; gap: 1rem; padding-left: 5px;">
+                    <button onclick="toggleSidebar()" class="hamburger-btn" style="margin: 0; margin-right: 0.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                     </svg>
-                    <span>EnMS</span>
+                    <span>HUMANERGY</span>
                 </div>
-                <ul class="industrial-nav-links">
-                    <li><a href="/" class="industrial-nav-link">Dashboard</a></li>
-                    <li><a href="/api/analytics/ui/" class="industrial-nav-link">Analytics</a></li>
-                    <li><a href="/reports.html" class="industrial-nav-link active">Reports</a></li>
-                    <li><a href="/grafana/" class="industrial-nav-link">Grafana</a></li>
-                    <li><a href="/nodered/" class="industrial-nav-link">Node-RED</a></li>
-                    <li><a href="/api/simulator/docs" class="industrial-nav-link" target="_blank">Simulator</a></li>
-                </ul>
+                <div style="color: #fff; font-weight: 500;">
+                    <span id="user-name"></span>
+                </div>
             </nav>
         </div>
     </header>
+
+    <script>
+        // Display user name in header
+        const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+        if (userData.full_name) {
+            document.getElementById('user-name').textContent = userData.full_name;
+        }
+    </script>
 
     <!-- Page Header -->
     <section style="background: linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #00A8E8 100%); 
@@ -463,5 +476,7 @@
     
     <!-- OVOS Voice Assistant Widget -->
     <script src="/js/ovos-voice-widget.js"></script>
+    <!-- Sidebar Script -->
+    <script src="/js/sidebar.js?v=1765871462"></script>
 </body>
 </html>
