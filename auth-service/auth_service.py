@@ -46,6 +46,9 @@ SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 SMTP_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL', '')
 SMTP_FROM_NAME = os.environ.get('SMTP_FROM_NAME', 'ENMS Platform')
 
+# Email enabled only if SMTP_USER and SMTP_PASSWORD are configured
+EMAIL_ENABLED = bool(SMTP_USER and SMTP_PASSWORD and SMTP_FROM_EMAIL)
+
 # Frontend URL
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8080')
 
@@ -129,6 +132,10 @@ def generate_verification_token() -> str:
 
 def send_verification_email(email: str, token: str, full_name: str) -> bool:
     """Send email verification link to user"""
+    if not EMAIL_ENABLED:
+        logger.info(f"Email disabled - skipping verification email for {email}")
+        return True
+    
     try:
         verification_link = f"{FRONTEND_URL}/verify-email.html?token={token}"
         
@@ -208,6 +215,10 @@ def send_verification_email(email: str, token: str, full_name: str) -> bool:
 
 def send_signup_notification(user_data: Dict) -> bool:
     """Send new user registration notification to admins"""
+    if not EMAIL_ENABLED:
+        logger.info("Email disabled - skipping signup notification")
+        return True
+    
     try:
         recipients = SIGNUP_ALERT_RECIPIENTS
         if not recipients:
@@ -341,15 +352,19 @@ def register_user(email: str, password: str, organization: str, full_name: str,
         password_hash = hash_password(password)
         verification_token = generate_verification_token()
         
+        # If email is disabled, auto-verify user
+        email_verified = not EMAIL_ENABLED
+        verified_at_sql = "NOW()" if email_verified else "NULL"
+        
         # Insert user
-        cursor.execute("""
+        cursor.execute(f"""
             INSERT INTO demo_users 
             (email, password_hash, organization, full_name, position, mobile, country, role,
-             verification_token, verification_sent_at, ip_address_signup, user_agent)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s)
+             verification_token, verification_sent_at, email_verified, verified_at, ip_address_signup, user_agent)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, {verified_at_sql}, %s, %s)
             RETURNING id, email, full_name, role
         """, (email, password_hash, organization, full_name, position, mobile, country,
-              user_role, verification_token, ip_address, user_agent))
+              user_role, verification_token, email_verified, ip_address, user_agent))
         
         user = cursor.fetchone()
         conn.commit()
@@ -377,11 +392,18 @@ def register_user(email: str, password: str, organization: str, full_name: str,
             'ip_address': ip_address
         })
         
+        # Different message based on email status
+        if EMAIL_ENABLED:
+            message = 'Registration successful. Please check your email to verify your account.'
+        else:
+            message = 'Registration successful. Your account is ready to use. You can log in now.'
+        
         return {
             'success': True,
-            'message': 'Registration successful. Please check your email to verify your account.',
+            'message': message,
             'user_id': user['id'],
-            'role': user['role']
+            'role': user['role'],
+            'email_verified': email_verified
         }
         
     except Exception as e:
