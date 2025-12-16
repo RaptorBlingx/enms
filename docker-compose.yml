@@ -316,10 +316,10 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       ADMIN_EMAILS: ${ADMIN_EMAILS}
       SIGNUP_ALERT_RECIPIENTS: ${SIGNUP_ALERT_RECIPIENTS}
-      AUTH_SERVICE_PORT: 5001
+      AUTH_SERVICE_PORT: 5500
       DEBUG_MODE: ${DEBUG_MODE:-false}
     ports:
-      - "5001:5001"
+      - "5500:5500"
     depends_on:
       postgres:
         condition: service_healthy
@@ -327,7 +327,7 @@ services:
       - enms-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5001/api/auth/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5500/api/auth/health"]
       interval: 30s
       timeout: 10s
       retries: 3
