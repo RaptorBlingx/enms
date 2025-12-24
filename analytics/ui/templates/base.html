@@ -195,6 +195,108 @@
         .industrial-nav-dropdown button.industrial-nav-link.active {
             background: var(--color-secondary);
         }
+        
+        /* ============================================
+           UNIFIED KPI CARDS - Matching Portal Design
+           ============================================ */
+        .kpi-card-premium {
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, var(--card-bg-from, #f8f9fa) 0%, #ffffff 100%);
+            border-radius: 16px;
+            border: 1px solid var(--card-border, #e5e7eb);
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .kpi-card-premium:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+            border-color: var(--card-border-hover, #d1d5db);
+        }
+        
+        /* Icon styling - matching portal */
+        .kpi-card-premium .kpi-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--card-gradient-from, #0A2463) 0%, var(--card-gradient-to, #1E3A8A) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .kpi-card-premium:hover .kpi-icon {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(var(--card-glow-rgb, 10, 36, 99), 0.3);
+        }
+        
+        /* Value styling - matching portal */
+        .kpi-card-premium .kpi-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--card-value-color, #0A2463);
+            margin-bottom: 8px;
+            line-height: 1;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Label styling - matching portal */
+        .kpi-card-premium .kpi-label {
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Description styling - matching portal */
+        .kpi-card-premium .kpi-description {
+            font-size: 12px;
+            color: var(--card-value-color, #0A2463);
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .kpi-card-premium {
+                padding: 24px 16px;
+            }
+            
+            .kpi-card-premium .kpi-value {
+                font-size: 40px;
+            }
+            
+            .kpi-card-premium .kpi-icon {
+                width: 52px;
+                height: 52px;
+                font-size: 28px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .kpi-card-premium {
+                padding: 20px 12px;
+            }
+            
+            .kpi-card-premium .kpi-value {
+                font-size: 36px;
+            }
+            
+            .kpi-card-premium .kpi-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+        }
     </style>
     
     {% block extra_css %}{% endblock %}

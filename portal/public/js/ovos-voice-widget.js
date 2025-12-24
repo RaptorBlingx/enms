@@ -14,12 +14,13 @@
     // Configuration
     const CONFIG = {
         // API endpoint - works with nginx proxy
+        // Updated to use cleaner /api/ovos/ route (nginx → analytics → OVOS bridge)
         apiUrl: window.location.port === '8001' 
-            ? '/api/v1/ovos/voice/query' 
-            : '/api/analytics/api/v1/ovos/voice/query',
+            ? '/api/v1/ovos/voice/query'  // Direct to analytics (dev)
+            : '/api/ovos/voice/query',     // Via nginx proxy (production)
         healthUrl: window.location.port === '8001' 
-            ? '/api/v1/ovos/voice/health' 
-            : '/api/analytics/api/v1/ovos/voice/health',
+            ? '/api/v1/ovos/voice/health'  // Direct to analytics (dev)
+            : '/api/ovos/voice/health',    // Via nginx proxy (production)
         welcomeMessage: 'Hello! I\'m your EnMS voice assistant. Ask me about energy consumption, machine status, anomalies, forecasts, or say "factory overview" for a summary. Say "Jarvis" to activate hands-free!',
         placeholder: 'Ask about energy, machines, anomalies...',
         title: 'OVOS Voice Assistant',
@@ -46,6 +47,14 @@
 
     // Create floating "Enable Voice" button (shown until user grants permission)
     function createEnableVoiceButton() {
+        // Check if navbar button exists (for index.html with navbar)
+        const navButton = document.getElementById('ovos-enable-voice-nav');
+        if (navButton) {
+            navButton.style.display = 'flex';
+            return; // Don't create floating button if navbar button exists
+        }
+        
+        // Fallback: Create floating button for pages without navbar
         const btnHTML = `
             <button id="ovos-enable-voice" class="ovos-enable-voice">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -676,9 +685,8 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    utterance: text, 
-                    session_id: sessionId,
-                    include_audio: audioEnabled
+                    text: text, 
+                    session_id: sessionId
                 }),
             });
 
@@ -689,8 +697,14 @@
                 addMessage(data.response, false, false, data.latency_ms, data.tts_latency_ms);
                 
                 // Play audio if available and enabled
-                if (audioEnabled && data.audio_base64) {
-                    playAudio(data.audio_base64, data.audio_format || 'wav');
+                if (audioEnabled) {
+                    if (data.audio_base64) {
+                        // Option 1: Server-side TTS (OVOS generated audio)
+                        playAudio(data.audio_base64, data.audio_format || 'wav');
+                    } else if (window.speechSynthesis) {
+                        // Option 2: Fallback to browser TTS (Web Speech API)
+                        speakText(data.response);
+                    }
                 }
                 
                 // Trigger PDF download if present (for report generation queries)
@@ -738,6 +752,44 @@
             });
         } catch (err) {
             console.error('Failed to create audio:', err);
+        }
+    }
+
+    /**
+     * Speak text using browser's Web Speech API (fallback TTS)
+     * Used when OVOS doesn't provide audio
+     */
+    function speakText(text) {
+        try {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95;     // Slightly slower for clarity
+            utterance.pitch = 1.0;     // Normal pitch
+            utterance.volume = 1.0;    // Full volume
+            utterance.lang = 'en-US';  // English US
+            
+            // Try to use a good voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => 
+                v.name.includes('Google') || 
+                v.name.includes('Microsoft') || 
+                v.lang === 'en-US'
+            );
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            utterance.onerror = (e) => {
+                console.error('Speech synthesis error:', e);
+            };
+            
+            window.speechSynthesis.speak(utterance);
+            console.log('🔊 Speaking with browser TTS:', text.substring(0, 50));
+            
+        } catch (err) {
+            console.error('Failed to speak text:', err);
         }
     }
 
@@ -1051,7 +1103,7 @@
 
     // One-time enable function - grants permission and starts background listening
     async function enableVoiceAssistant() {
-        const enableBtn = document.getElementById('ovos-enable-voice');
+        const enableBtn = document.getElementById('ovos-enable-voice-nav') || document.getElementById('ovos-enable-voice');
         if (!enableBtn) return;
         
         enableBtn.classList.add('loading');
@@ -1087,9 +1139,11 @@
     }
 
     function showWakeWordIndicator() {
-        // Remove enable button if exists
-        const enableBtn = document.getElementById('ovos-enable-voice');
-        if (enableBtn) enableBtn.remove();
+        // Remove enable buttons if exists
+        const navBtn = document.getElementById('ovos-enable-voice-nav');
+        const floatBtn = document.getElementById('ovos-enable-voice');
+        if (navBtn) navBtn.remove();
+        if (floatBtn) floatBtn.remove();
         
         // Create indicator
         const indicatorHTML = `
@@ -1117,7 +1171,10 @@
         
         // Show enable button again
         createEnableVoiceButton();
-        document.getElementById('ovos-enable-voice').addEventListener('click', enableVoiceAssistant);
+        const enableBtn = document.getElementById('ovos-enable-voice-nav') || document.getElementById('ovos-enable-voice');
+        if (enableBtn) {
+            enableBtn.addEventListener('click', enableVoiceAssistant);
+        }
         
         // Update widget button
         updateWakeWordUI(false);
@@ -1142,9 +1199,14 @@
             if (indicator) indicator.remove();
             
             // Show enable button again
-            if (!document.getElementById('ovos-enable-voice')) {
+            const navBtn = document.getElementById('ovos-enable-voice-nav');
+            const floatBtn = document.getElementById('ovos-enable-voice');
+            if (!navBtn && !floatBtn) {
                 createEnableVoiceButton();
-                document.getElementById('ovos-enable-voice').addEventListener('click', enableVoiceAssistant);
+                const enableBtn = document.getElementById('ovos-enable-voice-nav') || document.getElementById('ovos-enable-voice');
+                if (enableBtn) {
+                    enableBtn.addEventListener('click', enableVoiceAssistant);
+                }
             }
             
         } else {
@@ -1206,8 +1268,11 @@
         // Wake word toggle (inside widget)
         document.getElementById('ovos-wakeword-toggle').addEventListener('click', toggleWakeWord);
         
-        // Enable voice button (floating - one-time permission)
-        document.getElementById('ovos-enable-voice').addEventListener('click', enableVoiceAssistant);
+        // Enable voice button (navbar or floating - one-time permission)
+        const enableBtn = document.getElementById('ovos-enable-voice-nav') || document.getElementById('ovos-enable-voice');
+        if (enableBtn) {
+            enableBtn.addEventListener('click', enableVoiceAssistant);
+        }
         
         // Initialize speech recognition
         initSpeechRecognition();

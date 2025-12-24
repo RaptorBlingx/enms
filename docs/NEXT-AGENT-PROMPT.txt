@@ -1,0 +1,76 @@
+# 🎯 PROMPT FOR NEXT CHAT AGENT
+
+Copy and paste this into your next VS Code GitHub Copilot Chat session:
+
+---
+
+**Complete OVOS skill interface layer for EnMS.**
+
+Read and follow `/home/ubuntu/humanergy/docs/CHAT-AGENT-HANDOFF-OVOS-SKILL-REFACTOR.md` - comprehensive 8-phase implementation plan.
+
+**Current Architecture Status:**
+- ✅ Service layer COMPLETE (_call_enms_api with 20 IntentTypes)
+- ✅ API client COMPLETE (all EnMS endpoints)
+- ✅ Response formatters COMPLETE
+- ⚠️ OVOS interface layer INCOMPLETE (3 of 20 intents)
+
+**Your Task:**
+Add OVOS interface layer following official OVOS pattern for complex skills:
+1. Create 17 missing .intent files in locale/en-us/
+2. Add 17 lightweight @intent_handler methods
+3. Uncomment 3 existing handlers
+4. Refactor converse() to follow-ups only
+
+**Architecture Pattern (Official OVOS):**
+```
+Handler (@intent_handler) → Service Layer (_call_enms_api) → API Client → Response
+  ↑ Missing                    ↑ EXISTS                      ↑ EXISTS      ↑ EXISTS
+```
+
+**Primary References:**
+1. `/home/ubuntu/humanergy/docs/CHAT-AGENT-HANDOFF-OVOS-SKILL-REFACTOR.md` - Implementation plan
+2. `/home/ubuntu/humanergy/docs/api-documentation/ENMS-API-DOCUMENTATION-FOR-OVOS.md` - API docs (for .intent examples)
+3. `enms_ovos_skill/__init__.py` lines 663-1800 - Service layer (YOUR GUIDE)
+4. `enms_ovos_skill/lib/models.py` - IntentType enum (20 types to cover)
+
+**Key Insight:**
+You're NOT building from scratch. You're adding interface wrappers around existing service layer. Each handler = ~10 lines that extract entities and call `_call_enms_api()`.
+
+**IntentTypes with Complete Service Logic:**
+ENERGY_QUERY, POWER_QUERY, MACHINE_STATUS, FACTORY_OVERVIEW, ANOMALY_DETECTION, RANKING, COMPARISON, COST_ANALYSIS, FORECAST, BASELINE, BASELINE_MODELS, BASELINE_EXPLANATION, KPI, PERFORMANCE, SEUS, REPORT, PRODUCTION, HELP
+
+**Success Criteria:**
+- 20 .intent files in locale/en-us/
+- 20 @intent_handler methods in __init__.py
+- All handlers route to _call_enms_api()
+- Tests pass for all intents
+
+**Estimated: 2-3 days (16-18 hours)**
+
+Start with Phase 1 to validate architecture, then systematically add interface layer.
+
+---
+
+**Alternative (if you want more detail):**
+
+Execute OVOS architecture refactor for EnMS skill following the 8-phase plan in `/home/ubuntu/humanergy/docs/CHAT-AGENT-HANDOFF-OVOS-SKILL-REFACTOR.md`.
+
+**Situation:** Current skill uses custom converse() method with manual keyword matching instead of proper OVOS .intent files and @intent_handler decorators. This violates WASABI proposal commitment to create "proper OVOS skills" and doesn't scale for open-source/multi-language support.
+
+**Verified facts:**
+- 20 IntentTypes defined but only 3 .intent files exist
+- 3 @intent_handler methods COMMENTED OUT at lines 1978-1996 in __init__.py
+- converse() method does manual keyword matching (84-line list)
+- Custom HybridParser bypasses OVOS Padatious engine
+- Files in wrong locations: intent/ and entities/ should be in locale/en-us/
+
+**Your task:** Migrate to standard OVOS architecture following the handoff document. Start with Phase 1 (quick validation) by moving existing files and uncommenting decorators. Then create the 17 missing .intent files and handlers.
+
+**Read these docs first:**
+1. CHAT-AGENT-HANDOFF-OVOS-SKILL-REFACTOR.md - Full plan
+2. OVOS-SKILL-DEVELOPMENT-PROPER-WAY.md - Architecture comparison
+3. OVOS-REFACTOR-CONCRETE-EXAMPLE.md - Code examples
+
+**Estimated: 17.5 hours (2-3 days). Test after each phase. Success = all 20 intents working via OVOS patterns.**
+
+Begin with Phase 1 validation.

@@ -28,8 +28,8 @@ ENERGY_RATE = 0.15  # $/kWh
 @router.get("/analytics/top-consumers", tags=["Analytics"])
 async def get_top_energy_consumers(
     metric: str = Query("energy", description="Metric to rank by: energy, cost, power, anomalies"),
-    start_time: datetime = Query(..., description="Start of time range (ISO 8601)"),
-    end_time: datetime = Query(..., description="End of time range (ISO 8601)"),
+    start_time: datetime = Query(None, description="Start of time range (ISO 8601) - defaults to today 00:00 UTC"),
+    end_time: datetime = Query(None, description="End of time range (ISO 8601) - defaults to now"),
     limit: int = Query(5, description="Number of top consumers to return", ge=1, le=20)
 ) -> Dict[str, Any]:
     """
@@ -53,6 +53,12 @@ async def get_top_energy_consumers(
     """
     
     try:
+        # Set defaults if not provided
+        if start_time is None:
+            start_time = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        if end_time is None:
+            end_time = datetime.utcnow()
+        
         valid_metrics = ['energy', 'cost', 'power', 'anomalies']
         if metric not in valid_metrics:
             raise HTTPException(

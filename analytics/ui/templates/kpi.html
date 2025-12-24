@@ -309,42 +309,79 @@
         const kpis = currentKpiData.kpis || {};
         const totals = currentKpiData.totals || {};
         
-        // Update KPI cards
+        // Update KPI cards - matching portal design
         const cardsHtml = `
             <div class="col-md-2">
-                <div class="card stat-card border-start border-primary border-4">
-                    <div class="stat-value">${kpis.sec?.value?.toFixed(5) || '-'}</div>
-                    <div class="stat-label">${kpis.sec?.unit || 'SEC'}</div>
+                <div class="kpi-card-premium" style="--card-gradient-from: #0A2463; --card-gradient-to: #1E3A8A; --card-value-color: #0A2463;">
+                    <div class="kpi-icon">
+                        <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-value">${kpis.sec?.value?.toFixed(5) || '-'}</div>
+                    <div class="kpi-label">KWH/UNIT</div>
+                    <div class="kpi-description">Energy per Unit</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card stat-card border-start border-danger border-4">
-                    <div class="stat-value">${kpis.peak_demand?.value?.toFixed(1) || '-'}</div>
-                    <div class="stat-label">${kpis.peak_demand?.unit || 'Peak kW'}</div>
+                <div class="kpi-card-premium" style="--card-gradient-from: #FF6B35; --card-gradient-to: #D94D1A; --card-value-color: #FF6B35; --card-bg-from: #fff5f0; --card-border: #ffe5d5;">
+                    <div class="kpi-icon">
+                        <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-value">${kpis.peak_demand?.value?.toFixed(1) || '-'}</div>
+                    <div class="kpi-label">KW</div>
+                    <div class="kpi-description">Peak Power</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card stat-card border-start border-success border-4">
-                    <div class="stat-value">${kpis.load_factor?.percent?.toFixed(1) || '-'}%</div>
-                    <div class="stat-label">Load Factor</div>
+                <div class="kpi-card-premium" style="--card-gradient-from: #00A8E8; --card-gradient-to: #007BA7; --card-value-color: #00A8E8; --card-bg-from: #f0f9ff; --card-border: #d5efff;">
+                    <div class="kpi-icon">
+                        <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                            <path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-value">${kpis.load_factor?.percent?.toFixed(1) || '-'}%</div>
+                    <div class="kpi-label">LOAD FACTOR</div>
+                    <div class="kpi-description">Avg/Peak Ratio</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card stat-card border-start border-warning border-4">
-                    <div class="stat-value">$${kpis.energy_cost?.value?.toFixed(2) || '-'}</div>
-                    <div class="stat-label">Energy Cost</div>
+                <div class="kpi-card-premium" style="--card-gradient-from: #2ECC71; --card-gradient-to: #27AE60; --card-value-color: #2ECC71; --card-bg-from: #f0fdf4; --card-border: #d5f5e3;">
+                    <div class="kpi-icon">
+                        <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-value">$${kpis.energy_cost?.value?.toFixed(1) || '-'}</div>
+                    <div class="kpi-label">ENERGY COST</div>
+                    <div class="kpi-description">Total Cost</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card stat-card border-start border-info border-4">
-                    <div class="stat-value">${kpis.carbon_intensity?.value?.toFixed(1) || '-'}</div>
-                    <div class="stat-label">${kpis.carbon_intensity?.unit || 'kg CO₂'}</div>
+                <div class="kpi-card-premium" style="--card-gradient-from: #E74C3C; --card-gradient-to: #C0392B; --card-value-color: #E74C3C; --card-bg-from: #fef2f2; --card-border: #fecaca;">
+                    <div class="kpi-icon">
+                        <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-value">${kpis.carbon_intensity?.value?.toFixed(1) || '-'}</div>
+                    <div class="kpi-label">KG CO₂</div>
+                    <div class="kpi-description">Carbon Emissions</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="card stat-card border-start border-secondary border-4">
-                    <div class="stat-value">${totals.total_energy_kwh?.toFixed(1) || '-'}</div>
-                    <div class="stat-label">Total kWh</div>
+                <div class="kpi-card-premium" style="--card-gradient-from: #3498DB; --card-gradient-to: #2980B9; --card-value-color: #3498DB; --card-bg-from: #eff6ff; --card-border: #dbeafe;">
+                    <div class="kpi-icon">
+                        <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="kpi-value">${totals.total_energy_kwh?.toFixed(1) || '-'}</div>
+                    <div class="kpi-label">TOTAL KWH</div>
+                    <div class="kpi-description">Energy Consumed</div>
                 </div>
             </div>
         `;

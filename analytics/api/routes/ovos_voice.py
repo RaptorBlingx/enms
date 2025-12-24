@@ -43,14 +43,14 @@ OVOS_BRIDGE_URL = f"http://{OVOS_BRIDGE_HOST}:{OVOS_BRIDGE_PORT}"
 
 class VoiceQueryRequest(BaseModel):
     """Request model for voice query"""
-    utterance: str
+    text: str
     session_id: Optional[str] = None
     include_audio: bool = True  # Request audio response from OVOS TTS
     
     class Config:
         json_schema_extra = {
             "example": {
-                "utterance": "What's the energy consumption for Compressor-1?",
+                "text": "What's the energy consumption for Compressor-1?",
                 "session_id": None,
                 "include_audio": True
             }
@@ -62,7 +62,7 @@ class VoiceQueryResponse(BaseModel):
     success: bool
     response: Optional[str] = None
     audio_base64: Optional[str] = None  # Base64 encoded WAV audio from OVOS TTS
-    audio_format: str = "wav"
+    audio_format: Optional[str] = None  # Audio format (wav, mp3, etc.) - None if no audio
     pdf_base64: Optional[str] = None  # Base64 encoded PDF for report downloads
     pdf_filename: Optional[str] = None  # Suggested filename for PDF download
     error: Optional[str] = None
@@ -120,7 +120,7 @@ async def voice_query(request: VoiceQueryRequest):
             response = await client.post(
                 f"{OVOS_BRIDGE_URL}{endpoint}",
                 json={
-                    "utterance": request.utterance,
+                    "text": request.text,
                     "session_id": request.session_id
                 }
             )

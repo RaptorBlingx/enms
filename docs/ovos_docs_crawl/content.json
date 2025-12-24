@@ -1,0 +1,730 @@
+{
+  "https://openvoiceos.github.io/ovos-technical-manual/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/",
+    "title": "Introduction - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:27.865181"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/312-wake_word_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/312-wake_word_plugins/",
+    "title": "Wake Word - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:28.557104"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/50-ovos_installer/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/50-ovos_installer/",
+    "title": "ovos-installer - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:29.120193"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/002-license/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/002-license/",
+    "title": "License - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:29.810959"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/utterance_transformers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/utterance_transformers/",
+    "title": "Utterance - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:30.522452"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/893-color_parser/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/893-color_parser/",
+    "title": "Color Parser - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:31.250625"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/gitlocalize_tutorial/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/gitlocalize_tutorial/",
+    "title": "GitLocalize Tutorial - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:31.942982"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/590-voice_apps/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/590-voice_apps/",
+    "title": "Standalone Apps - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:32.617130"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/403-intents/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/403-intents/",
+    "title": "Intent Design - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:33.322006"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/321-g2p_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/321-g2p_plugins/",
+    "title": "Grapheme to Phoneme - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:23:34.006992"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/702-ovos-shell/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/702-ovos-shell/",
+    "title": "Shell - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:24:15.206007"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/adapt_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/adapt_pipeline/",
+    "title": "Adapt - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:24:55.902139"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/409-skill_api/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/409-skill_api/",
+    "title": "Skill API - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:25:36.110221"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/711-qt_voice_apps/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/711-qt_voice_apps/",
+    "title": "QT Voice Apps - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:26:15.827294"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/201-tts_server/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/201-tts_server/",
+    "title": "TTS Server - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:26:55.544133"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/311-vad_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/311-vad_plugins/",
+    "title": "Voice Activity Detection - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:27:34.625180"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/300-plugin-manager/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/300-plugin-manager/",
+    "title": "Plugin Manager - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:28:13.422984"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/999-ovos_bigscreen/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/999-ovos_bigscreen/",
+    "title": "Plasma Bigscreen - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:28:51.111414"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/350-translation_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/350-translation_plugins/",
+    "title": "Language Detection/Translation - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:29:28.895248"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/m2v_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/m2v_pipeline/",
+    "title": "Model2Vec - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:30:07.261284"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/620-universal_skills/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/620-universal_skills/",
+    "title": "Universal Skills - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:30:43.463062"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/310-mic_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/310-mic_plugins/",
+    "title": "Microphone - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:31:19.654013"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/801-mk1_utils/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/801-mk1_utils/",
+    "title": "Mark1 Utils - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:31:54.934840"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/504-session/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/504-session/",
+    "title": "Session Aware Skills - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:32:29.638695"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/406-messagebus/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/406-messagebus/",
+    "title": "Bus Interaction - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:33:04.323644"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/152-hivemind-agents/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/152-hivemind-agents/",
+    "title": "HiveMind - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:33:38.024850"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/55-raspovos_troubleshooting/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/55-raspovos_troubleshooting/",
+    "title": "Troubleshooting - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:34:11.261635"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/pipelines_overview/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/pipelines_overview/",
+    "title": "Overview - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:34:43.954011"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/500-prompts/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/500-prompts/",
+    "title": "Prompts - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:35:16.151064"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/313-stt_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/313-stt_plugins/",
+    "title": "Speech To Text - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:35:47.855788"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/dialog_transformers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/dialog_transformers/",
+    "title": "Dialog - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:36:19.053370"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/54-skill-examples/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/54-skill-examples/",
+    "title": "Default Skills - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:36:49.786497"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/fallback_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/fallback_pipeline/",
+    "title": "Fallback - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:37:19.994920"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/405-customization/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/405-customization/",
+    "title": "Customization - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:37:49.694351"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/100-bus_service/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/100-bus_service/",
+    "title": "Bus - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:38:19.397916"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/padatious_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/padatious_pipeline/",
+    "title": "Padatious - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:38:48.587059"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/430-skill_dev_faq/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/430-skill_dev_faq/",
+    "title": "F.A.Q. - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:39:16.800423"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/501-context/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/501-context/",
+    "title": "Follow up Questions - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:39:44.494142"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/110-config/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/110-config/",
+    "title": "Configuration - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:40:11.689341"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/910-quebra_frases/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/910-quebra_frases/",
+    "title": "Quebra Frases - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:40:38.391047"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/lang_support/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/lang_support/",
+    "title": "Translations - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:41:04.588289"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/408-skill_settings/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/408-skill_settings/",
+    "title": "Skill Settings - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:41:30.291791"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/402-statements/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/402-statements/",
+    "title": "Dialog - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:41:55.525460"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/203-translate_server/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/203-translate_server/",
+    "title": "Translate Server - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:42:21.260938"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/631-OCP_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/631-OCP_pipeline/",
+    "title": "OCP - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:42:45.480759"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/610-common_query/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/610-common_query/",
+    "title": "Common Query Skills - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:43:09.180510"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/151-llm-transformers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/151-llm-transformers/",
+    "title": "AI Transformers - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:43:32.871236"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/920-padacioso/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/920-padacioso/",
+    "title": "Padacioso - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:43:56.563797"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/tts_transformers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/tts_transformers/",
+    "title": "TTS - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:44:18.766737"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/153-persona_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/153-persona_pipeline/",
+    "title": "Persona - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:44:40.467540"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/200-stt_server/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/200-stt_server/",
+    "title": "STT Server - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:45:01.671763"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/converse_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/converse_pipeline/",
+    "title": "Converse - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:45:22.371085"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/399-intents/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/399-intents/",
+    "title": "Skills and Intents - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:45:42.553854"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/102-core/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/102-core/",
+    "title": "Core - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:46:02.233399"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/891-number_parser/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/891-number_parser/",
+    "title": "Number Parser - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:46:21.455631"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/401-skill_structure/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/401-skill_structure/",
+    "title": "Anatomy - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:46:40.028086"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/001-release_channels/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/001-release_channels/",
+    "title": "Manual Install - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:46:59.086892"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/370-ocp_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/370-ocp_plugins/",
+    "title": "OCP Stream Extractors - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:47:16.773673"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/101-speech_service/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/101-speech_service/",
+    "title": "Listener - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:47:33.963744"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/900-bus_client/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/900-bus_client/",
+    "title": "Messagebus Client - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:47:50.646625"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/stop_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/stop_pipeline/",
+    "title": "Stop - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:48:06.923123"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/103-audio_service/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/103-audio_service/",
+    "title": "Audio - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:48:22.595371"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/503-layers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/503-layers/",
+    "title": "Intent Layers - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:48:37.797211"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/340-PHAL/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/340-PHAL/",
+    "title": "Platform/Hardware Abstraction Layer - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:48:52.483402"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/audio_transformers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/audio_transformers/",
+    "title": "Audio - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:49:07.167726"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/202-persona_server/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/202-persona_server/",
+    "title": "Persona Server - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:49:20.852418"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/720-skill_gui/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/720-skill_gui/",
+    "title": "GUI Interface - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:49:34.038040"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/410-skill_runtime_requirements/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/410-skill_runtime_requirements/",
+    "title": "Runtime Requirements - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:49:47.225769"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/003-timeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/003-timeline/",
+    "title": "Timeline - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:49:59.452585"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/99-architecture-overview/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/99-architecture-overview/",
+    "title": "Overview - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:50:11.145045"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/150-advanced_solvers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/150-advanced_solvers/",
+    "title": "Specialized Solvers - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:50:22.427273"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/320-tts_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/320-tts_plugins/",
+    "title": "Text To Speech - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:50:33.124267"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/400-skill-design-guidelines/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/400-skill-design-guidelines/",
+    "title": "Design Guidelines - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:50:43.316548"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/701-gui_protocol/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/701-gui_protocol/",
+    "title": "Protocol - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:50:53.018730"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/407-skill_filesystem/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/407-skill_filesystem/",
+    "title": "Filesystem - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:02.312571"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/150-personas/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/150-personas/",
+    "title": "Personas - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:11.070090"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/420-ssml/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/420-ssml/",
+    "title": "SSML - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:19.812493"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/51-install_raspovos/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/51-install_raspovos/",
+    "title": "Tutorial - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:27.530938"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/371-media_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/371-media_plugins/",
+    "title": "Media Playback - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:34.710018"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/411-skill_json/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/411-skill_json/",
+    "title": "Skill Json - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:41.419523"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/502-converse/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/502-converse/",
+    "title": "Converse - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:47.609643"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/cq_pipeline/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/cq_pipeline/",
+    "title": "Common Query - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:53.794445"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/710-qt5-gui/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/710-qt5-gui/",
+    "title": "QT5 mycroft-gui - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:51:58.985329"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/intent_transformers/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/intent_transformers/",
+    "title": "Intents - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:04.161956"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/890-date_parser/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/890-date_parser/",
+    "title": "Date Parser - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:08.348556"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/800-mk1_api/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/800-mk1_api/",
+    "title": "Enclosure Api - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:12.023991"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/630-OCP_skills/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/630-OCP_skills/",
+    "title": "Media Skills - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:15.208018"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/700-homescreen/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/700-homescreen/",
+    "title": "Homescreen - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:17.889263"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/104-gui_service/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/104-gui_service/",
+    "title": "GUI - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:20.104296"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/330-transformer_plugins/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/330-transformer_plugins/",
+    "title": "Transformers - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:23.347722"
+  },
+  "https://openvoiceos.github.io/ovos-technical-manual/600-fallbacks/": {
+    "url": "https://openvoiceos.github.io/ovos-technical-manual/600-fallbacks/",
+    "title": "Fallback Skills - OVOS Technical Manual",
+    "headings": [],
+    "text": "",
+    "code_blocks": [],
+    "timestamp": "2025-12-17T11:52:24.525553"
+  }
+}

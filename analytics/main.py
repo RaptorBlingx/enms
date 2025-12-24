@@ -662,12 +662,15 @@ async def system_statistics():
     """
     try:
         async with db.pool.acquire() as conn:
-            # Total energy readings (estimate from pg_class for speed)
+            # Total energy readings - use hypertable approximate row count (optimized)
+            # This uses TimescaleDB's hypertable_approximate_row_count for O(1) performance
             total_readings = await conn.fetchval(
                 """
-                SELECT reltuples::BIGINT 
-                FROM pg_class 
-                WHERE relname = 'energy_readings'
+                SELECT COALESCE(
+                    (SELECT approximate_row_count::BIGINT 
+                     FROM approximate_row_count('energy_readings')),
+                    0
+                )
                 """
             )
             
@@ -679,21 +682,23 @@ async def system_statistics():
                 """
             )
             
-            # Data rate: count readings in last minute (use 1min aggregate)
+            # Data rate: count readings in last minute (use RAW table for real-time accuracy)
+            # Continuous aggregates have refresh lag, so we need raw data for the latest minute
             data_rate = await conn.fetchval(
                 """
                 SELECT COALESCE(COUNT(*), 0)::INTEGER
-                FROM energy_readings_1min
-                WHERE bucket > NOW() - INTERVAL '1 minute'
+                FROM energy_readings
+                WHERE time > NOW() - INTERVAL '1 minute'
                 """
             )
             
-            # Readings per minute (average from last hour - use 1min aggregate)
+            # Readings per minute (average from last 10 mins - use raw table for recent data)
+            # Using 10 minutes to smooth out variations while staying near real-time
             readings_per_minute = await conn.fetchval(
                 """
-                SELECT COALESCE(COUNT(*) / 60, 0)::INTEGER
-                FROM energy_readings_1min
-                WHERE bucket > NOW() - INTERVAL '1 hour'
+                SELECT COALESCE(COUNT(*) / 10, 0)::INTEGER
+                FROM energy_readings
+                WHERE time > NOW() - INTERVAL '10 minutes'
                 """
             )
             
